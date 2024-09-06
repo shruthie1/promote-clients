@@ -6,13 +6,31 @@ import { fetchWithTimeout } from "./fetchWithTimeout";
 import { parseError } from "./parseError";
 import { ReactQueue } from "./ReactQueue";
 import { contains, ppplbot, startNewUserProcess } from "./utils";
-import { IClientDetails } from "./express";
+import { IClientDetails, restartClient } from "./express";
 
 export class Reactions {
+    private flag = true;
+    private flag2 = true;
+    private waitReactTime = Date.now();
+    private chatReactionsCache = new Map();
+    private lastReactedtime = Date.now();
+    private lastNotifiedTime = Date.now();
+    private reactionsRestarted = Date.now();
+    private totalReactionDelay = 0;
+    private successfulReactions = 0;
+    private averageReactionDelay = 0;
+    private minWaitTime = 15000;
+    private maxWaitTime = 19000;
+    private reactSleepTime = 17000;
+    private floodTriggeredTime = 0;
+    private floodCount = 0;
+    private targetReactionDelay = 17000;
+    private reactQueue: ReactQueue;
+    private clientDetails: IClientDetails;
 
-    clientDetails: IClientDetails;
     constructor(clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
+        this.reactQueue = new ReactQueue()
     }
 
     private standardEmoticons = ['👍', '❤', '🔥', '👏', '🥰', '😁']
@@ -46,25 +64,6 @@ export class Reactions {
         "1959951200", "1607289097", "1929774605", "1780733848", "1685018515", "2057393918",
         "1887746719", "1916123414", "1970767061", "2057158588"
     ]
-
-
-    private flag = true;
-    private flag2 = true;
-    private waitReactTime = Date.now();
-    private chatReactionsCache = new Map();
-    private lastReactedtime = Date.now();
-    private lastNotifiedTime = Date.now();
-    private reactionsRestarted = Date.now();
-    private totalReactionDelay = 0;
-    private successfulReactions = 0;
-    private averageReactionDelay = 0;
-    private minWaitTime = 15000;
-    private maxWaitTime = 19000;
-    private reactSleepTime = 17000;
-    private floodTriggeredTime = 0;
-    private floodCount = 0;
-    private targetReactionDelay = 17000;
-    private reactQueue = new ReactQueue();
 
     async react(event: NewMessageEvent) {
         const chatId = event.message.chatId.toString();
@@ -176,6 +175,9 @@ export class Reactions {
                     this.lastNotifiedTime = Date.now();
                     await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}  ${this.clientDetails.clientId.toUpperCase()} : Reactions Not working: ${this.flag}|${this.waitReactTime < Date.now()}|${!this.reactQueue.contains(chatId)}|${!contains(chatId, this.reactRestrictedIds)}|${this.chatReactionsCache.get(chatId)?.length} since: ${Math.floor((Date.now() - this.lastReactedtime) / 1000)}`);
                     console.log(`${this.clientDetails.clientId.toUpperCase()} Restarted Reactions`, this.flag, this.waitReactTime < Date.now(), !this.reactQueue.contains(chatId), !contains(chatId, this.reactRestrictedIds));
+                    if (Math.floor((Date.now() - this.lastReactedtime) / 1000) > 500) {
+                        await restartClient(this.clientDetails.clientId);
+                    }
                 }
             }
         } catch (error) {

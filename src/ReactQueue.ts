@@ -1,7 +1,6 @@
 export class ReactQueue {
-    private static instance: ReactQueue;
     private items: string[] = [];
-    private maxSize = 5;
+    private maxSize = 3;
     private timer: NodeJS.Timeout;
 
     constructor() { }

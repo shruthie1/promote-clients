@@ -97,6 +97,14 @@ app.get('/getProcessId', async (req, res) => {
   res.json({ ProcessId: prcessID.toString() });
 });
 
+app.get('/restart/:clientId', async (req, res, next) => {
+  res.send('OK');
+  next();
+}, async (req, res) => {
+  const clientId = req.params.clientId;
+  await restartClient(clientId)
+});
+
 app.get('/tryToConnect/:num', async (req, res, next) => {
   res.send('OK');
   next();
@@ -229,6 +237,14 @@ app.listen(port, () => {
 
 export function getMapValues() {
   return clientsMap.values()
+}
+
+export async function restartClient(clientId: string) {
+  const telegramService = TelegramService.getInstance();
+  await telegramService.deleteClient(clientId);
+  await sleep(5000);
+  const clientDetails = clientsMap.get(clientId);
+  await telegramService.createClient(clientDetails, false, true)
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

@@ -97,12 +97,12 @@ class TelegramManager {
                         console.log("Days Left: ", days);
                         this.promoterInstance.setDaysLeft(days)
                         // if (days == 3) {
-                        this.promoterInstance.setChannels(openChannels)
+                        // this.promoterInstance.setChannels(openChannels)
                         // }
                     } else if (event.message.text.toLowerCase().includes('good news')) {
 
                     } else if (event.message.text.toLowerCase().includes('can trigger a harsh')) {
-                        this.promoterInstance.setChannels(openChannels)
+                        // this.promoterInstance.setChannels(openChannels)
                     }
                 }
             }
