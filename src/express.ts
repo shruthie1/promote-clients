@@ -165,7 +165,7 @@ async function startConn() {
   const result = await fetchWithTimeout(`https://uptimechecker2.glitch.me/maskedcls`);
   const clients = result?.data;
   for (const client of clients) {
-    if (extractNumberFromString(client.clientId) == '1' && client.promoteMobile) {
+    if (extractNumberFromString(client.clientId) == process.env.clientNumber && client.promoteMobile) {
       clientsMap.set(client.clientId, {
         clientId: client.clientId,
         mobile: client.promoteMobile,
