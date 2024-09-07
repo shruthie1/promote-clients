@@ -3,7 +3,7 @@ const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHX
 
 export function parseError(
     err: any,
-    prefix: string = `${process.env.clientId}-Prom`,
+    prefix: string = `${process.env.clientId}`,
     sendErr: boolean = true
 ) {
     let status = 'UNKNOWN';

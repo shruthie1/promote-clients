@@ -41,8 +41,15 @@ export class TelegramService {
     }
 
     async deleteClient(clientId: string) {
-        const tgManager = await this.getClient(clientId);
-        await tgManager?.client?.disconnect();
+        let tgManager = await this.getClient(clientId);
+        if (tgManager) {
+            // Destroy the client instance
+            await tgManager.destroy(); // Ensure this cleans up all resources
+            console.log(`Client ${clientId} destroyed.`);
+            tgManager = null;
+        } else {
+            console.log(`Client ${clientId} not found.`);
+        }
         console.log("Disconnected : ", clientId)
         return TelegramService.clientsMap.delete(clientId);
     }

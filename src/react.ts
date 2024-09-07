@@ -7,6 +7,7 @@ import { parseError } from "./parseError";
 import { ReactQueue } from "./ReactQueue";
 import { contains, ppplbot, startNewUserProcess } from "./utils";
 import { IClientDetails, restartClient } from "./express";
+const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=${process.env.notifChannel}`
 
 export class Reactions {
     private flag = true;
@@ -19,14 +20,16 @@ export class Reactions {
     private totalReactionDelay = 0;
     private successfulReactions = 0;
     private averageReactionDelay = 0;
-    private minWaitTime = 15000;
+    private minWaitTime = 16000;
     private maxWaitTime = 19000;
-    private reactSleepTime = 17000;
+    private reactSleepTime = 18000;
     private floodTriggeredTime = 0;
     private floodCount = 0;
     private targetReactionDelay = 17000;
     private reactQueue: ReactQueue;
     private clientDetails: IClientDetails;
+    private processId: number = Math.floor(Math.random() * 1234);
+    private floodReleaseTime = 0;
 
     constructor(clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
@@ -143,14 +146,15 @@ export class Reactions {
                             this.targetReactionDelay = this.targetReactionDelay + 500
                             this.floodTriggeredTime = Date.now();
                             this.floodCount++;
-                            // await fetchWithTimeout(`${notifbot}&text=${process.env.clientId?.toUpperCase()}: Reaction Flood: sleeping for ${error.seconds}`);
+                            this.floodReleaseTime = Date.now() + (error.seconds * 1000) + 10000
+                            await fetchWithTimeout(`${notifbot}&text=${process.env.clientId} | ${this.clientDetails.clientId?.toUpperCase()}: Reaction Flood: sleeping for ${error.seconds}`);
                         } else {
                             if (error.errorMessage == "REACTION_INVALID") {
                                 availableReactions.splice(reactionIndex, 1);
                                 this.chatReactionsCache.set(chatId, availableReactions);
                             }
                             const chatEntity = <Api.Channel>await getEntity(event.client, chatId);
-                            console.log(`${this.clientDetails.clientId.toUpperCase()} Failed to React:`, reaction[0]?.toJSON().emoticon, chatEntity?.toJSON().username, error.errorMessage);
+                            console.log(`${process.env.clientId} | ${this.clientDetails.clientId.toUpperCase()} Failed to React:`, reaction[0]?.toJSON().emoticon, chatEntity?.toJSON().username, error.errorMessage);
                         }
                         await startNewUserProcess(error)
                     }
@@ -163,7 +167,7 @@ export class Reactions {
                 if (this.lastReactedtime < Date.now() - 60000 && (!this.flag || this.reactQueue.contains(chatId)) && this.reactionsRestarted < Date.now() - 30000) {
                     this.flag = true;
                     this.reactionsRestarted = Date.now();
-                    console.log(`${this.clientDetails.clientId.toUpperCase()} Restarted Reactions`, this.flag, this.waitReactTime < Date.now(), !this.reactQueue.contains(chatId), !contains(chatId, this.reactRestrictedIds));
+                    console.log(`${this.clientDetails.clientId.toUpperCase()}: processId: ${this.processId} Restarted Reactions`, this.flag, this.waitReactTime < Date.now(), !this.reactQueue.contains(chatId), !contains(chatId, this.reactRestrictedIds), `Waittime: ${Math.floor(Date.now() - this.floodReleaseTime) / 1000}`);
                 }
 
                 // if (lastReactedtime < Date.now() - 240000) {
@@ -171,9 +175,9 @@ export class Reactions {
                 //     console.log("Restarted not working Reactions", flag, waitReactTime < Date.now(), !reactQueue.contains(chatId), !isLimitReached, !contains(chatId, reactRestrictedIds), chatId, chatEntity?.toJSON().username, chatEntity?.toJSON().title);
                 // }
 
-                if (this.lastReactedtime < Date.now() - 240000 && this.lastNotifiedTime < Date.now() - 5 * 60 * 1000) {
+                if (this.lastReactedtime < Date.now() - 240000 && Date.now() > this.floodReleaseTime && this.lastNotifiedTime < Date.now() - 5 * 60 * 1000) {
                     this.lastNotifiedTime = Date.now();
-                    await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}  ${this.clientDetails.clientId.toUpperCase()} : Reactions Not working: ${this.flag}|${this.waitReactTime < Date.now()}|${!this.reactQueue.contains(chatId)}|${!contains(chatId, this.reactRestrictedIds)}|${this.chatReactionsCache.get(chatId)?.length} since: ${Math.floor((Date.now() - this.lastReactedtime) / 1000)}`);
+                    await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}  ${this.clientDetails.clientId.toUpperCase()}: processId: ${this.processId}| Reactions Not working: ${this.flag}|${this.waitReactTime < Date.now()}|${!this.reactQueue.contains(chatId)}|${!contains(chatId, this.reactRestrictedIds)}|${this.chatReactionsCache.get(chatId)?.length} since: ${Math.floor((Date.now() - this.lastReactedtime) / 1000)} | Waittime: ${Math.floor(this.floodReleaseTime - Date.now()) / 1000}`);
                     console.log(`${this.clientDetails.clientId.toUpperCase()} Restarted Reactions`, this.flag, this.waitReactTime < Date.now(), !this.reactQueue.contains(chatId), !contains(chatId, this.reactRestrictedIds));
                     if (Math.floor((Date.now() - this.lastReactedtime) / 1000) > 500) {
                         await restartClient(this.clientDetails.clientId);

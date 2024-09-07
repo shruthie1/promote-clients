@@ -27,6 +27,12 @@ export class Promotions {
         this.client = client
     }
 
+    async destroy() {
+        await this.client.disconnect();
+        this.client  = null;
+        console.log("Promotions instance destroyed.");
+    }
+
     setDaysLeft(daysLeft: number) {
         this.logDetails("WARN", `Setting Days Left : ${daysLeft}`)
         this.daysLeft = daysLeft
@@ -205,7 +211,7 @@ export class Promotions {
                     this.promotedCount++;
                     this.retryMessageSending(client, channelInfo, message?.id, randomIndex, undefined, false, defaultMsg);
                     this.scheduleFollowUpMessage(client, channelInfo);
-                    const outerLimit = 300000 + Math.floor(Math.random() * 5000);
+                    const outerLimit = 320000 + Math.floor(Math.random() * 8000);
                     await sleep(outerLimit);
                     return;
                 } else {
@@ -228,7 +234,7 @@ export class Promotions {
         }
     }
     async scheduleFollowUpMessage(client: TelegramClient, channelInfo: IChannel) {
-        const innerLimit = 423000 + Math.floor(Math.random() * 5000);
+        const innerLimit = 423000 + Math.floor(Math.random() * 8000);
         // //console.log(`Conditions met for sending follow-up message : limit -- ${innerLimit} Next : ${new Date(Date.now() + innerLimit).toLocaleString('en-IN').split(',')[1]}`);
         await sleep(innerLimit)
         let followUpMsg;
@@ -314,7 +320,7 @@ export class Promotions {
                     //console.log("instanse not exist")
                 }
             } catch (error) {
-                parseError(error)
+                parseError(error, `${this.clientDetails.clientId}, CheckHealth in Promote`)
                 try {
                     await this.client.invoke(
                         new Api.contacts.Unblock({
@@ -324,7 +330,7 @@ export class Promotions {
                 } catch (error) {
                     parseError(error)
                 }
-                await fetchWithTimeout(`${ppplbot}&text=@${(process.env.clientId).toUpperCase()}: Failed To Check Health`);
+                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Failed To Check Health`);
             }
             return true;
         }

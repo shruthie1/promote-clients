@@ -183,43 +183,36 @@ async function startConn() {
 async function checkHealth() {
   console.log("============Checking Health==============")
   const telegramService = TelegramService.getInstance();
-  const result = await fetchWithTimeout(`https://uptimechecker2.glitch.me/maskedcls`);
-  const clients = result?.data;
-  for (const client of clients) {
-    const telegramManager = await telegramService.getClient(client.clientId);
+  const clients = await (UserDataDtoCrud.getInstance()).getClients()
+  for (const clientData of clients) {
+    const clientDetails: IClientDetails = {
+      clientId: clientData.clientId,
+      mobile: clientData.promoteMobile,
+      repl: clientData.repl,
+      username: clientData.username,
+      lastMessage: Date.now(),
+      name: clientData.name
+    }
+    const telegramManager = await telegramService.getClient(clientDetails.clientId);
     if (telegramManager) {
       const me = await telegramManager.getMe();
-      if (me.phone !== client.promoteMobile) {
-        console.log(client.clientId, " : mobile changed")
-        await telegramService.deleteClient(client.promoteMobile);
-        clientsMap.set(client.clientId, {
-          clientId: client.clientId,
-          mobile: client.promoteMobile,
-          repl: client.repl,
-          username: client.username,
-          lastMessage: Date.now(),
-          name: client.name
-        })
-        await telegramService.createClient(client, false, true);
+      if (me.phone !== clientDetails.mobile) {
+        console.log(clientDetails.clientId, " : mobile changed")
+        await telegramService.deleteClient(clientDetails.mobile);
+        clientsMap.set(clientDetails.clientId, clientDetails)
+        await telegramService.createClient(clientDetails, false, true);
       } else {
-        const clientDetails: IClientDetails = {
-          clientId: client.clientId,
-          mobile: client.promoteMobile,
-          repl: client.repl,
-          username: client.username,
-          lastMessage: Date.now(),
-          name: client.name
-        }
+
         if (telegramManager.getLastMessageTime() < Date.now() - 5 * 60 * 1000) {
-          console.log(client.clientId, " : Promotions stopped - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000))
+          console.log(clientDetails.clientId, " : Promotions stopped - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000))
           await telegramManager.checktghealth()
           // await telegramService.deleteClient(client.clientId);
           // await sleep(5000);
           // await telegramService.createClient(clientDetails, false, true);
         } else {
-          console.log(client.clientId, " : Promotions Working fine - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000))
+          console.log(clientDetails.clientId, " : Promotions Working fine - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000))
         }
-        clientsMap.set(client.clientId, clientDetails)
+        clientsMap.set(clientDetails.clientId, clientDetails)
         telegramManager.setClientDetails(clientDetails)
       }
       setTimeout(async () => {
@@ -240,6 +233,7 @@ export function getMapValues() {
 }
 
 export async function restartClient(clientId: string) {
+  console.log(`===================Restarting service : ${clientId.toUpperCase()}=======================`)
   const telegramService = TelegramService.getInstance();
   await telegramService.deleteClient(clientId);
   await sleep(5000);

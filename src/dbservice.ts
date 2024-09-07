@@ -41,14 +41,12 @@ export class UserDataDtoCrud {
                 this.statsDb2 = this.client.db("tgclients").collection('stats2');
                 this.activeChannelDb = this.client.db("tgclients").collection('activeChannels');
                 this.promoteStatsDb = this.client.db("tgclients").collection('promoteStats');
-                const clients = await this.client.db("tgclients").collection('clients').find({}).toArray();
+                await this.getClients()
                 this.client.on('close', () => {
                     console.log('MongoDB connection closed.');
                     this.isConnected = false;
                 });
-                clients.forEach(clt => {
-                    this.clients = Object.assign(this.clients, { [clt.dbcoll]: clt });
-                });
+
                 return true;
             } catch (error) {
                 console.log(`Error connecting to MongoDB: ${error}`);
@@ -59,6 +57,13 @@ export class UserDataDtoCrud {
         }
     }
 
+    async getClients() {
+        const clients = await this.client.db("tgclients").collection('clients').find({}).toArray();
+        clients.forEach(clt => {
+            this.clients = Object.assign(this.clients, { [clt.dbcoll]: clt });
+        });
+        return clients;
+    }
 
     async updateActiveChannel(filter: any, data: any) {
         delete data["_id"]
@@ -102,7 +107,7 @@ export class UserDataDtoCrud {
             parseError(error)
         }
     }
-    
+
     async removeFromAvailableMsgs(filter: any, valueToRemove: string) {
 
         try {

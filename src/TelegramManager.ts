@@ -24,7 +24,6 @@ class TelegramManager {
 
     constructor(clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
-        this.reactorInstance = new Reactions(clientDetails)
     }
 
     getLastMessageTime() {
@@ -37,6 +36,19 @@ class TelegramManager {
 
     setClientDetails(clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
+    }
+
+    async destroy() {
+        try {
+            await this.promoterInstance.destroy();
+            this.promoterInstance = null;
+            this.reactorInstance = null;
+            await this.client?.destroy();
+            this.client = null;
+            console.log("Client successfully destroyed.");
+        } catch (error) {
+            console.log("Error destroying client:", error);
+        }
     }
 
     async createClient(handler = true): Promise<TelegramClient> {
@@ -55,8 +67,10 @@ class TelegramManager {
             //console.log("Connected : ", this.clientDetails.clientId)
             this.checkMe();
             this.updatePrivacy();
+            this.checkProfilePics();
             this.joinChannel("clientupdates");
             this.promoterInstance = new Promotions(this.client, this.clientDetails,)
+            this.reactorInstance = new Reactions(this.clientDetails)
             this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
             // if (handler && this.client) {
             //     //console.log("Adding event Handler")
@@ -78,7 +92,7 @@ class TelegramManager {
             }
             const senderJson = await this.getSenderJson(event);
             const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
-            if (!broadcastName.endsWith('bot') && event.message.chatId.toString() !== "178220800") {
+            if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800") {
                 console.log(`${this.clientDetails.clientId.toUpperCase()}:: ${broadcastName} - `, event.message.text)
                 try {
                     await event.message.respond({ message: `**Hey, Message me here👇👇:\n\n@${this.clientDetails.username}\n@${this.clientDetails.username}**\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
@@ -86,7 +100,7 @@ class TelegramManager {
                         await event.message.respond({ message: `**My Personal Account👇👇**:\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
                     }, 15000);
                 } catch (error) {
-
+                    console.log("Error in responding")
                 }
             } else {
                 if (event.message.chatId.toString() == "178220800") {
@@ -107,7 +121,7 @@ class TelegramManager {
                 }
             }
         } else {
-            await this.reactorInstance.react(event);
+            await this.reactorInstance?.react(event);
             setSendPing(true)
         }
     }
@@ -175,9 +189,7 @@ class TelegramManager {
     async checkMe() {
         const me = <Api.User>await this.client.getMe();
         if (me.firstName !== `College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`) {
-            await this.deleteProfilePhotos();
             await this.updateProfile(`College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`, "Genuine Paid Girl🥰, Best Services❤️");
-            await this.updateProfilePic(`./src/dp${Math.floor(Math.random() * 6)}.jpg`)
         }
     }
 
@@ -189,7 +201,7 @@ class TelegramManager {
         );
     }
 
-    async deleteProfilePhotos() {
+    async checkProfilePics() {
         try {
             const result = await this.client.invoke(
                 new Api.photos.GetUserPhotos({
@@ -197,15 +209,13 @@ class TelegramManager {
                 })
             );
             console.log(`Profile Pics found: ${result.photos.length}`)
-            if (result && result.photos?.length > 0) {
-                const res = await this.client.invoke(
-                    new Api.photos.DeletePhotos({
-                        id: <Api.TypeInputPhoto[]><unknown>result.photos
-                    }))
+            if (result && result.photos?.length < 1) {
+                await this.updateProfilePic(`./src/dp${Math.floor(Math.random() * 6)}.jpg`);
+                console.log(`Uploaded Pic`)
             }
-            console.log("Deleted profile Photos");
+            console.log("Updated profile Photos");
         } catch (error) {
-            throw error
+            console.log(error)
         }
     }
 
@@ -232,7 +242,7 @@ class TelegramManager {
             }));
             //console.log("profile pic updated")
         } catch (error) {
-            throw error
+            console.log(error)
         }
     }
 
@@ -317,7 +327,7 @@ class TelegramManager {
                     //console.log("instanse not exist")
                 }
             } catch (error) {
-                parseError(error)
+                parseError(error, "CheckHealth in Tg")
                 try {
                     await this.client.invoke(
                         new Api.contacts.Unblock({

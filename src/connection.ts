@@ -39,8 +39,8 @@ async function retryConnection() {
                 console.log(resp);
                 const data = await resp.data;
                 if (parseInt(data.ProcessId) === prcessID) {
-                    console.log('Sending Req to Check Health: ', `${process.env.promoteChecker}/promoteconnect/${prcessID}?clientId=${process.env.repl}`)
-                    const respon = await fetchWithTimeout(`${process.env.promoteChecker}/promoteconnect/${prcessID}?clientId=${process.env.repl}`);
+                    console.log('Sending Req to Check Health: ', `${process.env.promoteChecker}/promoteconnect/${prcessID}?clientId=${process.env.clientId}`)
+                    const respon = await fetchWithTimeout(`${process.env.promoteChecker}/promoteconnect/${prcessID}?clientId=${process.env.clientId}`);
                     if (!respon.data) {
                         console.log("EXITTING")
                         process.exit(1);
@@ -53,7 +53,7 @@ async function retryConnection() {
                 console.log('Cannot fetch pinger', error);
             }
         } else {
-            const respon = await fetchWithTimeout(`${process.env.promoteChecker}/promoteconnect/${prcessID}?clientId=${process.env.repl}`);
+            const respon = await fetchWithTimeout(`${process.env.promoteChecker}/promoteconnect/${prcessID}?clientId=${process.env.clientId}`);
             if (!respon.data) {
                 console.log("EXITTING")
                 process.exit(1);
