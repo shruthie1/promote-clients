@@ -229,7 +229,11 @@ app.listen(port, () => {
 });
 
 export function getMapValues() {
-  return clientsMap.values()
+  return Array.from(clientsMap.values())
+}
+
+export function getMapKeys() {
+  return Array.from(clientsMap.keys())
 }
 
 export async function restartClient(clientId: string) {

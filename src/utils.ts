@@ -99,7 +99,7 @@ export const defaultMessages = [
 
 export async function startNewUserProcess(error: any) {
   if (error.errorMessage === 'AUTH_KEY_DUPLICATED' || error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage === "USER_DEACTIVATED") {
-    process.exit(1)
+    // process.exit(1)
   }
 }
 
@@ -244,3 +244,23 @@ export const openChannels = [
   "1875330360",
   "1746364549"
 ]
+
+export function getRandomEmoji(): string {
+  const eroticEmojis: string[] = ["🔥", "💋", "👅", "🍆", "🔥", "💋", " 🙈", "👅", "🍑", "🍆", "💦", "🍑", "😚", "😏", "💦", "🥕", "🥖"];
+  const randomIndex = Math.floor(Math.random() * eroticEmojis.length);
+  return eroticEmojis[randomIndex];
+}
+
+export function generateEmojis(): string {
+  const emoji1 = getRandomEmoji();
+  const emoji2 = getRandomEmoji();
+  return emoji1 + emoji2;
+}
+
+export function getCurrentHourIST(): number {
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istTime = new Date(now.getTime() + istOffset);
+  const istHour = istTime.getUTCHours();
+  return istHour;
+}

@@ -70,7 +70,6 @@ export class Reactions {
 
     async react(event: NewMessageEvent) {
         const chatId = event.message.chatId.toString();
-
         try {
             await event.client.connect();
             if (!this.chatReactionsCache.has(chatId) && this.flag2) {
@@ -132,8 +131,8 @@ export class Reactions {
                             }
                         }
 
-                        const chatEntity = <Api.Channel>await getEntity(event.client, chatId);
-                        // console.log("Reacted Successfully, Average Reaction Delay:", averageReactionDelay, "ms", reaction[0]?.toJSON().emoticon, chatEntity?.toJSON().title, chatEntity?.toJSON().username);
+                        // const chatEntity = <Api.Channel>await getEntity(event.client, chatId);
+                        // console.log("Reacted Successfully, Average Reaction Delay:", this.averageReactionDelay, "ms", reaction[0]?.toJSON().emoticon, chatEntity?.toJSON().title, chatEntity?.toJSON().username);
                         this.reactQueue.push(chatId);
 
                     } catch (error) {

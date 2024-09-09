@@ -1,4 +1,4 @@
-import { TelegramClient, Api } from "telegram";
+import { TelegramClient, Api, errors } from "telegram";
 import { NewMessage, NewMessageEvent } from "telegram/events";
 import { LogLevel } from "telegram/extensions/Logger";
 import { StringSession } from "telegram/sessions";
@@ -10,8 +10,9 @@ import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
 import { IClientDetails } from "./express";
-import { getdaysLeft, openChannels, startNewUserProcess } from "./utils";
-import { Promotions } from "./Promotions";
+import { getdaysLeft, startNewUserProcess } from "./utils";
+
+import { Promotion } from "./Promotions2";
 
 const ppplbot = `https://api.telegram.org/bot6735591051:AAELwIkSHegcBIVv5pf484Pn09WNQj1Nl54/sendMessage?chat_id=${process.env.updatesChannel}`
 
@@ -20,14 +21,14 @@ class TelegramManager {
     public client: TelegramClient | null;
     private lastCheckedTime = 0;
     private reactorInstance: Reactions;
-    private promoterInstance: Promotions;
+    public promoterInstance: Promotion;
 
     constructor(clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
     }
 
     getLastMessageTime() {
-        return this.promoterInstance.lastMessageTime
+        return this.promoterInstance.lastMessageTime;
     }
 
     connected() {
@@ -69,13 +70,13 @@ class TelegramManager {
             this.updatePrivacy();
             this.checkProfilePics();
             this.joinChannel("clientupdates");
-            this.promoterInstance = new Promotions(this.client, this.clientDetails,)
             this.reactorInstance = new Reactions(this.clientDetails)
             this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
+            this.promoterInstance = new Promotion(this.client, this.clientDetails)
             // if (handler && this.client) {
             //     //console.log("Adding event Handler")
             // }
-            this.promoterInstance.PromoteToGrp()
+            // this.promoterInstance.PromoteToGrp()
             return this.client
         } catch (error) {
             //console.log("=========Failed To Connect : ", this.clientDetails.clientId);
@@ -208,12 +209,12 @@ class TelegramManager {
                     userId: "me"
                 })
             );
-            console.log(`Profile Pics found: ${result.photos.length}`)
+            // console.log(`Profile Pics found: ${result.photos.length}`)
             if (result && result.photos?.length < 1) {
                 await this.updateProfilePic(`./src/dp${Math.floor(Math.random() * 6)}.jpg`);
                 console.log(`Uploaded Pic`)
             }
-            console.log("Updated profile Photos");
+            // console.log("Updated profile Photos");
         } catch (error) {
             console.log(error)
         }
@@ -343,7 +344,6 @@ class TelegramManager {
         }
         return false
     }
-
 }
 
 export default TelegramManager;
