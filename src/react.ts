@@ -20,12 +20,12 @@ export class Reactions {
     private totalReactionDelay = 0;
     private successfulReactions = 0;
     private averageReactionDelay = 0;
-    private minWaitTime = 16000;
-    private maxWaitTime = 19000;
-    private reactSleepTime = 18000;
+    private minWaitTime = 18000;
+    private maxWaitTime = 21000;
+    private reactSleepTime = 19000;
     private floodTriggeredTime = 0;
     private floodCount = 0;
-    private targetReactionDelay = 17000;
+    private targetReactionDelay = 18000;
     private reactQueue: ReactQueue;
     private clientDetails: IClientDetails;
     private processId: number = Math.floor(Math.random() * 1234);

@@ -96,10 +96,26 @@ class TelegramManager {
             if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800") {
                 console.log(`${this.clientDetails.clientId.toUpperCase()}:: ${broadcastName} - `, event.message.text)
                 try {
-                    await event.message.respond({ message: `**Hey, Message me here👇👇:\n\n@${this.clientDetails.username}\n@${this.clientDetails.username}**\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
-                    setTimeout(async () => {
-                        await event.message.respond({ message: `**My Personal Account👇👇**:\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
-                    }, 15000);
+                    try {
+                        this.client.invoke(new Api.messages.SetTyping({
+                            peer: event.chatId,
+                            action: new Api.SendMessageTypingAction(),
+                        }))
+                    } catch (error) {
+
+                    }
+                    const messages = await this.client.getMessages(event.chatId, { limit: 5 });
+                    if (messages.total < 3) {
+                        await event.message.respond({ message: `**My Original Telegram👇👇**:\n\n@${this.clientDetails.username}\n@${this.clientDetails.username}\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                        setTimeout(async () => {
+                            await event.message.respond({ message: `**Hey, Message me here👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                        }, 25000);
+                    } else {
+                        setTimeout(async () => {
+                            await event.message.respond({ message: `**Message me Man👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                        }, 5000);
+                    }
+
                 } catch (error) {
                     console.log("Error in responding")
                 }

@@ -18,11 +18,11 @@ export class Promotion {
     public client: TelegramClient | null;
     private daysLeft: number;
     private sleepTime = 0;
-    public lastMessageTime = Date.now();
+    public lastMessageTime = Date.now() - 240000;
     private lastCheckedTime: number;
     private channels: string[];
     private minDelay: number = 90000;
-    private maxDelay: number = 240000;
+    private maxDelay: number = 260000;
     private smallDelay: number = 2000;
     private maxSmallDelay: number = 5000;
     private messageQueue: MessageQueueItem[] = []
