@@ -131,9 +131,10 @@ class TelegramManager {
                         // this.promoterInstance.setChannels(openChannels)
                         // }
                     } else if (event.message.text.toLowerCase().includes('good news')) {
-
+                        this.promoterInstance.setDaysLeft(0)
                     } else if (event.message.text.toLowerCase().includes('can trigger a harsh')) {
                         // this.promoterInstance.setChannels(openChannels)
+                        this.promoterInstance.setDaysLeft(99)
                     }
                 }
             }

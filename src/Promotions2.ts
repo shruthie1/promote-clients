@@ -22,9 +22,9 @@ export class Promotion {
     private lastCheckedTime: number;
     private channels: string[];
     private minDelay: number = 90000;
-    private maxDelay: number = 260000;
+    private maxDelay: number = 300000;
     private smallDelay: number = 2000;
-    private maxSmallDelay: number = 5000;
+    private maxSmallDelay: number = 4000;
     private messageQueue: MessageQueueItem[] = []
     private messageCheckDelay: number = 15000;
     private promoteMsgs = {};
@@ -222,7 +222,7 @@ export class Promotion {
     }
 
     async checktghealth(force: boolean = false) {
-        if (((this.lastCheckedTime < Date.now() - 30 * 60 * 1000 && this.daysLeft == 0) || force)) {//&& daysLeftForRelease() < 0) {
+        if (((this.lastCheckedTime < Date.now() - 120 * 60 * 1000 && this.daysLeft == 0) || force)) {//&& daysLeftForRelease() < 0) {
             this.lastCheckedTime = Date.now();
             try {
                 if (this.client) {

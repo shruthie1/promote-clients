@@ -34,7 +34,7 @@ export function parseError(
             }
           }
         }
-        return undefined;
+        return JSON.stringify(data);
       };
 
     if (err.response) {
