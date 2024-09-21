@@ -206,9 +206,13 @@ class TelegramManager {
     }
 
     async checkMe() {
-        const me = <Api.User>await this.client.getMe();
-        if (me.firstName !== `College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`) {
-            await this.updateProfile(`College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`, "Genuine Paid Girl🥰, Best Services❤️");
+        try {
+            const me = <Api.User>await this.client.getMe();
+            if (me.firstName !== `College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`) {
+                await this.updateProfile(`College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`, "Genuine Paid Girl🥰, Best Services❤️");
+            }
+        } catch (error) {
+            parseError(error, this.clientDetails?.clientId);
         }
     }
 
