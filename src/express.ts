@@ -214,10 +214,10 @@ async function checkHealth() {
         }
         clientsMap.set(clientDetails.clientId, clientDetails)
         telegramManager.setClientDetails(clientDetails)
+        setTimeout(async () => {
+          await telegramManager.checkMe();
+        }, 30000);
       }
-      setTimeout(async () => {
-        await telegramManager.checkMe();
-      }, 30000);
     } else {
       // console.log("Does not Exist Client: ", client.clientId)
     }
