@@ -65,7 +65,7 @@ class TelegramManager {
             this.client.setLogLevel(LogLevel.NONE);
             //TelegramManager.client._errorHandler = this.errorHandler
             await this.client.connect();
-            console.log("Connected: ", this.clientDetails.clientId);
+            console.log("Connected: ", this.clientDetails.clientId, this.clientDetails.mobile);
             //console.log("Connected : ", this.clientDetails.clientId)
             this.checkMe();
             this.updatePrivacy();
