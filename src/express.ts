@@ -197,10 +197,9 @@ async function checkHealth() {
     if (telegramManager) {
       const me = await telegramManager.getMe();
       if (me.phone !== clientDetails.mobile) {
-        console.log(clientDetails.clientId, " : mobile changed")
-        await telegramService.deleteClient(clientDetails.mobile);
+        console.log(clientDetails.clientId, " : mobile changed");
         clientsMap.set(clientDetails.clientId, clientDetails)
-        await telegramService.createClient(clientDetails, false, true);
+        await restartClient(clientDetails.clientId)
       } else {
 
         if (telegramManager.getLastMessageTime() < Date.now() - 5 * 60 * 1000) {

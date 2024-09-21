@@ -89,7 +89,7 @@ class TelegramManager {
         if (event.isPrivate) {
             if (event.message.text === `exit${this?.clientDetails?.clientId}`) {
                 //console.log(`EXITTING PROCESS!!`);
-                (await TelegramService.getInstance()).deleteClient(this.clientDetails.mobile)
+                (await TelegramService.getInstance()).deleteClient(this.clientDetails.clientId)
             }
             const senderJson = await this.getSenderJson(event);
             const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
