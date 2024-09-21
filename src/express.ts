@@ -162,7 +162,7 @@ function extractNumberFromString(str) {
 
 async function startConn() {
   console.log("Starting connections")
-  const result = await fetchWithTimeout(`https://uptimechecker2.glitch.me/maskedcls`);
+  const result = await fetchWithTimeout(`https://uptimechecker2.glitch.me/clients`);
   const clients = result?.data;
   console.log("Clients: ", clients?.length)
   for (const client of clients) {
