@@ -164,6 +164,7 @@ async function startConn() {
   console.log("Starting connections")
   const result = await fetchWithTimeout(`https://uptimechecker2.glitch.me/maskedcls`);
   const clients = result?.data;
+  console.log("Clients: ", clients?.length)
   for (const client of clients) {
     if (extractNumberFromString(client.clientId) == process.env.clientNumber && client.promoteMobile) {
       clientsMap.set(client.clientId, {
