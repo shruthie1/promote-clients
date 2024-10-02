@@ -27,8 +27,12 @@ jobs:
       run: |
         npm run build
 
+    - name: Set branch name as environment variable
+      id: branch_name
+      run: echo "BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
+
     - name: Call function with checked-out branch name
-      run: npm run upload-cloudinary -- pmc
+      run: npm run upload-cloudinary -- ${{ env.BRANCH_NAME }}
       env:
         CL_NAME: ${{ secrets.CL_NAME }}
         CL_APIKEY: ${{ secrets.CL_APIKEY }}
