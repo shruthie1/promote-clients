@@ -113,7 +113,7 @@ export class TelegramService {
                 }
             } catch (error) {
                 console.log("Parsing Error");
-                const errorDetails = parseError(error);
+                const errorDetails = parseError(error, clientDetails.clientId);
             }
         } else {
             console.log("Client Already exists: ", clientDetails.clientId)
