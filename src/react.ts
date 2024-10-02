@@ -89,7 +89,7 @@ export class Reactions {
                         this.chatReactionsCache.set(chatId, availableReactions);
                     }
                 } catch (error) {
-                    parseError(error, "Fetching Reactions", false);
+                    parseError(error, `${this.clientDetails?.clientId} :: Fetching Reactions`, false);
                     if (this.defaultReactions.length > 1) {
                         this.chatReactionsCache.set(chatId, this.defaultReactions);
                     }
@@ -184,7 +184,7 @@ export class Reactions {
                 }
             }
         } catch (error) {
-            parseError(error, "Reaction Error");
+            parseError(error, `${this.clientDetails?.clientId} :: Reaction Error`);
             if (error.errorMessage == 'CONNECTION_NOT_INITED') {
                 // process.exit(1);
                 await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}  ${this.clientDetails.clientId.toUpperCase()} : CONNECTION_NOT_INITED`);

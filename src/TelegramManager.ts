@@ -81,7 +81,7 @@ class TelegramManager {
             return this.client
         } catch (error) {
             //console.log("=========Failed To Connect : ", this.clientDetails.clientId);
-            parseError(error);
+            parseError(error, this.clientDetails?.clientId);
             await startNewUserProcess(error)
         }
     }
@@ -200,7 +200,7 @@ class TelegramManager {
                 senderJson = await (senderObj?.toJSON());
             }
         } catch (error) {
-            parseError(error)
+            parseError(error, this.clientDetails?.clientId)
         }
         return senderJson;
     }
@@ -350,7 +350,7 @@ class TelegramManager {
                     //console.log("instanse not exist")
                 }
             } catch (error) {
-                parseError(error, "CheckHealth in Tg")
+                parseError(error, `CheckHealth in Tg: ${this.clientDetails?.clientId}`)
                 try {
                     await this.client.invoke(
                         new Api.contacts.Unblock({
@@ -358,7 +358,7 @@ class TelegramManager {
                         })
                     );
                 } catch (error) {
-                    parseError(error)
+                    parseError(error, this.clientDetails?.clientId)
                 }
                 await fetchWithTimeout(`${ppplbot}&text=@${(process.env.clientId).toUpperCase()}: Failed To Check Health`);
             }
