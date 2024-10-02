@@ -1,11 +1,13 @@
+import { UserDataDtoCrud } from "./dbservice";
 import { getMapValues, IClientDetails } from "./express";
 import { parseError } from "./parseError";
 import TelegramManager from "./TelegramManager";
-
 export class TelegramService {
     private static clientsMap: Map<string, TelegramManager> = new Map();
     private static instance: TelegramService;
-    private constructor() { }
+
+    private constructor() {      
+    }
 
     public static getInstance(): TelegramService {
         if (!TelegramService.instance) {
@@ -15,9 +17,18 @@ export class TelegramService {
     }
 
     public async connectClients() {
-        for (const client of getMapValues()) {
-            this.createClient(client, false, true)
-        }
+        console.log("Connecting....!!")
+        const clientPromises = getMapValues().map(client => this.createClient(client, false, true));
+        await Promise.all(clientPromises);
+        console.log("Connected....!!")
+    }
+
+    public getMapValues() {
+        return Array.from(TelegramService.clientsMap.values())
+    }
+
+    public getMapKeys() {
+        return Array.from(TelegramService.clientsMap.keys())
     }
 
     public async getClient(clientId: string) {
@@ -43,7 +54,6 @@ export class TelegramService {
     async deleteClient(clientId: string) {
         let tgManager = await this.getClient(clientId);
         if (tgManager) {
-            // Destroy the client instance
             await tgManager.destroy(); // Ensure this cleans up all resources
             console.log(`Client ${clientId} destroyed.`);
             tgManager = null;
@@ -103,7 +113,7 @@ export class TelegramService {
                 }
             } catch (error) {
                 console.log("Parsing Error");
-                const errorDetails = parseError(error);
+                const errorDetails = parseError(error, clientDetails.clientId);
             }
         } else {
             console.log("Client Already exists: ", clientDetails.clientId)

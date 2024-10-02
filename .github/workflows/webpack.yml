@@ -28,7 +28,7 @@ jobs:
         npm run build
 
     - name: Call function with checked-out branch name
-      run: npm run upload-cloudinary -- pms
+      run: npm run upload-cloudinary -- pmc
       env:
         CL_NAME: ${{ secrets.CL_NAME }}
         CL_APIKEY: ${{ secrets.CL_APIKEY }}

@@ -65,6 +65,11 @@ export class UserDataDtoCrud {
         return clients;
     }
 
+    async readPromoteStats() {
+        const result = await this.promoteStatsDb.findOne({ "client": "shruthi1" });
+        return result.channels.slice(0, 200);
+    }    
+
     async updateActiveChannel(filter: any, data: any) {
         delete data["_id"]
         return await this.activeChannelDb.updateOne(

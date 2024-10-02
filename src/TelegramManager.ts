@@ -1,4 +1,4 @@
-import { TelegramClient, Api } from "telegram";
+import { TelegramClient, Api, errors } from "telegram";
 import { NewMessage, NewMessageEvent } from "telegram/events";
 import { LogLevel } from "telegram/extensions/Logger";
 import { StringSession } from "telegram/sessions";
@@ -10,8 +10,9 @@ import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
 import { IClientDetails } from "./express";
-import { getdaysLeft, openChannels, startNewUserProcess } from "./utils";
-import { Promotions } from "./Promotions";
+import { getdaysLeft, startNewUserProcess } from "./utils";
+
+import { Promotion } from "./Promotions2";
 
 const ppplbot = `https://api.telegram.org/bot6735591051:AAELwIkSHegcBIVv5pf484Pn09WNQj1Nl54/sendMessage?chat_id=${process.env.updatesChannel}`
 
@@ -20,14 +21,14 @@ class TelegramManager {
     public client: TelegramClient | null;
     private lastCheckedTime = 0;
     private reactorInstance: Reactions;
-    private promoterInstance: Promotions;
+    public promoterInstance: Promotion;
 
     constructor(clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
     }
 
     getLastMessageTime() {
-        return this.promoterInstance.lastMessageTime
+        return this.promoterInstance.lastMessageTime;
     }
 
     connected() {
@@ -54,7 +55,7 @@ class TelegramManager {
     async createClient(handler = true): Promise<TelegramClient> {
         try {
             //console.log("Creating Client: ", this.clientDetails.clientId)
-            const result2 = <any>await fetchWithTimeout(`https://checker-production-8f93.up.railway.app/forward/archived-clients/fetchOne/${this.clientDetails.mobile}`);
+            const result2 = <any>await fetchWithTimeout(`https://checker-production-c3c0.up.railway.app/forward/archived-clients/fetchOne/${this.clientDetails.mobile}`);
             // //console.log("ArchivedClient : ", result2.data)
             this.client = new TelegramClient(new StringSession(result2.data.session), parseInt(process.env.API_ID), process.env.API_HASH, {
                 connectionRetries: 5,
@@ -64,22 +65,23 @@ class TelegramManager {
             this.client.setLogLevel(LogLevel.NONE);
             //TelegramManager.client._errorHandler = this.errorHandler
             await this.client.connect();
+            console.log("Connected: ", this.clientDetails.clientId, this.clientDetails.mobile);
             //console.log("Connected : ", this.clientDetails.clientId)
             this.checkMe();
             this.updatePrivacy();
             this.checkProfilePics();
             this.joinChannel("clientupdates");
-            this.promoterInstance = new Promotions(this.client, this.clientDetails,)
             this.reactorInstance = new Reactions(this.clientDetails)
             this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
+            this.promoterInstance = new Promotion(this.client, this.clientDetails)
             // if (handler && this.client) {
             //     //console.log("Adding event Handler")
             // }
-            this.promoterInstance.PromoteToGrp()
+            // this.promoterInstance.PromoteToGrp()
             return this.client
         } catch (error) {
             //console.log("=========Failed To Connect : ", this.clientDetails.clientId);
-            parseError(error);
+            parseError(error, this.clientDetails?.clientId);
             await startNewUserProcess(error)
         }
     }
@@ -88,17 +90,33 @@ class TelegramManager {
         if (event.isPrivate) {
             if (event.message.text === `exit${this?.clientDetails?.clientId}`) {
                 //console.log(`EXITTING PROCESS!!`);
-                (await TelegramService.getInstance()).deleteClient(this.clientDetails.mobile)
+                (await TelegramService.getInstance()).deleteClient(this.clientDetails.clientId)
             }
             const senderJson = await this.getSenderJson(event);
             const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
             if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800") {
                 console.log(`${this.clientDetails.clientId.toUpperCase()}:: ${broadcastName} - `, event.message.text)
                 try {
-                    await event.message.respond({ message: `**Hey, Message me here👇👇:\n\n@${this.clientDetails.username}\n@${this.clientDetails.username}**\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
-                    setTimeout(async () => {
-                        await event.message.respond({ message: `**My Personal Account👇👇**:\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
-                    }, 15000);
+                    try {
+                        this.client.invoke(new Api.messages.SetTyping({
+                            peer: event.chatId,
+                            action: new Api.SendMessageTypingAction(),
+                        }))
+                    } catch (error) {
+
+                    }
+                    const messages = await this.client.getMessages(event.chatId, { limit: 5 });
+                    if (messages.total < 3) {
+                        await event.message.respond({ message: `**My Original Telegram👇👇**:\n\n@${this.clientDetails.username}\n@${this.clientDetails.username}\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                        setTimeout(async () => {
+                            await event.message.respond({ message: `**Hey, Message me here👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                        }, 25000);
+                    } else {
+                        setTimeout(async () => {
+                            await event.message.respond({ message: `**Message me Man👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                        }, 5000);
+                    }
+
                 } catch (error) {
                     console.log("Error in responding")
                 }
@@ -114,9 +132,10 @@ class TelegramManager {
                         // this.promoterInstance.setChannels(openChannels)
                         // }
                     } else if (event.message.text.toLowerCase().includes('good news')) {
-
+                        this.promoterInstance.setDaysLeft(0)
                     } else if (event.message.text.toLowerCase().includes('can trigger a harsh')) {
                         // this.promoterInstance.setChannels(openChannels)
+                        this.promoterInstance.setDaysLeft(99)
                     }
                 }
             }
@@ -181,15 +200,19 @@ class TelegramManager {
                 senderJson = await (senderObj?.toJSON());
             }
         } catch (error) {
-            parseError(error)
+            parseError(error, this.clientDetails?.clientId)
         }
         return senderJson;
     }
 
     async checkMe() {
-        const me = <Api.User>await this.client.getMe();
-        if (me.firstName !== `College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`) {
-            await this.updateProfile(`College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`, "Genuine Paid Girl🥰, Best Services❤️");
+        try {
+            const me = <Api.User>await this.client.getMe();
+            if (me.firstName !== `College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`) {
+                await this.updateProfile(`College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`, "Genuine Paid Girl🥰, Best Services❤️");
+            }
+        } catch (error) {
+            parseError(error, this.clientDetails?.clientId);
         }
     }
 
@@ -208,12 +231,12 @@ class TelegramManager {
                     userId: "me"
                 })
             );
-            console.log(`Profile Pics found: ${result.photos.length}`)
+            // console.log(`Profile Pics found: ${result.photos.length}`)
             if (result && result.photos?.length < 1) {
                 await this.updateProfilePic(`./src/dp${Math.floor(Math.random() * 6)}.jpg`);
                 console.log(`Uploaded Pic`)
             }
-            console.log("Updated profile Photos");
+            // console.log("Updated profile Photos");
         } catch (error) {
             console.log(error)
         }
@@ -327,7 +350,7 @@ class TelegramManager {
                     //console.log("instanse not exist")
                 }
             } catch (error) {
-                parseError(error, "CheckHealth in Tg")
+                parseError(error, `CheckHealth in Tg: ${this.clientDetails?.clientId}`)
                 try {
                     await this.client.invoke(
                         new Api.contacts.Unblock({
@@ -335,7 +358,7 @@ class TelegramManager {
                         })
                     );
                 } catch (error) {
-                    parseError(error)
+                    parseError(error, this.clientDetails?.clientId)
                 }
                 await fetchWithTimeout(`${ppplbot}&text=@${(process.env.clientId).toUpperCase()}: Failed To Check Health`);
             }
@@ -343,7 +366,6 @@ class TelegramManager {
         }
         return false
     }
-
 }
 
 export default TelegramManager;

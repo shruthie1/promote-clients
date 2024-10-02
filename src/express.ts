@@ -162,8 +162,9 @@ function extractNumberFromString(str) {
 
 async function startConn() {
   console.log("Starting connections")
-  const result = await fetchWithTimeout(`https://uptimechecker2.glitch.me/maskedcls`);
+  const result = await fetchWithTimeout(`https://uptimechecker2.glitch.me/clients`);
   const clients = result?.data;
+  console.log("Clients: ", clients?.length)
   for (const client of clients) {
     if (extractNumberFromString(client.clientId) == process.env.clientNumber && client.promoteMobile) {
       clientsMap.set(client.clientId, {
@@ -197,10 +198,9 @@ async function checkHealth() {
     if (telegramManager) {
       const me = await telegramManager.getMe();
       if (me.phone !== clientDetails.mobile) {
-        console.log(clientDetails.clientId, " : mobile changed")
-        await telegramService.deleteClient(clientDetails.mobile);
+        console.log(clientDetails.clientId, " : mobile changed", " me : ", me, "clientDetails: ", clientDetails);
         clientsMap.set(clientDetails.clientId, clientDetails)
-        await telegramService.createClient(clientDetails, false, true);
+        await restartClient(clientDetails.clientId)
       } else {
 
         if (telegramManager.getLastMessageTime() < Date.now() - 5 * 60 * 1000) {
@@ -214,10 +214,10 @@ async function checkHealth() {
         }
         clientsMap.set(clientDetails.clientId, clientDetails)
         telegramManager.setClientDetails(clientDetails)
+        setTimeout(async () => {
+          await telegramManager.checkMe();
+        }, 30000);
       }
-      setTimeout(async () => {
-        await telegramManager.checkMe();
-      }, 30000);
     } else {
       // console.log("Does not Exist Client: ", client.clientId)
     }
@@ -229,7 +229,11 @@ app.listen(port, () => {
 });
 
 export function getMapValues() {
-  return clientsMap.values()
+  return Array.from(clientsMap.values())
+}
+
+export function getMapKeys() {
+  return Array.from(clientsMap.keys())
 }
 
 export async function restartClient(clientId: string) {

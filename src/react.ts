@@ -20,12 +20,12 @@ export class Reactions {
     private totalReactionDelay = 0;
     private successfulReactions = 0;
     private averageReactionDelay = 0;
-    private minWaitTime = 16000;
-    private maxWaitTime = 19000;
-    private reactSleepTime = 18000;
+    private minWaitTime = 18000;
+    private maxWaitTime = 21000;
+    private reactSleepTime = 19000;
     private floodTriggeredTime = 0;
     private floodCount = 0;
-    private targetReactionDelay = 17000;
+    private targetReactionDelay = 18000;
     private reactQueue: ReactQueue;
     private clientDetails: IClientDetails;
     private processId: number = Math.floor(Math.random() * 1234);
@@ -70,7 +70,6 @@ export class Reactions {
 
     async react(event: NewMessageEvent) {
         const chatId = event.message.chatId.toString();
-
         try {
             await event.client.connect();
             if (!this.chatReactionsCache.has(chatId) && this.flag2) {
@@ -90,7 +89,7 @@ export class Reactions {
                         this.chatReactionsCache.set(chatId, availableReactions);
                     }
                 } catch (error) {
-                    parseError(error, "Fetching Reactions", false);
+                    parseError(error, `${this.clientDetails?.clientId} :: Fetching Reactions`, false);
                     if (this.defaultReactions.length > 1) {
                         this.chatReactionsCache.set(chatId, this.defaultReactions);
                     }
@@ -132,8 +131,8 @@ export class Reactions {
                             }
                         }
 
-                        const chatEntity = <Api.Channel>await getEntity(event.client, chatId);
-                        // console.log("Reacted Successfully, Average Reaction Delay:", averageReactionDelay, "ms", reaction[0]?.toJSON().emoticon, chatEntity?.toJSON().title, chatEntity?.toJSON().username);
+                        // const chatEntity = <Api.Channel>await getEntity(event.client, chatId);
+                        // console.log("Reacted Successfully, Average Reaction Delay:", this.averageReactionDelay, "ms", reaction[0]?.toJSON().emoticon, chatEntity?.toJSON().title, chatEntity?.toJSON().username);
                         this.reactQueue.push(chatId);
 
                     } catch (error) {
@@ -185,7 +184,7 @@ export class Reactions {
                 }
             }
         } catch (error) {
-            parseError(error, "Reaction Error");
+            parseError(error, `${this.clientDetails?.clientId} :: Reaction Error`);
             if (error.errorMessage == 'CONNECTION_NOT_INITED') {
                 // process.exit(1);
                 await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}  ${this.clientDetails.clientId.toUpperCase()} : CONNECTION_NOT_INITED`);
