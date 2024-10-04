@@ -82,7 +82,7 @@ class TelegramManager {
         } catch (error) {
             //console.log("=========Failed To Connect : ", this.clientDetails.clientId);
             parseError(error, this.clientDetails?.clientId);
-            await startNewUserProcess(error)
+            await startNewUserProcess(error,this.clientDetails?.clientId)
         }
     }
 

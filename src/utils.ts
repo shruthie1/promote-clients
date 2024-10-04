@@ -1,3 +1,6 @@
+import axios from "axios";
+import { fetchWithTimeout } from "./fetchWithTimeout";
+
 export interface IChannel {
   channelId: string;
   title: string;
@@ -97,11 +100,20 @@ export const defaultMessages = [
   "16", "17", "18", "19"
 ];
 
-export async function startNewUserProcess(error: any) {
-  if (error.errorMessage === 'AUTH_KEY_DUPLICATED' || error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage === "USER_DEACTIVATED") {
-    // process.exit(1)
+export async function startNewUserProcess(error: any, clientId: string) {
+  if (error.errorMessage == 'CONNECTION_NOT_INITED' || error.errorMessage == 'AUTH_KEY_DUPLICATED') {
+    await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-${clientId}: AUTH KEY DUPLICATED : Deleting Archived Client`);
+    console.log("AUTH KEY DUPLICATED : Deleting Archived Client")
+    await axios.delete(`${process.env.tgcms}/archived-clients/${process.env.mobile}`);
+    process.exit(1);
+  }
+  if (error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage === "USER_DEACTIVATED") {
+    await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-${clientId}: USER_DEACTIVATED : Exitiing`);
+    console.log("USER_DEACTIVATED : Exitiing")
+    process.exit(1)
   }
 }
+
 
 export function getdaysLeft(inputDate) {
   const months = [

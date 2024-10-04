@@ -93,7 +93,7 @@ export class Reactions {
                     if (this.defaultReactions.length > 1) {
                         this.chatReactionsCache.set(chatId, this.defaultReactions);
                     }
-                    await startNewUserProcess(error)
+                    await startNewUserProcess(error, this.clientDetails?.clientId)
                 } finally {
                     this.flag2 = true;
                 }
@@ -155,7 +155,7 @@ export class Reactions {
                             const chatEntity = <Api.Channel>await getEntity(event.client, chatId);
                             console.log(`${process.env.clientId} | ${this.clientDetails.clientId.toUpperCase()} Failed to React:`, reaction[0]?.toJSON().emoticon, chatEntity?.toJSON().username, error.errorMessage);
                         }
-                        await startNewUserProcess(error)
+                        await startNewUserProcess(error, this.clientDetails?.clientId)
                     }
                     this.flag = true;
                 } else {
@@ -185,10 +185,7 @@ export class Reactions {
             }
         } catch (error) {
             parseError(error, `${this.clientDetails?.clientId} :: Reaction Error`);
-            if (error.errorMessage == 'CONNECTION_NOT_INITED') {
-                // process.exit(1);
-                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}  ${this.clientDetails.clientId.toUpperCase()} : CONNECTION_NOT_INITED`);
-            }
+            await startNewUserProcess(error, this.clientDetails?.clientId)
             this.flag = true;
             this.flag2 = true;
         }
