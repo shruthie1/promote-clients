@@ -87,7 +87,7 @@ export function parseError(
   console.log(resp);
   if ((sendErr && !msg.includes("INPUT_USER_DEACTIVATED")) ||
     ((msg.includes("USER_DEACTIVATED") || msg.includes("USER_DEACTIVATED_BAN")) && !msg.includes("INPUT_USER_DEACTIVATED"))) {
-    fetchWithTimeout(`${ppplbot()}&text=${resp.message}`);
+    fetchWithTimeout(`${ppplbot(process.env.notifChannel)}&text=${resp.message}`);
   }
   return resp
 }
