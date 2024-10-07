@@ -200,7 +200,7 @@ class TelegramManager {
                 senderJson = await (senderObj?.toJSON());
             }
         } catch (error) {
-            parseError(error, this.clientDetails?.clientId)
+            parseError(error, `${this.clientDetails?.clientId} || ${this.clientDetails.mobile}`);
         }
         return senderJson;
     }
@@ -212,7 +212,7 @@ class TelegramManager {
                 await this.updateProfile(`College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`, "Genuine Paid Girl🥰, Best Services❤️");
             }
         } catch (error) {
-            parseError(error, this.clientDetails?.clientId);
+            parseError(error, `${this.clientDetails?.clientId} || ${this.clientDetails.mobile}`);
         }
     }
 
@@ -238,7 +238,7 @@ class TelegramManager {
             }
             // console.log("Updated profile Photos");
         } catch (error) {
-            console.log(error)
+            parseError(error, `${this.clientDetails?.clientId} || ${this.clientDetails.mobile}`);
         }
     }
 
