@@ -1,7 +1,7 @@
 import { TelegramClient, Api, errors } from "telegram";
 import { UserDataDtoCrud } from "./dbservice";
 import { generateEmojis, getCurrentHourIST, getRandomEmoji, IChannel, selectRandomElements, sleep } from "./utils";
-import { IClientDetails } from "./express";
+import { IClientDetails, restartClient } from "./express";
 import { parseError } from "./parseError";
 import { SendMessageParams } from "telegram/client/messages";
 import { pickOneMsg } from "./messages";
@@ -191,7 +191,7 @@ export class Promotion {
             }
         } else {
             setTimeout(() => {
-                this.promoteInBatches()
+                restartClient(this.clientDetails.clientId)
             }, 300000)
         }
     }
