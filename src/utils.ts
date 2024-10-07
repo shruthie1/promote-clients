@@ -114,7 +114,6 @@ export async function startNewUserProcess(error: any, clientId: string) {
   }
 }
 
-
 export function getdaysLeft(inputDate) {
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',

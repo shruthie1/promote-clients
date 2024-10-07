@@ -189,6 +189,10 @@ export class Promotion {
                     await sleep(randomBatchDelay);
                 }
             }
+        } else {
+            setTimeout(() => {
+                this.promoteInBatches()
+            }, 300000)
         }
     }
 
