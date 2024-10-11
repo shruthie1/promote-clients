@@ -110,13 +110,14 @@ export class Promotion {
                 return undefined
             }
         } catch (error) {
+            const errorDetails = parseError(error)
             if (error instanceof errors.FloodWaitError) {
                 console.log(error)
                 console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                 this.sleepTime = Date.now() + (error.seconds * 1000); // Set the sleep time for the specific client
                 return undefined
             } else {
-                console.error(`Client ${this.clientDetails.clientId}: Error sending message to ${channelInfo.username}: ${error.message} | DaysLeft: ${this.daysLeft}`);
+                console.error(`Client ${this.clientDetails.clientId}: Error sending message to ${channelInfo.username}: ${errorDetails.message} | DaysLeft: ${this.daysLeft}`);
                 if (error.errorMessage === "CHANNEL_PRIVATE") {
                     return await this.handlePrivateChannel(channelInfo, message, error);
                 } else {

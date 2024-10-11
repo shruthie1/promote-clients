@@ -108,13 +108,31 @@ class TelegramManager {
                     }
                     const messages = await this.client.getMessages(event.chatId, { limit: 5 });
                     if (messages.total < 3) {
-                        await event.message.respond({ message: `**My Original Telegram👇👇**:\n\n@${this.clientDetails.username}\n@${this.clientDetails.username}\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                        try {
+                            await event.message.respond({ message: `**My Original Telegram👇👇**:\n\n@${this.clientDetails.username}\n@${this.clientDetails.username}\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                        } catch (error) {
+                            if (error instanceof errors.FloodWaitError) {
+                                console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                            }
+                        }
                         setTimeout(async () => {
-                            await event.message.respond({ message: `**Hey, Message me here👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                            try {
+                                await event.message.respond({ message: `**Hey, Message me here👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                            } catch (error) {
+                                if (error instanceof errors.FloodWaitError) {
+                                    console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                                }
+                            }
                         }, 25000);
                     } else {
                         setTimeout(async () => {
-                            await event.message.respond({ message: `**Message me Man👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                            try {
+                                await event.message.respond({ message: `**Message me Man👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                            } catch (error) {
+                                if (error instanceof errors.FloodWaitError) {
+                                    console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                                }
+                            }
                         }, 5000);
                     }
 
