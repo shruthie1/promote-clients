@@ -139,6 +139,7 @@ export class Promotion {
                     continue;
                 }
                 let sentCount = 0
+                console.log(`${this.clientDetails.clientId} ::  Stated Batch`)
                 for (const channelId of channelsBatch) {
                     const channelInfo = await this.getChannelInfo(channelId);
                     if (!channelInfo?.banned) {
@@ -185,7 +186,7 @@ export class Promotion {
 
                 if (channelIndex !== 0) {
                     const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
-                    console.log("Sleeping : ", randomBatchDelay)
+                    console.log(`${this.clientDetails.clientId} ::  Sleeping for ${randomBatchDelay}`)
                     await sleep(randomBatchDelay);
                 }
             }
