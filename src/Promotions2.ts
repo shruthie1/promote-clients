@@ -1,10 +1,11 @@
 import { TelegramClient, Api, errors } from "telegram";
 import { UserDataDtoCrud } from "./dbservice";
-import { generateEmojis, getCurrentHourIST, getRandomEmoji, IChannel, selectRandomElements, sleep } from "./utils";
+import { generateEmojis, getCurrentHourIST, getRandomEmoji, IChannel, ppplbot, selectRandomElements, sleep } from "./utils";
 import { IClientDetails, restartClient } from "./express";
 import { parseError } from "./parseError";
 import { SendMessageParams } from "telegram/client/messages";
 import { pickOneMsg } from "./messages";
+import { fetchWithTimeout } from "./fetchWithTimeout";
 
 interface MessageQueueItem {
     channelId: string;
@@ -131,7 +132,6 @@ export class Promotion {
         let channelIndex = 0;
         if (this.channels.length > 0) {
             while (true) {
-
                 const channelsBatch = this.channels.slice(channelIndex, channelIndex + 5);
 
                 if (channelsBatch.length < 5) {
@@ -139,7 +139,7 @@ export class Promotion {
                     continue;
                 }
                 let sentCount = 0
-                console.log(`${this.clientDetails.clientId} ::  Stated Batch`)
+                console.log(`${this.clientDetails.clientId} ::  Started Batch`)
                 for (const channelId of channelsBatch) {
                     const channelInfo = await this.getChannelInfo(channelId);
                     if (!channelInfo?.banned) {
@@ -186,15 +186,15 @@ export class Promotion {
 
                 if (channelIndex !== 0) {
                     const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
-                    console.log(`${this.clientDetails.clientId} ::  Sleeping for ${randomBatchDelay}`)
+                    console.log(`${this.clientDetails.clientId} ::  Sleeping for ${randomBatchDelay / 60000}`)
                     await sleep(randomBatchDelay);
                 }
             }
-        } else {
-            setTimeout(() => {
-                restartClient(this.clientDetails.clientId)
-            }, 300000)
         }
+        await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Issue with Promotions`);
+        setTimeout(() => {
+            restartClient(this.clientDetails.clientId)
+        }, 300000)
     }
 
     async handlePrivateChannel(channelInfo: IChannel, message: SendMessageParams, error: any) {
