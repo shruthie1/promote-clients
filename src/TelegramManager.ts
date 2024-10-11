@@ -22,6 +22,7 @@ class TelegramManager {
     private lastCheckedTime = 0;
     private reactorInstance: Reactions;
     public promoterInstance: Promotion;
+    public daysLeft = 0;
 
     constructor(clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
@@ -82,7 +83,7 @@ class TelegramManager {
         } catch (error) {
             //console.log("=========Failed To Connect : ", this.clientDetails.clientId);
             parseError(error, this.clientDetails?.clientId);
-            await startNewUserProcess(error,this.clientDetails?.clientId)
+            await startNewUserProcess(error, this.clientDetails?.clientId)
         }
     }
 
@@ -128,14 +129,17 @@ class TelegramManager {
                         const days = getdaysLeft(date);
                         console.log("Days Left: ", days);
                         this.promoterInstance.setDaysLeft(days)
+                        this.daysLeft = days
                         // if (days == 3) {
                         // this.promoterInstance.setChannels(openChannels)
                         // }
                     } else if (event.message.text.toLowerCase().includes('good news')) {
                         this.promoterInstance.setDaysLeft(0)
+                        this.daysLeft = 0
                     } else if (event.message.text.toLowerCase().includes('can trigger a harsh')) {
                         // this.promoterInstance.setChannels(openChannels)
                         this.promoterInstance.setDaysLeft(99)
+                        this.daysLeft = 99
                     }
                 }
             }

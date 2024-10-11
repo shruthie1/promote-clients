@@ -204,13 +204,13 @@ async function checkHealth() {
       } else {
 
         if (telegramManager.getLastMessageTime() < Date.now() - 5 * 60 * 1000) {
-          console.log(clientDetails.clientId, " : Promotions stopped - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000))
+          console.log(clientDetails.clientId, " : Promotions stopped - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
           await telegramManager.checktghealth()
           // await telegramService.deleteClient(client.clientId);
           // await sleep(5000);
           // await telegramService.createClient(clientDetails, false, true);
         } else {
-          console.log(clientDetails.clientId, " : Promotions Working fine - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000))
+          console.log(clientDetails.clientId, " : Promotions Working fine - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
         }
         clientsMap.set(clientDetails.clientId, clientDetails)
         telegramManager.setClientDetails(clientDetails)
