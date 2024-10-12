@@ -113,6 +113,7 @@ export class Promotion {
                     return undefined
                 }
             } else {
+                console.log("client Destroyed while promotions",this.clientDetails.clientId)
                 await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Client Destroyed.`);
                 restartClient(this.clientDetails.clientId)
             }
@@ -200,6 +201,7 @@ export class Promotion {
         }
         await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Issue with Promotions`);
         setTimeout(() => {
+            console.log(" Issue with Promotions",this.clientDetails.clientId)
             restartClient(this.clientDetails.clientId)
         }, 300000)
     }

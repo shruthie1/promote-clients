@@ -179,6 +179,7 @@ export class Reactions {
                     await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}  ${this.clientDetails.clientId.toUpperCase()}: processId: ${this.processId}| Reactions Not working: ${this.flag}|${this.waitReactTime < Date.now()}|${!this.reactQueue.contains(chatId)}|${!contains(chatId, this.reactRestrictedIds)}|${this.chatReactionsCache.get(chatId)?.length} since: ${Math.floor((Date.now() - this.lastReactedtime) / 1000)}`)// | Waittime: ${Math.floor((this.floodReleaseTime - Date.now()) / 1000)}`);
                     console.log(`${this.clientDetails.clientId.toUpperCase()} Restarted Reactions`, this.flag, this.waitReactTime < Date.now(), !this.reactQueue.contains(chatId), !contains(chatId, this.reactRestrictedIds));
                     if (Math.floor((Date.now() - this.lastReactedtime) / 1000) > 500) {
+                        console.log("Reactions Stopped", this.clientDetails.clientId, (Date.now() - this.lastReactedtime) / 1000)
                         await restartClient(this.clientDetails.clientId);
                     }
                 }

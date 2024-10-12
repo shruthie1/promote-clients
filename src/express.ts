@@ -213,6 +213,7 @@ async function checkHealth() {
           console.log(clientDetails.clientId, " : Promotions stopped - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
           await telegramManager.checktghealth();
           if (telegramManager.daysLeft == 0 && telegramManager.getLastMessageTime() < Date.now() - 10 * 60 * 1000) {
+            console.log("Promotion seems stopped",this.clientDetails.clientId)
             restartClient(clientDetails.clientId)
           }
           // await telegramService.deleteClient(client.clientId);
