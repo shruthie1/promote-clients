@@ -263,6 +263,7 @@ export async function restartClient(clientId: string) {
         const clientDetails = clientsMap.get(clientId);
         await telegramService.createClient(clientDetails, false, true)
       } else {
+        console.log(client);
         console.log(`===================Client Recently Started: ${clientId.toUpperCase()}=======================`)
       }
     } else {
