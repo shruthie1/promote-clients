@@ -78,9 +78,8 @@ export function parseError(
     message = err.errorMessage;
     error = err.name || err.code || 'Error';
   }
-
+  console.log(err)
   const msg = `${prefix ? `${prefix} ::` : ""} ${extractMessage(message)} `
-
   const resp = { status, message: err.errorMessage || msg, error };
   console.log(resp.error == 'RPCError' ? resp.message : resp);
   console.log(resp);

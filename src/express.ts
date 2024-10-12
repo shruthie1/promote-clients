@@ -29,7 +29,9 @@ export interface IClientDetails {
   username: string;
   lastMessage: number;
   name: string;
+  startTime: number
 }
+
 
 // do something when app is closing
 process.on('exit', exitHandler.bind(null, { cleanup: true }));
@@ -72,6 +74,7 @@ console.log("ProcessID: ", prcessID)
 app.use(express.json());
 
 const clientsMap: Map<string, IClientDetails> = new Map();
+
 app.get('/', (req, res) => {
   res.send("Hello World");
 })
@@ -173,7 +176,8 @@ async function startConn() {
         repl: client.repl,
         username: client.username,
         lastMessage: Date.now(),
-        name: client.name
+        name: client.name,
+        startTime: Date.now()
       })
     }
   }
@@ -186,13 +190,15 @@ async function checkHealth() {
   const telegramService = TelegramService.getInstance();
   const clients = await (UserDataDtoCrud.getInstance()).getClients()
   for (const clientData of clients) {
+    const client = clientsMap.get(clientData.clientId)
     const clientDetails: IClientDetails = {
       clientId: clientData.clientId,
       mobile: clientData.promoteMobile,
       repl: clientData.repl,
       username: clientData.username,
       lastMessage: Date.now(),
-      name: clientData.name
+      name: clientData.name,
+      startTime: client?.startTime || Date.now()
     }
     const telegramManager = await telegramService.getClient(clientDetails.clientId);
     if (telegramManager) {
@@ -240,16 +246,24 @@ export function getMapKeys() {
 }
 
 export async function restartClient(clientId: string) {
-  console.log(`===================Restarting service : ${clientId.toUpperCase()}=======================`)
-  const telegramService = TelegramService.getInstance();
-  if (telegramService.hasClient(clientId)) {
-    await telegramService.deleteClient(clientId);
-    await sleep(5000);
-  } else {
-    console.log(`===================Client does not exist : ${clientId.toUpperCase()}=======================`)
+  const client = clientsMap.get(clientId)
+  if (client) {
+    if (client.startTime < Date.now() - 2 * 60 * 1000) {
+      clientsMap.set(clientId, { ...client, startTime: Date.now() })
+      console.log(`===================Restarting service : ${clientId.toUpperCase()}=======================`)
+      const telegramService = TelegramService.getInstance();
+      if (telegramService.hasClient(clientId)) {
+        await telegramService.deleteClient(clientId);
+        await sleep(5000);
+      } else {
+        console.log(`===================Client does not exist : ${clientId.toUpperCase()}=======================`)
+      }
+      const clientDetails = clientsMap.get(clientId);
+      await telegramService.createClient(clientDetails, false, true)
+    } else {
+      console.log(`===================Client Recently : ${clientId.toUpperCase()}=======================`)
+    }
   }
-  const clientDetails = clientsMap.get(clientId);
-  await telegramService.createClient(clientDetails, false, true)
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
