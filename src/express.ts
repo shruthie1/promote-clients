@@ -213,7 +213,7 @@ async function checkHealth() {
           console.log(clientDetails.clientId, " : Promotions stopped - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
           await telegramManager.checktghealth();
           if (telegramManager.daysLeft == 0 && telegramManager.getLastMessageTime() < Date.now() - 10 * 60 * 1000) {
-            console.log("Promotion seems stopped",this.clientDetails.clientId)
+            console.log("Promotion seems stopped", clientDetails.clientId)
             restartClient(clientDetails.clientId)
           }
           // await telegramService.deleteClient(client.clientId);
@@ -247,23 +247,29 @@ export function getMapKeys() {
 }
 
 export async function restartClient(clientId: string) {
-  const client = clientsMap.get(clientId)
-  if (client) {
-    if (client.startTime < Date.now() - 2 * 60 * 1000) {
-      clientsMap.set(clientId, { ...client, startTime: Date.now() })
-      console.log(`===================Restarting service : ${clientId.toUpperCase()}=======================`)
-      const telegramService = TelegramService.getInstance();
-      if (telegramService.hasClient(clientId)) {
-        await telegramService.deleteClient(clientId);
-        await sleep(5000);
+  if (clientId) {
+    const client = clientsMap.get(clientId)
+    if (client) {
+      if (client.startTime < Date.now() - 2 * 60 * 1000) {
+        clientsMap.set(clientId, { ...client, startTime: Date.now() })
+        console.log(`===================Restarting service : ${clientId.toUpperCase()}=======================`)
+        const telegramService = TelegramService.getInstance();
+        if (telegramService.hasClient(clientId)) {
+          await telegramService.deleteClient(clientId);
+          await sleep(5000);
+        } else {
+          console.log(`===================Client does not exist : ${clientId.toUpperCase()}=======================`)
+        }
+        const clientDetails = clientsMap.get(clientId);
+        await telegramService.createClient(clientDetails, false, true)
       } else {
-        console.log(`===================Client does not exist : ${clientId.toUpperCase()}=======================`)
+        console.log(`===================Client Recently Started: ${clientId.toUpperCase()}=======================`)
       }
-      const clientDetails = clientsMap.get(clientId);
-      await telegramService.createClient(clientDetails, false, true)
     } else {
-      console.log(`===================Client Recently : ${clientId.toUpperCase()}=======================`)
+      console.error("ClientId does not exist")
     }
+  } else {
+    console.error("ClientId is undefined")
   }
 }
 
