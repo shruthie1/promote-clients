@@ -33,6 +33,7 @@ export class Promotion {
     constructor(client: TelegramClient, clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
         this.client = client;
+        console.log(clientDetails.clientId, ": Promotion Instance created")
         setInterval(() => this.checkQueuedMessages(), this.messageCheckDelay);
         const db = UserDataDtoCrud.getInstance();
         db.getPromoteMsgs().then((data) => {
@@ -76,6 +77,7 @@ export class Promotion {
     async fetchDialogs() {
         const channelIds = [];
         try {
+            await this.client?.connect()
             const dialogs = await this.client.getDialogs({ limit: 500 });
             //console.log("Dialogs : ", dialogs.length)
             const unreadUserDialogs = [];
@@ -110,7 +112,7 @@ export class Promotion {
                     console.log(`Client ${this.clientDetails.clientId}: Sleeping for ${this.sleepTime / 1000} seconds due to rate limit.`);
                     return undefined
                 }
-            }else{
+            } else {
                 await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Client Destroyed.`);
                 restartClient(this.clientDetails.clientId)
             }

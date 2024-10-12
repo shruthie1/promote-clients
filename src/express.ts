@@ -242,8 +242,12 @@ export function getMapKeys() {
 export async function restartClient(clientId: string) {
   console.log(`===================Restarting service : ${clientId.toUpperCase()}=======================`)
   const telegramService = TelegramService.getInstance();
-  await telegramService.deleteClient(clientId);
-  await sleep(5000);
+  if (telegramService.hasClient(clientId)) {
+    await telegramService.deleteClient(clientId);
+    await sleep(5000);
+  } else {
+    console.log(`===================Client does not exist : ${clientId.toUpperCase()}=======================`)
+  }
   const clientDetails = clientsMap.get(clientId);
   await telegramService.createClient(clientDetails, false, true)
 }

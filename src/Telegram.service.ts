@@ -35,7 +35,7 @@ export class TelegramService {
         const tgManager = TelegramService.clientsMap.get(clientId);
         try {
             if (tgManager && tgManager.connected()) {
-                await tgManager.client.connect()
+                await tgManager.client.connect();
                 return tgManager
             } else {
                 // console.log("tg manager is undefined")
