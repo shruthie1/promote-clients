@@ -267,10 +267,10 @@ export async function restartClient(clientId: string) {
         console.log(`===================Client Recently Started: ${clientId.toUpperCase()}=======================`)
       }
     } else {
-      console.error("ClientId does not exist")
+      console.error(`Client ${clientId} does not exist`)
     }
   } else {
-    console.error("ClientId is undefined")
+    console.error(`ClientId ${clientId} is undefined`)
   }
 }
 
