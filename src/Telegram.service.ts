@@ -84,9 +84,9 @@ export class TelegramService {
             const telegramManager = new TelegramManager(clientDetails);
             try {
                 const client = await telegramManager.createClient(handler);
+                TelegramService.clientsMap.set(clientDetails.clientId, telegramManager);
                 await client.getMe();
                 if (client) {
-                    TelegramService.clientsMap.set(clientDetails.clientId, telegramManager);
                     if (autoDisconnect) {
                         setTimeout(async () => {
                             if (client.connected || await this.getClient(clientDetails.clientId)) {
