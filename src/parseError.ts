@@ -39,7 +39,6 @@ export function parseError(
   };
 
   if (err.response) {
-    console.log("Checking in response")
     const response = err.response;
     status =
       response.data?.status ||
@@ -49,6 +48,7 @@ export function parseError(
     message =
       response.data?.message ||
       response.data?.errors ||
+      response.errorMessage ||
       response.message ||
       response.statusText ||
       response.data ||
@@ -61,7 +61,6 @@ export function parseError(
       err.code ||
       'Error';
   } else if (err.request) {
-    console.log("Checking in request")
     status = err.status || 'NO_RESPONSE';
     message = err.data?.message ||
       err.data?.errors ||
@@ -71,7 +70,6 @@ export function parseError(
       err.message || 'The request was triggered but no response was received';
     error = err.name || err.code || 'NoResponseError';
   } else if (err.message) {
-    console.log("Checking in error")
     status = err.status || 'UNKNOWN';
     message = err.message;
     error = err.name || err.code || 'Error';
@@ -83,7 +81,8 @@ export function parseError(
 
   const msg = `${prefix ? `${prefix} ::` : ""} ${extractMessage(message)} `
 
-  const resp = { status, message: msg, error };
+  const resp = { status, message: err.errorMessage || msg, error };
+  console.log(resp.error == 'RPCError' ? resp.message : resp);
   console.log(resp);
   if ((sendErr && !msg.includes("INPUT_USER_DEACTIVATED")) ||
     ((msg.includes("USER_DEACTIVATED") || msg.includes("USER_DEACTIVATED_BAN")) && !msg.includes("INPUT_USER_DEACTIVATED"))) {
