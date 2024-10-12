@@ -100,17 +100,22 @@ export class Promotion {
 
     async sendMessageToChannel(channelInfo: IChannel, message: SendMessageParams) {
         try {
-            if (this.sleepTime < Date.now()) {
-                const result = await this.client.sendMessage(channelInfo.channelId, message);
-                console.log(`Client ${this.clientDetails.clientId}: Message sent to ${channelInfo.channelId}`);
-                this.lastMessageTime = Date.now()
-                return result
-            } else {
-                console.log(`Client ${this.clientDetails.clientId}: Sleeping for ${this.sleepTime / 1000} seconds due to rate limit.`);
-                return undefined
+            if (this.client) {
+                if (this.sleepTime < Date.now()) {
+                    const result = await this.client.sendMessage(channelInfo.channelId, message);
+                    console.log(`Client ${this.clientDetails.clientId}: Message sent to ${channelInfo.channelId}`);
+                    this.lastMessageTime = Date.now()
+                    return result
+                } else {
+                    console.log(`Client ${this.clientDetails.clientId}: Sleeping for ${this.sleepTime / 1000} seconds due to rate limit.`);
+                    return undefined
+                }
+            }else{
+                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Client Destroyed.`);
+                restartClient(this.clientDetails.clientId)
             }
         } catch (error) {
-            const errorDetails = parseError(error)
+            const errorDetails = parseError(error, `${this.clientDetails.clientId}`, false)
             if (error instanceof errors.FloodWaitError) {
                 console.log(error)
                 console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
