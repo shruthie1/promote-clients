@@ -127,7 +127,6 @@ export class Promotion {
                 if (error.errorMessage === "CHANNEL_PRIVATE") {
                     return await this.handlePrivateChannel(channelInfo, message, error);
                 } else {
-                    const errorDetails = parseError(error, `${this.clientDetails.clientId}`, false)
                     return await this.handleOtherErrors(channelInfo, message, error);
                 }
             }
@@ -232,6 +231,8 @@ export class Promotion {
             // }
         } else if (error.errorMessage === 'CHAT_WRITE_FORBIDDEN') {
             // await leaveChannel(this.client, channelInfo);
+        }else{
+            const errorDetails = parseError(error, `${this.clientDetails.clientId}`, false)
         }
         return undefined;
     }
