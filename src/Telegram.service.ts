@@ -59,6 +59,7 @@ export class TelegramService {
             console.log(`Client ${clientId} not found.`);
         }
         console.log("Disconnected : ", clientId)
+        TelegramService.clientsMap.set(clientId, null);
         return TelegramService.clientsMap.delete(clientId);
     }
 

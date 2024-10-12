@@ -212,7 +212,7 @@ async function checkHealth() {
         if (telegramManager.getLastMessageTime() < Date.now() - 5 * 60 * 1000) {
           console.log(clientDetails.clientId, " : Promotions stopped - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
           await telegramManager.checktghealth();
-          if (telegramManager.daysLeft == 0 && telegramManager.getLastMessageTime() < Date.now() - 10 * 60 * 1000) {
+          if (telegramManager.daysLeft == -1 && telegramManager.getLastMessageTime() < Date.now() - 10 * 60 * 1000) {
             console.log("Promotion seems stopped", clientDetails.clientId)
             restartClient(clientDetails.clientId)
           }
@@ -263,7 +263,7 @@ export async function restartClient(clientId: string) {
         const clientDetails = clientsMap.get(clientId);
         await telegramService.createClient(clientDetails, false, true)
       } else {
-        console.log(client);
+        console.log(client, Date.now());
         console.log(`===================Client Recently Started: ${clientId.toUpperCase()}=======================`)
       }
     } else {

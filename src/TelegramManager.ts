@@ -22,7 +22,7 @@ class TelegramManager {
     private lastCheckedTime = 0;
     private reactorInstance: Reactions;
     public promoterInstance: Promotion;
-    public daysLeft = 0;
+    public daysLeft = -1;
 
     constructor(clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
@@ -153,7 +153,7 @@ class TelegramManager {
                         // }
                     } else if (event.message.text.toLowerCase().includes('good news')) {
                         this.promoterInstance.setDaysLeft(0)
-                        this.daysLeft = 0
+                        this.daysLeft = -1
                     } else if (event.message.text.toLowerCase().includes('can trigger a harsh')) {
                         // this.promoterInstance.setChannels(openChannels)
                         this.promoterInstance.setDaysLeft(99)
