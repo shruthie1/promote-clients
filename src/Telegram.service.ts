@@ -5,8 +5,7 @@ export class TelegramService {
     private static clientsMap: Map<string, TelegramManager> = new Map();
     private static instance: TelegramService;
 
-    private constructor() {      
-    }
+    private constructor() {}
 
     public static getInstance(): TelegramService {
         if (!TelegramService.instance) {
@@ -79,8 +78,9 @@ export class TelegramService {
         TelegramService.clientsMap.clear();
     }
 
-    async createClient(clientDetails: IClientDetails, autoDisconnect = true, handler = true): Promise<TelegramManager> {
-        if (!this.hasClient(clientDetails.clientId)) {
+    async createClient(clientDetails: IClientDetails, autoDisconnect = false, handler = true): Promise<TelegramManager> {
+        const clientData = await this.getClient(clientDetails.clientId)
+        if (!clientData || !clientData.client) {
             const telegramManager = new TelegramManager(clientDetails);
             try {
                 const client = await telegramManager.createClient(handler);
@@ -98,13 +98,13 @@ export class TelegramService {
                             TelegramService.clientsMap.delete(clientDetails.clientId);
                         }, 180000)
                     } else {
-                        setInterval(async () => {
-                            //console.log("destroying loop :", mobile)
-                            //client._destroyed = true
-                            // if (!client.connected) {
-                            // await client.connect();
-                            //}
-                        }, 20000);
+                        // setInterval(async () => {
+                        //     //console.log("destroying loop :", mobile)
+                        //     //client._destroyed = true
+                        //     // if (!client.connected) {
+                        //     // await client.connect();
+                        //     //}
+                        // }, 20000);
                     }
                     return telegramManager;
                 } else {

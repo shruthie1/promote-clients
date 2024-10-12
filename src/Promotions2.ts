@@ -113,7 +113,7 @@ export class Promotion {
                     return undefined
                 }
             } else {
-                console.log("client Destroyed while promotions",this.clientDetails.clientId)
+                console.log("client Destroyed while promotions", this.clientDetails.clientId)
                 await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Client Destroyed.`);
                 restartClient(this.clientDetails.clientId)
             }
@@ -140,68 +140,72 @@ export class Promotion {
         let channelIndex = 0;
         if (this.channels.length > 0) {
             while (true) {
-                const channelsBatch = this.channels.slice(channelIndex, channelIndex + 5);
+                if (this.client) {
+                    const channelsBatch = this.channels.slice(channelIndex, channelIndex + 5);
 
-                if (channelsBatch.length < 5) {
-                    channelIndex = 0;
-                    continue;
-                }
-                let sentCount = 0
-                console.log(`${this.clientDetails.clientId} ::  Started Batch`)
-                for (const channelId of channelsBatch) {
-                    const channelInfo = await this.getChannelInfo(channelId);
-                    if (!channelInfo?.banned) {
-                        let sentMessage: Api.Message = undefined
-
-                        if (channelInfo.wordRestriction === 0) {
-                            const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
-                            const emojis = generateEmojis();
-                            const randomEmoji = getRandomEmoji();
-                            const hour = getCurrentHourIST();
-                            const isMorning = (hour > 9 && hour < 22);
-                            const offset = Math.floor(Math.random() * 3)
-                            const endMsg = pickOneMsg(['U bussy👀?', "I'm Aviilble!!😊💦", 'Trry Once!!😊💦', 'Trry Once!!😊💦', 'Waiiting fr ur mssg.....Dr!!💦', 'U Onliine?👀', "I'm Avilble!!😊", 'U Bussy??👀💦', 'U Intrstd??👀💦', 'U Awakke?👀💦', 'U therre???💦💦']);
-                            const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`//\n\n${(isMorning) ? "Just Now I Came from My **College!!**" : "I am Alone in My **Hostel Room** Now!!"}🙈🙈\n\n**${endMsg}**`
-                            const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;//${randomEmoji}\n-------------------------------------------\n   ${emojis}${emojis}${emojis}${emojis}\n========================` : ""}**`;
-                            sentMessage = await this.sendMessageToChannel(channelInfo, { message: msg + addon });
-                        } else {
-                            let randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0]
-                            if (channelInfo.availableMsgs.length == 0) {
-                                randomIndex = '0'
-                            }
-                            const randomAvailableMsg = this.promoteMsgs[randomIndex];
-                            sentMessage = await this.sendMessageToChannel(channelInfo, { message: randomAvailableMsg });
-                            if (sentMessage) {
-                                this.messageQueue.push({
-                                    channelId,
-                                    messageId: sentMessage.id,
-                                    timestamp: Date.now(),
-                                    messageIndex: randomIndex,
-                                });
-                            }
-                        }
-                        if (sentMessage) {
-                            sentCount++;
-                        }
-                        const randomSmallDelay = Math.floor(Math.random() * (this.maxSmallDelay - this.smallDelay + 1)) + this.smallDelay;
-                        await sleep(randomSmallDelay);
-                    } else {
-                        console.log("Banned Channel")
+                    if (channelsBatch.length < 5) {
+                        channelIndex = 0;
+                        continue;
                     }
-                }
-                console.log(this.clientDetails.clientId, "Sent : ", sentCount)
-                channelIndex = (channelIndex + 5) % this.channels.length;
+                    let sentCount = 0
+                    console.log(`${this.clientDetails.clientId} ::  Started Batch`)
+                    for (const channelId of channelsBatch) {
+                        const channelInfo = await this.getChannelInfo(channelId);
+                        if (!channelInfo?.banned) {
+                            let sentMessage: Api.Message = undefined
 
-                if (channelIndex !== 0) {
-                    const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
-                    console.log(`${this.clientDetails.clientId} ::  Sleeping for ${randomBatchDelay / 60000}`)
-                    await sleep(randomBatchDelay);
+                            if (channelInfo.wordRestriction === 0) {
+                                const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
+                                const emojis = generateEmojis();
+                                const randomEmoji = getRandomEmoji();
+                                const hour = getCurrentHourIST();
+                                const isMorning = (hour > 9 && hour < 22);
+                                const offset = Math.floor(Math.random() * 3)
+                                const endMsg = pickOneMsg(['U bussy👀?', "I'm Aviilble!!😊💦", 'Trry Once!!😊💦', 'Trry Once!!😊💦', 'Waiiting fr ur mssg.....Dr!!💦', 'U Onliine?👀', "I'm Avilble!!😊", 'U Bussy??👀💦', 'U Intrstd??👀💦', 'U Awakke?👀💦', 'U therre???💦💦']);
+                                const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`//\n\n${(isMorning) ? "Just Now I Came from My **College!!**" : "I am Alone in My **Hostel Room** Now!!"}🙈🙈\n\n**${endMsg}**`
+                                const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;//${randomEmoji}\n-------------------------------------------\n   ${emojis}${emojis}${emojis}${emojis}\n========================` : ""}**`;
+                                sentMessage = await this.sendMessageToChannel(channelInfo, { message: msg + addon });
+                            } else {
+                                let randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0]
+                                if (channelInfo.availableMsgs.length == 0) {
+                                    randomIndex = '0'
+                                }
+                                const randomAvailableMsg = this.promoteMsgs[randomIndex];
+                                sentMessage = await this.sendMessageToChannel(channelInfo, { message: randomAvailableMsg });
+                                if (sentMessage) {
+                                    this.messageQueue.push({
+                                        channelId,
+                                        messageId: sentMessage.id,
+                                        timestamp: Date.now(),
+                                        messageIndex: randomIndex,
+                                    });
+                                }
+                            }
+                            if (sentMessage) {
+                                sentCount++;
+                            }
+                            const randomSmallDelay = Math.floor(Math.random() * (this.maxSmallDelay - this.smallDelay + 1)) + this.smallDelay;
+                            await sleep(randomSmallDelay);
+                        } else {
+                            console.log("Banned Channel")
+                        }
+                    }
+                    console.log(this.clientDetails.clientId, "Sent : ", sentCount)
+                    channelIndex = (channelIndex + 5) % this.channels.length;
+
+                    if (channelIndex !== 0) {
+                        const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
+                        console.log(`${this.clientDetails.clientId} ::  Sleeping for ${randomBatchDelay / 60000}`)
+                        await sleep(randomBatchDelay);
+                    }
+                } else {
+                    break;
                 }
             }
         }
         await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Issue with Promotions`);
         setTimeout(() => {
-            console.log(" Issue with Promotions",this.clientDetails.clientId)
+            console.log(" Issue with Promotions", this.clientDetails.clientId)
             restartClient(this.clientDetails.clientId)
         }, 300000)
     }
@@ -233,7 +237,7 @@ export class Promotion {
             // }
         } else if (error.errorMessage === 'CHAT_WRITE_FORBIDDEN') {
             // await leaveChannel(this.client, channelInfo);
-        }else{
+        } else {
             const errorDetails = parseError(error, `${this.clientDetails.clientId}`, false)
         }
         return undefined;
