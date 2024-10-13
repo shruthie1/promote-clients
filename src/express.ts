@@ -250,7 +250,7 @@ export async function restartClient(clientId: string) {
   if (clientId) {
     const client = clientsMap.get(clientId)
     if (client) {
-      if (client.startTime < Date.now() - 2 * 60 * 1000) {
+      if (client.startTime < Date.now() - 3 * 60 * 1000) {
         clientsMap.set(clientId, { ...client, startTime: Date.now() })
         console.log(`===================Restarting service : ${clientId.toUpperCase()}=======================`)
         const telegramService = TelegramService.getInstance();
