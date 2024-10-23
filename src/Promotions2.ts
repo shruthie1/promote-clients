@@ -17,7 +17,7 @@ interface MessageQueueItem {
 export class Promotion {
     private clientDetails: IClientDetails = undefined
     public client: TelegramClient | null;
-    private daysLeft: number;
+    private daysLeft: number = -1;
     private sleepTime = 0;
     public lastMessageTime = Date.now() - 240000;
     private lastCheckedTime: number;
@@ -118,6 +118,7 @@ export class Promotion {
                 restartClient(this.clientDetails.clientId)
             }
         } catch (error) {
+            console.log(this.clientDetails.clientId, `Some Error Occured, ${error.errorMessage}`)
             if (error instanceof errors.FloodWaitError) {
                 console.log(error)
                 console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
@@ -150,6 +151,7 @@ export class Promotion {
                     let sentCount = 0
                     console.log(`${this.clientDetails.clientId} ::  Started Batch`)
                     for (const channelId of channelsBatch) {
+                        console.log(`--------${this.clientDetails.clientId}-----------`)
                         const channelInfo = await this.getChannelInfo(channelId);
                         if (!channelInfo?.banned) {
                             let sentMessage: Api.Message = undefined
