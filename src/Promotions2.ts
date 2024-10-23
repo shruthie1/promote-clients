@@ -153,7 +153,6 @@ export class Promotion {
                     let sentCount = 0
                     console.log(`${this.clientDetails.clientId} ::  Started Batch`)
                     for (const channelId of channelsBatch) {
-                        console.log(`--------${this.clientDetails.clientId}-----------`)
                         const channelInfo = await this.getChannelInfo(channelId);
                         if (!channelInfo?.banned) {
                             let sentMessage: Api.Message = undefined

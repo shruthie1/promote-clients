@@ -14,7 +14,7 @@ export class Reactions {
     private flag2 = true;
     private waitReactTime = Date.now();
     private chatReactionsCache = new Map();
-    private lastReactedtime = Date.now();
+    private lastReactedtime = Date.now() - 180000;
     private lastNotifiedTime = Date.now();
     private reactionsRestarted = Date.now();
     private totalReactionDelay = 0;
@@ -166,7 +166,7 @@ export class Reactions {
                 if (this.lastReactedtime < Date.now() - 60000 && (!this.flag || this.reactQueue.contains(chatId)) && this.reactionsRestarted < Date.now() - 30000) {
                     this.flag = true;
                     this.reactionsRestarted = Date.now();
-                    console.log(`${this.clientDetails.clientId.toUpperCase()}: processId: ${this.processId} Restarted Reactions`, this.flag, this.waitReactTime < Date.now(), !this.reactQueue.contains(chatId), !contains(chatId, this.reactRestrictedIds), `Waittime: ${Math.floor(Date.now() - this.floodReleaseTime) / 1000}`);
+                    console.log(`${this.clientDetails.clientId.toUpperCase()}: processId: ${this.processId}----Restarted Reactions------`, this.flag, this.waitReactTime < Date.now(), !this.reactQueue.contains(chatId), !contains(chatId, this.reactRestrictedIds), `Waittime: ${Math.floor(Date.now() - this.lastReactedtime) / 1000}`);
                 }
 
                 // if (lastReactedtime < Date.now() - 240000) {
