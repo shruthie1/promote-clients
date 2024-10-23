@@ -239,6 +239,7 @@ export class Promotion {
             //     await leaveChannel(client, channelInfo);
             // }
         } else if (error.errorMessage === 'CHAT_WRITE_FORBIDDEN') {
+            console.log(`${this.clientDetails.clientId}: ${error.errorMessage}`)
             // await leaveChannel(this.client, channelInfo);
         } else {
             const errorDetails = parseError(error, `${this.clientDetails.clientId}`, false)
