@@ -118,7 +118,7 @@ export class Promotion {
                 restartClient(this.clientDetails.clientId)
             }
         } catch (error) {
-            if (error.errorMessage === 'USER_BANNED_IN_CHANNEL') {
+            if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(this.clientDetails.clientId, `Some Error Occured, ${error.errorMessage}`)
             }
             if (error instanceof errors.FloodWaitError) {
