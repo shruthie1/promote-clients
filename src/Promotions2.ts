@@ -118,7 +118,9 @@ export class Promotion {
                 restartClient(this.clientDetails.clientId)
             }
         } catch (error) {
-            console.log(this.clientDetails.clientId, `Some Error Occured, ${error.errorMessage}`)
+            if (error.errorMessage === 'USER_BANNED_IN_CHANNEL') {
+                console.log(this.clientDetails.clientId, `Some Error Occured, ${error.errorMessage}`)
+            }
             if (error instanceof errors.FloodWaitError) {
                 console.log(error)
                 console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
