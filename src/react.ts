@@ -183,6 +183,11 @@ export class Reactions {
                         // await restartClient(this.clientDetails.clientId);
                         this.reactQueue.clear()
                     }
+                    if (Math.floor((Date.now() - this.lastReactedtime) / 1000) > 1000) {
+                        console.log("Reactions Stopped", this.clientDetails.clientId, (Date.now() - this.lastReactedtime) / 1000)
+                        // await restartClient(this.clientDetails.clientId);
+                        this.reactRestrictedIds = []
+                    }
                 }
             }
         } catch (error) {
