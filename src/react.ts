@@ -180,7 +180,7 @@ export class Reactions {
                     console.log(`${this.clientDetails.clientId.toUpperCase()} Restarted Reactions`, this.flag, this.waitReactTime < Date.now(), !this.reactQueue.contains(chatId), !contains(chatId, this.reactRestrictedIds));
                     if (Math.floor((Date.now() - this.lastReactedtime) / 1000) > 500) {
                         console.log("Reactions Stopped", this.clientDetails.clientId, (Date.now() - this.lastReactedtime) / 1000)
-                        await restartClient(this.clientDetails.clientId);
+                        // await restartClient(this.clientDetails.clientId);
                     }
                 }
             }
