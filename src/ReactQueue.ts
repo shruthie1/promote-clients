@@ -38,4 +38,8 @@ export class ReactQueue {
     public isFull() {
         return this.items.length === this.maxSize;
     }
+
+    public clear() {
+        this.items = []
+    }
 }
