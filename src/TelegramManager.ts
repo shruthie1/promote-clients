@@ -387,7 +387,7 @@ class TelegramManager {
             const result = await this.client.invoke(
                 new Api.account.UpdateProfile(data)
             );
-            //console.log("Updated NAme: ", firstName);
+            console.log("Updated NAme: ", firstName);
         } catch (error) {
             throw error
         }
