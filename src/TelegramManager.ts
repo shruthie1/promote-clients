@@ -169,7 +169,7 @@ class TelegramManager {
                     const newPromoteClient = await db.findPromoteClient(query);
                     if (newPromoteClient) {
                         console.log("Setting up new client for : ", this.clientDetails.clientId, "as days :", this.daysLeft);
-                        await this.updateProfile('Deleted Account', 'Deleted Account');
+                        await this.updateProfile('Deleted Account', '');
                         await this.deleteProfilePhotos();
                         await this.updatePrivacyforDeletedAccount();
                         const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
