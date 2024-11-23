@@ -158,7 +158,6 @@ export class Promotion {
                     for (const channelId of channelsBatch) {
                         // Simulate human behavior by randomly skipping channels
                         if (Math.random() < 0.25) {
-                            console.log("Randomly skipping channel to simulate human behavior");
                             continue;
                         }
 
