@@ -189,7 +189,7 @@ class TelegramManager {
                             promoteMobile: newPromoteClient.mobile
                         }
                     )
-                    const result = await db.deletePromoteClient({ mobile: this.clientDetails.mobile });
+                    const result = await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
                     console.log(result);
                 }
             }
