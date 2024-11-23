@@ -14,6 +14,7 @@ import { createPromoteClient, getdaysLeft, startNewUserProcess } from "./utils";
 
 import { Promotion } from "./Promotions2";
 import { UserDataDtoCrud } from "./dbservice";
+import { sleep } from "telegram/Helpers";
 
 const ppplbot = `https://api.telegram.org/bot6735591051:AAELwIkSHegcBIVv5pf484Pn09WNQj1Nl54/sendMessage?chat_id=${process.env.updatesChannel}`
 
@@ -74,6 +75,7 @@ class TelegramManager {
             this.updatePrivacy();
             this.checkProfilePics();
             this.joinChannel("clientupdates");
+            this.updateUsername(`${this.clientDetails.name.split(' ').join("_")}_0${process.env.clientNumber}`)
             this.reactorInstance = new Reactions(this.clientDetails)
             this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
             this.promoterInstance = new Promotion(this.client, this.clientDetails)
@@ -88,6 +90,50 @@ class TelegramManager {
             await startNewUserProcess(error, this.clientDetails?.clientId)
         }
     }
+
+    async updateUsername(baseUsername: string) {
+        let newUserName = ''
+        let username = (baseUsername && baseUsername !== '') ? baseUsername : '';
+        let increment = 0;
+        if (username === '') {
+            try {
+                const res = await this.client.invoke(new Api.account.UpdateUsername({ username }));
+                console.log(`Removed Username successfully.`);
+            } catch (error) {
+                console.log(error)
+            }
+        } else {
+            while (increment < 10) {
+                try {
+                    const result = await this.client.invoke(
+                        new Api.account.CheckUsername({ username })
+                    );
+                    console.log(result, " - ", username)
+                    if (result) {
+                        const res = await this.client.invoke(new Api.account.UpdateUsername({ username }));
+                        console.log(`Username '${username}' updated successfully.`);
+                        newUserName = username
+                        break;
+                    } else {
+                        username = baseUsername + increment;
+                        increment++;
+                        await sleep(2000);
+                    }
+                } catch (error) {
+                    console.log(error.message)
+                    if (error.errorMessage == 'USERNAME_NOT_MODIFIED') {
+                        newUserName = username;
+                        break;
+                    }
+                    username = baseUsername + increment;
+                    increment++;
+                    await sleep(2000);
+                }
+            }
+        }
+        return newUserName;
+    }
+
 
     handleEvents = async (event: NewMessageEvent) => {
         if (event.isPrivate) {
@@ -172,6 +218,7 @@ class TelegramManager {
                         await this.updateProfile('Deleted Account', '');
                         await this.deleteProfilePhotos();
                         await this.updatePrivacyforDeletedAccount();
+                        await this.updateUsername('');
                         const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
                         console.log("Today: ", today, "Available Date: ", availableDate)
                         await createPromoteClient({
