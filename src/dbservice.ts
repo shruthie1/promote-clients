@@ -170,7 +170,7 @@ export class UserDataDtoCrud {
             const clientsDb = this.client.db("tgclients").collection('promoteClients')
             return await clientsDb.deleteOne(filter)
         } catch (error) {
-            parseError(error, "Error updating Client")
+            parseError(error, "Error deleting Client")
         }
     }
 }
