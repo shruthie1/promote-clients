@@ -208,7 +208,7 @@ class TelegramManager {
                         this.daysLeft = 99
                     }
                 }
-                if (this.daysLeft > 3) {
+                if (this.daysLeft > 1) {
                     try {
                         const db = UserDataDtoCrud.getInstance();
                         const today = (new Date(Date.now())).toISOString().split('T')[0];
