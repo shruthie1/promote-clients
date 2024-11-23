@@ -275,3 +275,24 @@ export function getCurrentHourIST(): number {
   const istHour = istTime.getUTCHours();
   return istHour;
 }
+export interface PromoteClientPayload {
+  tgId: string;
+  mobile: string;
+  availableDate: string;
+  lastActive: string;
+  channels: number;
+}
+
+export const createPromoteClient = async (payload: PromoteClientPayload): Promise<void> => {
+  try {
+    const response = await axios.post(`${process.env.uptimeChecker}/promoteclients`, payload, {
+      headers: {
+        'accept': '*/*',
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log('Response:', response.data);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};

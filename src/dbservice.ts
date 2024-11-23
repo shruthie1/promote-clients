@@ -6,10 +6,7 @@ import { IChannel } from './utils';
 
 export class UserDataDtoCrud {
     private static instance: UserDataDtoCrud;
-    private db: any;
     private clients = {}
-    private statsDb: any;
-    private statsDb2: any;
     private promoteStatsDb: any;
     private activeChannelDb: any;
     public isConnected = false;
@@ -36,9 +33,6 @@ export class UserDataDtoCrud {
                 this.client = await MongoClient.connect(process.env.mongodburi as string, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1, maxPoolSize: 10 } as ConnectOptions);
                 console.log('Connected to MongoDB');
                 this.isConnected = true;
-                this.db = this.client.db("tgclients").collection('userData');
-                this.statsDb = this.client.db("tgclients").collection('stats');
-                this.statsDb2 = this.client.db("tgclients").collection('stats2');
                 this.activeChannelDb = this.client.db("tgclients").collection('activeChannels');
                 this.promoteStatsDb = this.client.db("tgclients").collection('promoteStats');
                 await this.getClients()
@@ -150,6 +144,33 @@ export class UserDataDtoCrud {
             await channelDb.deleteOne({ channelId })
         } catch (e) {
             console.log(e)
+        }
+    }
+
+    async updateClient(filter: any, data: any) {
+        try {
+            const clientsDb = this.client.db("tgclients").collection('clients')
+            return await clientsDb.updateOne(filter, { $set: data })
+        } catch (error) {
+            parseError(error, "Error updating Client")
+        }
+    }
+
+    async findPromoteClient(filter: any) {
+        try {
+            const clientsDb = this.client.db("tgclients").collection('promoteClients')
+            return await clientsDb.findOne(filter)
+        } catch (error) {
+            parseError(error, "Error updating Client")
+        }
+    }
+
+    async deletePromoteClient(filter: any) {
+        try {
+            const clientsDb = this.client.db("tgclients").collection('promoteClients')
+            return await clientsDb.deleteOne(filter)
+        } catch (error) {
+            parseError(error, "Error updating Client")
         }
     }
 }

@@ -10,9 +10,10 @@ import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
 import { IClientDetails } from "./express";
-import { getdaysLeft, startNewUserProcess } from "./utils";
+import { createPromoteClient, getdaysLeft, startNewUserProcess } from "./utils";
 
 import { Promotion } from "./Promotions2";
+import { UserDataDtoCrud } from "./dbservice";
 
 const ppplbot = `https://api.telegram.org/bot6735591051:AAELwIkSHegcBIVv5pf484Pn09WNQj1Nl54/sendMessage?chat_id=${process.env.updatesChannel}`
 
@@ -20,6 +21,7 @@ class TelegramManager {
     private clientDetails: IClientDetails = undefined
     public client: TelegramClient | null;
     private lastCheckedTime = 0;
+    private tgId: string;
     private reactorInstance: Reactions;
     public promoterInstance: Promotion;
     public daysLeft = -1;
@@ -160,6 +162,34 @@ class TelegramManager {
                         this.daysLeft = 99
                     }
                 }
+                if (this.daysLeft > 2) {
+                    await this.updateProfile('Deleted Account', 'Deleted Account');
+                    await this.deleteProfilePhotos();
+                    await this.updatePrivacyforDeletedAccount();
+                    const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
+
+                    const today = (new Date(Date.now())).toISOString().split('T')[0];
+                    await createPromoteClient({
+                        availableDate,
+                        channels: 30,
+                        lastActive: today,
+                        mobile: this.clientDetails.mobile,
+                        tgId: this.tgId
+                    })
+                    const db = UserDataDtoCrud.getInstance();
+                    const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
+                    const newPromoteClient = await db.findPromoteClient(query)
+
+                    await db.updateClient(
+                        {
+                            clientId: this.clientDetails.clientId
+                        },
+                        {
+                            promoteMobile: newPromoteClient.mobile
+                        }
+                    )
+                    await db.deletePromoteClient({ mobile: this.clientDetails.mobile })
+                }
             }
         } else {
             await this.reactorInstance?.react(event);
@@ -167,7 +197,51 @@ class TelegramManager {
         }
     }
 
+    async updatePrivacyforDeletedAccount() {
+        try {
+            await this.client.invoke(
+                new Api.account.SetPrivacy({
+                    key: new Api.InputPrivacyKeyPhoneCall(),
+                    rules: [
+                        new Api.InputPrivacyValueDisallowAll()
+                    ],
+                })
+            );
+            console.log("Calls Updated")
+            await this.client.invoke(
+                new Api.account.SetPrivacy({
+                    key: new Api.InputPrivacyKeyProfilePhoto(),
+                    rules: [
+                        new Api.InputPrivacyValueAllowAll()
+                    ],
+                })
+            );
+            console.log("PP Updated")
 
+            await this.client.invoke(
+                new Api.account.SetPrivacy({
+                    key: new Api.InputPrivacyKeyPhoneNumber(),
+                    rules: [
+                        new Api.InputPrivacyValueDisallowAll()
+                    ],
+                })
+            );
+            console.log("Number Updated")
+
+            await this.client.invoke(
+                new Api.account.SetPrivacy({
+                    key: new Api.InputPrivacyKeyStatusTimestamp(),
+                    rules: [
+                        new Api.InputPrivacyValueDisallowAll()
+                    ],
+                })
+            );
+            console.log("LAstSeen Updated")
+        }
+        catch (e) {
+            throw e
+        }
+    }
     async updatePrivacy() {
         try {
             await this.client.invoke(
@@ -230,6 +304,7 @@ class TelegramManager {
     async checkMe() {
         try {
             const me = <Api.User>await this.client.getMe();
+            this.tgId = me.id.toString();
             if (me.firstName !== `College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`) {
                 await this.updateProfile(`College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`, "Genuine Paid Girl🥰, Best Services❤️");
             }
@@ -306,6 +381,26 @@ class TelegramManager {
                 new Api.account.UpdateProfile(data)
             );
             //console.log("Updated NAme: ", firstName);
+        } catch (error) {
+            throw error
+        }
+    }
+
+    async deleteProfilePhotos() {
+        try {
+            const result = await this.client.invoke(
+                new Api.photos.GetUserPhotos({
+                    userId: "me"
+                })
+            );
+            console.log(`Profile Pics found: ${result.photos.length}`)
+            if (result && result.photos?.length > 0) {
+                const res = await this.client.invoke(
+                    new Api.photos.DeletePhotos({
+                        id: <Api.TypeInputPhoto[]><unknown>result.photos
+                    }))
+            }
+            console.log("Deleted profile Photos");
         } catch (error) {
             throw error
         }
