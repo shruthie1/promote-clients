@@ -165,7 +165,7 @@ class TelegramManager {
                 if (this.daysLeft > 1) {
                     const db = UserDataDtoCrud.getInstance();
                     const today = (new Date(Date.now())).toISOString().split('T')[0];
-                    const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
+                    const query = { availableDate: { $lte: today }, channels: { $gt: 350 } }
                     const newPromoteClient = await db.findPromoteClient(query);
                     if (newPromoteClient) {
                         console.log("Setting up new client for : ", this.clientDetails.clientId, "as days :", this.daysLeft);
