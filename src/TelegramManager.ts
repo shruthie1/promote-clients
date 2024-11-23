@@ -211,11 +211,25 @@ class TelegramManager {
                 if (this.daysLeft > 1) {
                     try {
                         const db = UserDataDtoCrud.getInstance();
+                        const existingClients = await db.getClients();
+                        const promoteMobiles = [];
+                        for (const existingClient of existingClients) {
+                            promoteMobiles.push(existingClient.promoteMobile)
+                        }
                         const today = (new Date(Date.now())).toISOString().split('T')[0];
-                        const query = { availableDate: { $lte: today }, channels: { $gt: 350 } }
+                        const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } }
                         const newPromoteClient = await db.findPromoteClient(query);
                         if (newPromoteClient) {
                             console.log("Setting up new client for : ", this.clientDetails.clientId, "as days :", this.daysLeft);
+                            await db.updateClient(
+                                {
+                                    clientId: this.clientDetails.clientId
+                                },
+                                {
+                                    promoteMobile: newPromoteClient.mobile
+                                }
+                            )
+                            const result = await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
                             await this.updateProfile('Deleted Account', '');
                             await this.deleteProfilePhotos();
                             await this.updatePrivacyforDeletedAccount();
@@ -230,16 +244,6 @@ class TelegramManager {
                                 tgId: this.tgId
                             })
                             console.log(this.clientDetails.clientId, " - New Promote Client: ", newPromoteClient)
-                            await db.updateClient(
-                                {
-                                    clientId: this.clientDetails.clientId
-                                },
-                                {
-                                    promoteMobile: newPromoteClient.mobile
-                                }
-                            )
-                            const result = await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
-                            console.log(result);
                         }
                     } catch (error) {
                         parseError(error)
