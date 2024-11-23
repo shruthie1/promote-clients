@@ -163,34 +163,36 @@ class TelegramManager {
                     }
                 }
                 if (this.daysLeft > 1) {
-                    console.log("Setting up new client for : ", this.clientDetails.clientId, "as days :", this.daysLeft);
-                    await this.updateProfile('Deleted Account', 'Deleted Account');
-                    await this.deleteProfilePhotos();
-                    await this.updatePrivacyforDeletedAccount();
-                    const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
-                    const today = (new Date(Date.now())).toISOString().split('T')[0];
-                    console.log("Today: ", today, "Available Date: ", availableDate)
-                    await createPromoteClient({
-                        availableDate,
-                        channels: 30,
-                        lastActive: today,
-                        mobile: this.clientDetails.mobile,
-                        tgId: this.tgId
-                    })
                     const db = UserDataDtoCrud.getInstance();
+                    const today = (new Date(Date.now())).toISOString().split('T')[0];
                     const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
-                    const newPromoteClient = await db.findPromoteClient(query)
-                    console.log(this.clientDetails.clientId, " - New Promote Client: ", newPromoteClient)
-                    await db.updateClient(
-                        {
-                            clientId: this.clientDetails.clientId
-                        },
-                        {
-                            promoteMobile: newPromoteClient.mobile
-                        }
-                    )
-                    const result = await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
-                    console.log(result);
+                    const newPromoteClient = await db.findPromoteClient(query);
+                    if (newPromoteClient) {
+                        console.log("Setting up new client for : ", this.clientDetails.clientId, "as days :", this.daysLeft);
+                        await this.updateProfile('Deleted Account', 'Deleted Account');
+                        await this.deleteProfilePhotos();
+                        await this.updatePrivacyforDeletedAccount();
+                        const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
+                        console.log("Today: ", today, "Available Date: ", availableDate)
+                        await createPromoteClient({
+                            availableDate,
+                            channels: 30,
+                            lastActive: today,
+                            mobile: this.clientDetails.mobile,
+                            tgId: this.tgId
+                        })
+                        console.log(this.clientDetails.clientId, " - New Promote Client: ", newPromoteClient)
+                        await db.updateClient(
+                            {
+                                clientId: this.clientDetails.clientId
+                            },
+                            {
+                                promoteMobile: newPromoteClient.mobile
+                            }
+                        )
+                        const result = await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
+                        console.log(result);
+                    }
                 }
             }
         } else {
