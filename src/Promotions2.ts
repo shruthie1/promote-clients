@@ -141,21 +141,34 @@ export class Promotion {
     public async promoteInBatches() {
         this.channels = await this.fetchDialogs();
         let channelIndex = 0;
+
         if (this.channels.length > 0) {
             while (true) {
                 if (this.client) {
-                    const channelsBatch = this.channels.slice(channelIndex, channelIndex + 5);
+                    const batchSize = Math.floor(Math.random() * 4) + 3; // Randomize batch size between 3-5
+                    const channelsBatch = this.channels.slice(channelIndex, channelIndex + batchSize);
 
-                    if (channelsBatch.length < 5) {
-                        channelIndex = 0;
+                    if (channelsBatch.length < 3) {
+                        channelIndex = 0; // Restart index for a fresh batch
                         continue;
                     }
-                    let sentCount = 0
-                    console.log(`${this.clientDetails.clientId} ::  Started Batch`)
+
+                    console.log(`${this.clientDetails.clientId} :: Started Batch`);
+                    let sentCount = 0;
                     for (const channelId of channelsBatch) {
+                        // Simulate human behavior by randomly skipping channels
+                        if (Math.random() < 0.25) {
+                            console.log("Randomly skipping channel to simulate human behavior");
+                            continue;
+                        }
+
                         const channelInfo = await this.getChannelInfo(channelId);
                         if (!channelInfo?.banned) {
-                            let sentMessage: Api.Message = undefined
+                            let sentMessage: Api.Message | undefined;
+
+                            if (Math.random() < 0.3) {
+                                await sleep(Math.floor(Math.random() * 2000) + 1000); // 1-3 seconds pause
+                            }
 
                             if (channelInfo.wordRestriction === 0) {
                                 const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
@@ -167,14 +180,15 @@ export class Promotion {
                                 const endMsg = pickOneMsg(['U bussy👀?', "I'm Aviilble!!😊💦", 'Trry Once!!😊💦', 'Trry Once!!😊💦', 'Waiiting fr ur mssg.....Dr!!💦', 'U Onliine?👀', "I'm Avilble!!😊", 'U Bussy??👀💦', 'U Intrstd??👀💦', 'U Awakke?👀💦', 'U therre???💦💦']);
                                 const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`//\n\n${(isMorning) ? "Just Now I Came from My **College!!**" : "I am Alone in My **Hostel Room** Now!!"}🙈🙈\n\n**${endMsg}**`
                                 const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;//${randomEmoji}\n-------------------------------------------\n   ${emojis}${emojis}${emojis}${emojis}\n========================` : ""}**`;
-                                sentMessage = await this.sendMessageToChannel(channelInfo, { message: msg + addon });
+                                sentMessage = await this.sendMessageToChannel(channelInfo, {
+                                    message: `${msg}\n${addon}`,
+                                });
                             } else {
-                                let randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0]
-                                if (channelInfo.availableMsgs.length == 0) {
-                                    randomIndex = '0'
-                                }
+                                // Select a random available promotional message
+                                const randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
                                 const randomAvailableMsg = this.promoteMsgs[randomIndex];
                                 sentMessage = await this.sendMessageToChannel(channelInfo, { message: randomAvailableMsg });
+
                                 if (sentMessage) {
                                     this.messageQueue.push({
                                         channelId,
@@ -184,21 +198,25 @@ export class Promotion {
                                     });
                                 }
                             }
+
                             if (sentMessage) {
                                 sentCount++;
                             }
+
+                            // Randomized small delays between messages
                             const randomSmallDelay = Math.floor(Math.random() * (this.maxSmallDelay - this.smallDelay + 1)) + this.smallDelay;
                             await sleep(randomSmallDelay);
                         } else {
-                            console.log("Banned Channel")
+                            console.log("Banned Channel");
                         }
                     }
-                    console.log(this.clientDetails.clientId, "Sent : ", sentCount)
-                    channelIndex = (channelIndex + 5) % this.channels.length;
+
+                    console.log(`${this.clientDetails.clientId} Sent: ${sentCount}`);
+                    channelIndex = (channelIndex + batchSize) % this.channels.length;
 
                     if (channelIndex !== 0) {
                         const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
-                        console.log(`${this.clientDetails.clientId} ::  Sleeping for ${randomBatchDelay / 60000}`)
+                        console.log(`${this.clientDetails.clientId} :: Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
                         await sleep(randomBatchDelay);
                     }
                 } else {
@@ -206,11 +224,13 @@ export class Promotion {
                 }
             }
         }
+
+        // If promotions failed, notify and restart the client
         await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Issue with Promotions`);
         setTimeout(() => {
-            console.log(" Issue with Promotions", this.clientDetails.clientId)
-            restartClient(this.clientDetails.clientId)
-        }, 300000)
+            console.log("Issue with Promotions", this.clientDetails.clientId);
+            restartClient(this.clientDetails.clientId);
+        }, 300000);
     }
 
     async handlePrivateChannel(channelInfo: IChannel, message: SendMessageParams, error: any) {
