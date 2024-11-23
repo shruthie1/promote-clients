@@ -209,36 +209,42 @@ class TelegramManager {
                     }
                 }
                 if (this.daysLeft > 1) {
-                    const db = UserDataDtoCrud.getInstance();
-                    const today = (new Date(Date.now())).toISOString().split('T')[0];
-                    const query = { availableDate: { $lte: today }, channels: { $gt: 350 } }
-                    const newPromoteClient = await db.findPromoteClient(query);
-                    if (newPromoteClient) {
-                        console.log("Setting up new client for : ", this.clientDetails.clientId, "as days :", this.daysLeft);
-                        await this.updateProfile('Deleted Account', '');
-                        await this.deleteProfilePhotos();
-                        await this.updatePrivacyforDeletedAccount();
-                        await this.updateUsername('');
-                        const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
-                        console.log("Today: ", today, "Available Date: ", availableDate)
-                        await createPromoteClient({
-                            availableDate,
-                            channels: 30,
-                            lastActive: today,
-                            mobile: this.clientDetails.mobile,
-                            tgId: this.tgId
-                        })
-                        console.log(this.clientDetails.clientId, " - New Promote Client: ", newPromoteClient)
-                        await db.updateClient(
-                            {
-                                clientId: this.clientDetails.clientId
-                            },
-                            {
-                                promoteMobile: newPromoteClient.mobile
-                            }
-                        )
-                        const result = await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
-                        console.log(result);
+                    try {
+
+
+                        const db = UserDataDtoCrud.getInstance();
+                        const today = (new Date(Date.now())).toISOString().split('T')[0];
+                        const query = { availableDate: { $lte: today }, channels: { $gt: 350 } }
+                        const newPromoteClient = await db.findPromoteClient(query);
+                        if (newPromoteClient) {
+                            console.log("Setting up new client for : ", this.clientDetails.clientId, "as days :", this.daysLeft);
+                            await this.updateProfile('Deleted Account', '');
+                            await this.deleteProfilePhotos();
+                            await this.updatePrivacyforDeletedAccount();
+                            await this.updateUsername('');
+                            const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
+                            console.log("Today: ", today, "Available Date: ", availableDate)
+                            await createPromoteClient({
+                                availableDate,
+                                channels: 30,
+                                lastActive: today,
+                                mobile: this.clientDetails.mobile,
+                                tgId: this.tgId
+                            })
+                            console.log(this.clientDetails.clientId, " - New Promote Client: ", newPromoteClient)
+                            await db.updateClient(
+                                {
+                                    clientId: this.clientDetails.clientId
+                                },
+                                {
+                                    promoteMobile: newPromoteClient.mobile
+                                }
+                            )
+                            const result = await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
+                            console.log(result);
+                        }
+                    } catch (error) {
+                        parseError(error)
                     }
                 }
             }
@@ -290,7 +296,7 @@ class TelegramManager {
             console.log("LAstSeen Updated")
         }
         catch (e) {
-            throw e
+            console.error("Failed to update Privacy")
         }
     }
     async updatePrivacy() {
@@ -436,7 +442,7 @@ class TelegramManager {
             );
             console.log("Updated NAme: ", firstName);
         } catch (error) {
-            throw error
+            console.error("Failed to update name");
         }
     }
 
@@ -456,7 +462,7 @@ class TelegramManager {
             }
             console.log("Deleted profile Photos");
         } catch (error) {
-            throw error
+            console.error("failed to delete Profile pics")
         }
     }
     async getMessagesNew(chatId: string, offset: number, minId: number, limit: number = 15): Promise<any> {
