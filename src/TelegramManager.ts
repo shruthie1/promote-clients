@@ -208,10 +208,8 @@ class TelegramManager {
                         this.daysLeft = 99
                     }
                 }
-                if (this.daysLeft > 1) {
+                if (this.daysLeft > 3) {
                     try {
-
-
                         const db = UserDataDtoCrud.getInstance();
                         const today = (new Date(Date.now())).toISOString().split('T')[0];
                         const query = { availableDate: { $lte: today }, channels: { $gt: 350 } }
