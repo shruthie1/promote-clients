@@ -1,6 +1,7 @@
 import axios from "axios";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { UserDataDtoCrud } from "./dbservice";
+import { parseError } from "./parseError";
 
 export interface IChannel {
   channelId: string;
@@ -308,6 +309,6 @@ export const createPromoteClient = async (payload: PromoteClientPayload): Promis
     });
     console.log('Response:', response.data);
   } catch (error) {
-    console.error('Error:', error);
+    parseError(error, "Failedd to insert promoteClient");
   }
 };
