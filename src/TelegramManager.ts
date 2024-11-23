@@ -380,7 +380,9 @@ class TelegramManager {
                 await this.updateProfile(`College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`, "Genuine Paid Girl🥰, Best Services❤️");
             }
             if (!me.photo) {
-                await this.checkProfilePics()
+                await this.checkProfilePics();
+                await sleep(2000);
+                await this.updatePrivacy();
             }
             return me;
         } catch (error) {
