@@ -170,6 +170,7 @@ async function startConn() {
   console.log("Clients: ", clients?.length)
   for (const client of clients) {
     if (extractNumberFromString(client.clientId) == process.env.clientNumber && client.promoteMobile) {
+      console.log(client.clientId)
       clientsMap.set(client.clientId, {
         clientId: client.clientId,
         mobile: client.promoteMobile,

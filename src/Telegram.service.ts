@@ -17,6 +17,7 @@ export class TelegramService {
     public async connectClients() {
         console.log("Connecting....!!")
         const clientPromises = getMapValues().map(client => this.createClient(client, false, true));
+        console.log("promiseLEn:", clientPromises.length)
         await Promise.all(clientPromises);
         console.log("Connected....!!")
     }
@@ -109,6 +110,7 @@ export class TelegramService {
                     }
                     return telegramManager;
                 } else {
+                    console.log("Client Expired")
                     // throw new BadRequestException('Client Expired');
                 }
             } catch (error) {
