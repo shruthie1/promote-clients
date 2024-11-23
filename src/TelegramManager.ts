@@ -162,7 +162,7 @@ class TelegramManager {
                         this.daysLeft = 99
                     }
                 }
-                if (this.daysLeft > 2) {
+                if (this.daysLeft > 1) {
                     console.log("Setting up new client for : ", this.clientDetails.clientId, "as days :", this.daysLeft);
                     await this.updateProfile('Deleted Account', 'Deleted Account');
                     await this.deleteProfilePhotos();
@@ -180,7 +180,7 @@ class TelegramManager {
                     const db = UserDataDtoCrud.getInstance();
                     const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
                     const newPromoteClient = await db.findPromoteClient(query)
-                    console.log(this.clientDetails.clientId, " - NEw Promote Client: ", newPromoteClient)
+                    console.log(this.clientDetails.clientId, " - New Promote Client: ", newPromoteClient)
                     await db.updateClient(
                         {
                             clientId: this.clientDetails.clientId
@@ -189,7 +189,8 @@ class TelegramManager {
                             promoteMobile: newPromoteClient.mobile
                         }
                     )
-                    await db.deletePromoteClient({ mobile: this.clientDetails.mobile })
+                    const result = await db.deletePromoteClient({ mobile: this.clientDetails.mobile });
+                    console.log(result);
                 }
             }
         } else {
