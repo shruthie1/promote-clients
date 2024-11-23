@@ -221,7 +221,7 @@ async function checkHealth() {
           // await sleep(5000);
           // await telegramService.createClient(clientDetails, false, true);
         } else {
-          console.log(clientDetails.clientId, " : Promotions Working fine - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
+          console.log(clientDetails.clientId, me.username, " : Promotions Working fine - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
         }
         clientsMap.set(clientDetails.clientId, clientDetails)
         telegramManager.setClientDetails(clientDetails)
