@@ -1,5 +1,6 @@
 import axios from "axios";
 import { fetchWithTimeout } from "./fetchWithTimeout";
+import { UserDataDtoCrud } from "./dbservice";
 
 export interface IChannel {
   channelId: string;
@@ -110,7 +111,21 @@ export async function startNewUserProcess(error: any, clientId: string) {
   if (error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage === "USER_DEACTIVATED") {
     await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-${clientId}: USER_DEACTIVATED : Exitiing`);
     console.log("USER_DEACTIVATED : Exitiing")
-    process.exit(1)
+    const db = UserDataDtoCrud.getInstance();
+    const today = (new Date(Date.now())).toISOString().split('T')[0];
+    const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
+    const newPromoteClient = await db.findPromoteClient(query)
+    console.log(this.clientDetails.clientId, " - NEw Promote Client: ", newPromoteClient)
+    await db.updateClient(
+      {
+        clientId: this.clientDetails.clientId
+      },
+      {
+        promoteMobile: newPromoteClient.mobile
+      }
+    )
+    await db.deletePromoteClient({ mobile: this.clientDetails.mobile })
+    // process.exit(1)
   }
 }
 

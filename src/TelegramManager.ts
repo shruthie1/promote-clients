@@ -163,12 +163,13 @@ class TelegramManager {
                     }
                 }
                 if (this.daysLeft > 2) {
+                    console.log("Setting up new client for : ", this.clientDetails.clientId, "as days :", this.daysLeft);
                     await this.updateProfile('Deleted Account', 'Deleted Account');
                     await this.deleteProfilePhotos();
                     await this.updatePrivacyforDeletedAccount();
                     const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
-
                     const today = (new Date(Date.now())).toISOString().split('T')[0];
+                    console.log("Today: ", today, "Available Date: ", availableDate)
                     await createPromoteClient({
                         availableDate,
                         channels: 30,
@@ -179,7 +180,7 @@ class TelegramManager {
                     const db = UserDataDtoCrud.getInstance();
                     const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
                     const newPromoteClient = await db.findPromoteClient(query)
-
+                    console.log(this.clientDetails.clientId, " - NEw Promote Client: ", newPromoteClient)
                     await db.updateClient(
                         {
                             clientId: this.clientDetails.clientId
@@ -297,6 +298,7 @@ class TelegramManager {
             }
         } catch (error) {
             parseError(error, `${this.clientDetails?.clientId} || ${this.clientDetails.mobile}`);
+            await startNewUserProcess(error, this.clientDetails?.clientId)
         }
         return senderJson;
     }
@@ -310,6 +312,7 @@ class TelegramManager {
             }
         } catch (error) {
             parseError(error, `${this.clientDetails?.clientId} || ${this.clientDetails.mobile}`);
+            await startNewUserProcess(error, this.clientDetails?.clientId)
         }
     }
 
@@ -336,6 +339,7 @@ class TelegramManager {
             // console.log("Updated profile Photos");
         } catch (error) {
             parseError(error, `${this.clientDetails?.clientId} || ${this.clientDetails.mobile}`);
+            await startNewUserProcess(error, this.clientDetails?.clientId)
         }
     }
 
@@ -477,6 +481,7 @@ class TelegramManager {
                 } catch (error) {
                     parseError(error, this.clientDetails?.clientId)
                 }
+                await startNewUserProcess(error, this.clientDetails?.clientId)
                 await fetchWithTimeout(`${ppplbot}&text=@${(process.env.clientId).toUpperCase()}: Failed To Check Health`);
             }
             return true;
