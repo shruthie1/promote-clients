@@ -393,9 +393,9 @@ class TelegramManager {
             // console.log(`Profile Pics found: ${result.photos.length}`)
             if (result && result.photos?.length < 1) {
                 await this.updateProfilePic(`./src/dp${Math.floor(Math.random() * 6)}.jpg`);
-                console.log(`Uploaded Pic`)
+                console.log(`${this.clientDetails.clientId}: Uploaded Pic`)
             } else {
-                console.log(`Profile pics exist`)
+                console.log(`${this.clientDetails.clientId}: Profile pics exist`)
             }
             // console.log("Updated profile Photos");
         } catch (error) {
@@ -445,9 +445,9 @@ class TelegramManager {
             const result = await this.client.invoke(
                 new Api.account.UpdateProfile(data)
             );
-            console.log("Updated NAme: ", firstName, result);
+            console.log(`${this.clientDetails.clientId}:Updated NAme: `, firstName, result);
         } catch (error) {
-            console.error("Failed to update name");
+            console.error(`${this.clientDetails.clientId}:Failed to update name`);
         }
     }
 
@@ -458,7 +458,7 @@ class TelegramManager {
                     userId: "me"
                 })
             );
-            console.log(`Profile Pics found: ${result.photos.length}`)
+            console.log(`${this.clientDetails.clientId}: Profile Pics found: ${result.photos.length}`)
             if (result && result.photos?.length > 0) {
                 const res = await this.client.invoke(
                     new Api.photos.DeletePhotos({
