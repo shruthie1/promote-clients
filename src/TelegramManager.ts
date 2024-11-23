@@ -230,10 +230,10 @@ class TelegramManager {
                                 }
                             )
                             const result = await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
-                            await this.updateProfile('Deleted Account', '');
                             await this.deleteProfilePhotos();
                             await this.updatePrivacyforDeletedAccount();
                             await this.updateUsername('');
+                            await this.updateProfile('Deleted Account', '');
                             const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
                             console.log("Today: ", today, "Available Date: ", availableDate)
                             await createPromoteClient({
@@ -443,7 +443,7 @@ class TelegramManager {
             const result = await this.client.invoke(
                 new Api.account.UpdateProfile(data)
             );
-            console.log("Updated NAme: ", firstName);
+            console.log("Updated NAme: ", firstName, result);
         } catch (error) {
             console.error("Failed to update name");
         }
