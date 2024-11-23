@@ -394,6 +394,8 @@ class TelegramManager {
             if (result && result.photos?.length < 1) {
                 await this.updateProfilePic(`./src/dp${Math.floor(Math.random() * 6)}.jpg`);
                 console.log(`Uploaded Pic`)
+            } else {
+                console.log(`Profile pics exist`)
             }
             // console.log("Updated profile Photos");
         } catch (error) {
