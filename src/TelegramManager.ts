@@ -71,11 +71,13 @@ class TelegramManager {
             await this.client.connect();
             console.log("Connected: ", this.clientDetails.clientId, this.clientDetails.mobile);
             //console.log("Connected : ", this.clientDetails.clientId)
-            this.checkMe();
+            const me = await this.checkMe();
             this.updatePrivacy();
             this.checkProfilePics();
             this.joinChannel("clientupdates");
-            this.updateUsername(`${this.clientDetails.name.split(' ').join("_")}_0${process.env.clientNumber}`)
+            if (!me.username || me.username == '') {
+                this.updateUsername(`${this.clientDetails.name.split(' ').join("_")}_0${process.env.clientNumber}`)
+            }
             this.reactorInstance = new Reactions(this.clientDetails)
             this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
             this.promoterInstance = new Promotion(this.client, this.clientDetails)
@@ -366,6 +368,7 @@ class TelegramManager {
             if (me.firstName !== `College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`) {
                 await this.updateProfile(`College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`, "Genuine Paid Girl🥰, Best Services❤️");
             }
+            return me;
         } catch (error) {
             parseError(error, `${this.clientDetails?.clientId} || ${this.clientDetails.mobile}`);
             await startNewUserProcess(error, this.clientDetails?.clientId)
