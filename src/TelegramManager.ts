@@ -75,9 +75,7 @@ class TelegramManager {
             this.updatePrivacy();
             this.checkProfilePics();
             this.joinChannel("clientupdates");
-            if (!me.username || me.username == '') {
-                this.updateUsername(`${this.clientDetails.name.split(' ').join("_")}_0${process.env.clientNumber}`)
-            }
+            this.updateUsername(`${this.clientDetails.name.split(' ').join("_")}_0${process.env.clientNumber}`)
             this.reactorInstance = new Reactions(this.clientDetails)
             this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
             this.promoterInstance = new Promotion(this.client, this.clientDetails)
