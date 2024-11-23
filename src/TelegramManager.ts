@@ -236,9 +236,13 @@ class TelegramManager {
                             )
                             const result = await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
                             await this.deleteProfilePhotos();
+                            await sleep(1500)
                             await this.updatePrivacyforDeletedAccount();
+                            await sleep(1500)
                             await this.updateUsername('');
+                            await sleep(1500)
                             await this.updateProfile('Deleted Account', '');
+                            await sleep(1500)
                             const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
                             console.log("Today: ", today, "Available Date: ", availableDate)
                             await createPromoteClient({
