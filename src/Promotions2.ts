@@ -22,10 +22,10 @@ export class Promotion {
     public lastMessageTime = Date.now() - 240000;
     private lastCheckedTime: number;
     private channels: string[];
-    private minDelay: number = 90000;
-    private maxDelay: number = 300000;
-    private smallDelay: number = 2000;
-    private maxSmallDelay: number = 4000;
+    private minDelay: number = 100000;
+    private maxDelay: number = 350000;
+    private smallDelay: number = 1000;
+    private maxSmallDelay: number = 5000;
     private messageQueue: MessageQueueItem[] = []
     private messageCheckDelay: number = 15000;
     private promoteMsgs = {};

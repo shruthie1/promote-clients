@@ -79,6 +79,10 @@ app.get('/', (req, res) => {
   res.send("Hello World");
 })
 
+app.get('/getClients', async (req, res) => {
+  res.json(await getALLClients())
+})
+
 app.get('/exit', (req, res, next) => {
   res.send("Exitting");
   next()
@@ -184,6 +188,16 @@ async function startConn() {
   }
   const telegramService = TelegramService.getInstance();
   await telegramService.connectClients()
+}
+
+async function getALLClients() {
+  const telegramService = TelegramService.getInstance();
+  const keys = telegramService.getMapKeys();
+  const result = {}
+  for (const key of keys) {
+    result[key] = telegramService.getClient(key) ? true : false
+  }
+  return result
 }
 
 async function checkHealth() {
