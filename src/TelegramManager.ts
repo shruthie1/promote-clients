@@ -354,7 +354,7 @@ class TelegramManager {
             //console.log("LAstSeen Updated")
         }
         catch (e) {
-           console.log(e)
+            console.log(e)
         }
     }
 
@@ -378,6 +378,9 @@ class TelegramManager {
             this.tgId = me.id.toString();
             if (me.firstName !== `College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`) {
                 await this.updateProfile(`College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`, "Genuine Paid Girl🥰, Best Services❤️");
+            }
+            if (!me.photo) {
+                await this.checkProfilePics()
             }
             return me;
         } catch (error) {
