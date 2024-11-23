@@ -320,6 +320,7 @@ class TelegramManager {
                     ],
                 })
             );
+            await sleep(1500)
             //console.log("Calls Updated")
             await this.client.invoke(
                 new Api.account.SetPrivacy({
@@ -330,7 +331,7 @@ class TelegramManager {
                 })
             );
             //console.log("PP Updated")
-
+            await sleep(1500)
             await this.client.invoke(
                 new Api.account.SetPrivacy({
                     key: new Api.InputPrivacyKeyPhoneNumber(),
@@ -340,7 +341,7 @@ class TelegramManager {
                 })
             );
             //console.log("Number Updated")
-
+            await sleep(1500)
             await this.client.invoke(
                 new Api.account.SetPrivacy({
                     key: new Api.InputPrivacyKeyStatusTimestamp(),
@@ -349,10 +350,11 @@ class TelegramManager {
                     ],
                 })
             );
+            await sleep(1500)
             //console.log("LAstSeen Updated")
         }
         catch (e) {
-            throw e
+           console.log(e)
         }
     }
 
