@@ -145,8 +145,7 @@ export class Promotion {
         if (this.channels.length > 0) {
             while (true) {
                 if (this.client) {
-                    const batchSize = Math.floor(Math.random() * 4) + 3; // Randomize batch size between 3-5
-                    const channelsBatch = this.channels.slice(channelIndex, channelIndex + batchSize);
+                    const channelsBatch = this.channels.slice(channelIndex, channelIndex + 5);
 
                     if (channelsBatch.length < 3) {
                         channelIndex = 0; // Restart index for a fresh batch
@@ -211,7 +210,7 @@ export class Promotion {
                     }
 
                     console.log(`${this.clientDetails.clientId} Sent: ${sentCount}`);
-                    channelIndex = (channelIndex + batchSize) % this.channels.length;
+                    channelIndex = (channelIndex + 5) % this.channels.length;
 
                     if (channelIndex !== 0) {
                         const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
