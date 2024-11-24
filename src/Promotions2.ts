@@ -156,7 +156,7 @@ export class Promotion {
                     let sentCount = 0;
                     for (const channelId of channelsBatch) {
                         // Simulate human behavior by randomly skipping channels
-                        if (Math.random() < 0.25) {
+                        if (Math.random() < 0.2) {
                             continue;
                         }
 
@@ -206,6 +206,7 @@ export class Promotion {
                             await sleep(randomSmallDelay);
                         } else {
                             console.log("Banned Channel");
+                            this.channels = this.channels.filter(id => id !== channelId);
                         }
                     }
 
