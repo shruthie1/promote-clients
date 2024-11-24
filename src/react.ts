@@ -166,17 +166,7 @@ export class Reactions {
                 if (this.lastReactedtime < Date.now() - 60000 && (!this.flag || this.reactQueue.contains(chatId)) && this.reactionsRestarted < Date.now() - 30000) {
                     this.flag = true;
                     this.reactionsRestarted = Date.now();
-                    console.log(`
-                        === Client Process Debug Info ===
-                        ClientID: ${this.clientDetails.clientId.toUpperCase()}
-                        ------ Restarted Reactions ------
-                        Flag: ${this.flag}
-                        WaitReactTimePassed: ${this.waitReactTime < Date.now()}
-                        InReactQueue: ${this.reactQueue.contains(chatId)}
-                        InRestrictedIDs: ${contains(chatId, this.reactRestrictedIds)}
-                        WaitTimeElapsed: ${Math.floor((Date.now() - this.lastReactedtime) / 1000)} seconds
-                        ==================================
-                    `);
+                    console.log(`\n=== Client Process Debug Info ===\nClientID: ${this.clientDetails.clientId.toUpperCase()}\n------ Restarted Reactions ------\nFlag: ${this.flag}\nWaitReactTimePassed: ${this.waitReactTime < Date.now()}\nNotInReactQueue: ${!this.reactQueue.contains(chatId)}\nNotInRestrictedIDs: ${!contains(chatId, this.reactRestrictedIds)}\nWaitTimeElapsed: ${Math.floor((Date.now() - this.lastReactedtime) / 1000)} seconds\n==================================`);
                 }
 
                 // if (lastReactedtime < Date.now() - 240000) {
@@ -186,13 +176,7 @@ export class Reactions {
 
                 if (this.lastReactedtime < Date.now() - 240000 && Date.now() > this.floodReleaseTime && this.lastNotifiedTime < Date.now() - 5 * 60 * 1000) {
                     this.lastNotifiedTime = Date.now();
-                    console.log(`
-                        ClientID: ${this.clientDetails.clientId.toUpperCase()}
-                        Flag: ${this.flag}
-                        WaitReactTimePassed: ${this.waitReactTime < Date.now()}
-                        InReactQueue: ${this.reactQueue.contains(chatId)}
-                        InRestrictedIDs: ${contains(chatId, this.reactRestrictedIds)}
-                    `);
+                    console.log(`ClientID: ${this.clientDetails.clientId.toUpperCase()}\nFlag: ${this.flag}\nWaitReactTimePassed: ${this.waitReactTime < Date.now()}\nNotInReactQueue: ${!this.reactQueue.contains(chatId)}\nNotInRestrictedIDs: ${!contains(chatId, this.reactRestrictedIds)}`);
                     if (Math.floor((Date.now() - this.lastReactedtime) / 1000) > 500) {
                         console.log("Reactions Stopped", this.clientDetails.clientId, (Date.now() - this.lastReactedtime) / 1000)
                         // await restartClient(this.clientDetails.clientId);
