@@ -156,7 +156,7 @@ export class Promotion {
                     let sentCount = 0;
                     for (const channelId of channelsBatch) {
                         // Simulate human behavior by randomly skipping channels
-                        if (Math.random() < 0.2) {
+                        if (Math.random() < 0.1) {
                             console.log(`${this.clientDetails.clientId} :: Skipped: ${channelId}`)
                             continue;
                         }
