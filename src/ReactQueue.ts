@@ -15,7 +15,7 @@ export class ReactQueue {
         }
         this.timer = setTimeout(() => {
             this.pop();
-        }, 100000); // 1 minute
+        }, 60000); // 1 minute
     }
 
     public pop() {
