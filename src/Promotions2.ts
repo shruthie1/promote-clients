@@ -24,8 +24,8 @@ export class Promotion {
     private channels: string[];
     private minDelay: number = 120000;
     private maxDelay: number = 400000;
-    private smallDelay: number = 1000;
-    private maxSmallDelay: number = 5000;
+    private smallDelay: number = 2000;
+    private maxSmallDelay: number = 6000;
     private messageQueue: MessageQueueItem[] = []
     private messageCheckDelay: number = 15000;
     private promoteMsgs = {};
