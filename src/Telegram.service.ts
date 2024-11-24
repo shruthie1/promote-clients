@@ -15,12 +15,15 @@ export class TelegramService {
     }
 
     public async connectClients() {
-        console.log("Connecting....!!")
-        const clientPromises = getMapValues().map(client => this.createClient(client, false, true));
-        console.log("promiseLEn:", clientPromises.length)
-        await Promise.all(clientPromises);
-        console.log("Connected....!!")
+        console.log("Connecting....!!");
+        const clients = getMapValues();
+        console.log("Total clients:", clients.length);
+        for (const client of clients) {
+            await this.createClient(client, false, true);
+        }
+        console.log("Connected....!!");
     }
+    
 
     public getMapValues() {
         return Array.from(TelegramService.clientsMap.values())
