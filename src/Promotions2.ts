@@ -152,7 +152,7 @@ export class Promotion {
                         continue;
                     }
 
-                    console.log(`${this.clientDetails.clientId} :: Started Batch`);
+                    console.log(`${this.clientDetails.clientId} :: Started Batch: ${channelsBatch.length}-${channelsBatch}`);
                     let sentCount = 0;
                     for (const channelId of channelsBatch) {
                         // Simulate human behavior by randomly skipping channels
