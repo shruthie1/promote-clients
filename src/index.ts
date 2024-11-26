@@ -85,7 +85,7 @@ const modifyPackageJson = (action: string, packageName: string, version?: string
 };
 // modifyPackageJson('add', 'lodash', '^4.17.21');
 // modifyPackageJson('remove', 'lodash');
-modifyPackageJson('change', 'telegram', '^2.26.8');
+modifyPackageJson('change', 'telegram', '2.16.4');
 // modifyPackageJson('add', 'cors', '^2.8.5');
 installPackage()
 
