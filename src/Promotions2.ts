@@ -195,7 +195,7 @@ export class Promotion {
                             const randomSmallDelay = Math.floor(Math.random() * (this.maxSmallDelay - this.smallDelay + 1)) + this.smallDelay;
                             await sleep(randomSmallDelay);
                         } else {
-                            console.log("Banned Channel");
+                            console.log(`${this.clientDetails.clientId} - Banned Channel - @${channelInfo.username}`);
                             this.channels = this.channels.filter(id => id !== channelId);
                         }
                     }
