@@ -105,7 +105,7 @@ export class Promotion {
             if (this.client) {
                 if (this.sleepTime < Date.now()) {
                     const result = await this.client.sendMessage(channelInfo.channelId, message);
-                    console.log(`Client ${this.clientDetails.clientId}: Message sent to ${channelInfo.channelId}`);
+                    console.log(`Client ${this.clientDetails.clientId}: Message sent to ${channelInfo.channelId} || @${channelInfo.username}`);
                     this.lastMessageTime = Date.now()
                     return result
                 } else {
