@@ -217,31 +217,35 @@ async function checkHealth() {
     }
     const telegramManager = await telegramService.getClient(clientDetails.clientId);
     if (telegramManager) {
-      const me = await telegramManager.getMe();
-      if (me.phone !== clientDetails.mobile) {
-        console.log(clientDetails.clientId, " : mobile changed", " me : ", me, "clientDetails: ", clientDetails);
-        clientsMap.set(clientDetails.clientId, clientDetails)
-        await restartClient(clientDetails.clientId)
-      } else {
-
-        if (telegramManager.getLastMessageTime() < Date.now() - 5 * 60 * 1000) {
-          console.log(clientDetails.clientId, " : Promotions stopped - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
-          await telegramManager.checktghealth();
-          if (telegramManager.daysLeft == -1 && telegramManager.getLastMessageTime() < Date.now() - 10 * 60 * 1000) {
-            console.log("Promotion seems stopped", clientDetails.clientId)
-            restartClient(clientDetails.clientId)
-          }
-          // await telegramService.deleteClient(client.clientId);
-          // await sleep(5000);
-          // await telegramService.createClient(clientDetails, false, true);
+      try {
+        const me = await telegramManager.getMe();
+        if (me.phone !== clientDetails.mobile) {
+          console.log(clientDetails.clientId, " : mobile changed", " me : ", me, "clientDetails: ", clientDetails);
+          clientsMap.set(clientDetails.clientId, clientDetails)
+          await restartClient(clientDetails.clientId)
         } else {
-          console.log(clientDetails.clientId, me.username, " : Promotions Working fine - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
+
+          if (telegramManager.getLastMessageTime() < Date.now() - 5 * 60 * 1000) {
+            console.log(clientDetails.clientId, " : Promotions stopped - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
+            await telegramManager.checktghealth();
+            if (telegramManager.daysLeft == -1 && telegramManager.getLastMessageTime() < Date.now() - 10 * 60 * 1000) {
+              console.log("Promotion seems stopped", clientDetails.clientId)
+              restartClient(clientDetails.clientId)
+            }
+            // await telegramService.deleteClient(client.clientId);
+            // await sleep(5000);
+            // await telegramService.createClient(clientDetails, false, true);
+          } else {
+            console.log(clientDetails.clientId, me.username, " : Promotions Working fine - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
+          }
+          clientsMap.set(clientDetails.clientId, clientDetails)
+          telegramManager.setClientDetails(clientDetails)
+          setTimeout(async () => {
+            await telegramManager.checkMe();
+          }, 30000);
         }
-        clientsMap.set(clientDetails.clientId, clientDetails)
-        telegramManager.setClientDetails(clientDetails)
-        setTimeout(async () => {
-          await telegramManager.checkMe();
-        }, 30000);
+      } catch (e) {
+        parseError(e, clientDetails.clientId)
       }
     } else {
       console.log("Does not Exist Client: ", client.clientId)
