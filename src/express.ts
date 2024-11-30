@@ -216,8 +216,6 @@ async function checkHealth() {
       startTime: client?.startTime || Date.now()
     }
     try {
-
-
       const telegramManager = await telegramService.getClient(clientDetails.clientId);
       if (telegramManager) {
         try {
@@ -225,7 +223,7 @@ async function checkHealth() {
           if (me.phone !== clientDetails.mobile) {
             console.log(clientDetails.clientId, " : mobile changed", " me : ", me, "clientDetails: ", clientDetails);
             clientsMap.set(clientDetails.clientId, clientDetails)
-            await restartClient(clientDetails.clientId)
+            await restartClient(clientDetails?.clientId)
           } else {
 
             if (telegramManager.getLastMessageTime() < Date.now() - 5 * 60 * 1000) {
@@ -233,7 +231,7 @@ async function checkHealth() {
               await telegramManager.checktghealth();
               if (telegramManager.daysLeft == -1 && telegramManager.getLastMessageTime() < Date.now() - 10 * 60 * 1000) {
                 console.log("Promotion seems stopped", clientDetails.clientId)
-                restartClient(clientDetails.clientId)
+                restartClient(clientDetails?.clientId)
               }
               // await telegramService.deleteClient(client.clientId);
               // await sleep(5000);

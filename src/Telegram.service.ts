@@ -42,12 +42,12 @@ export class TelegramService {
                 return tgManager
             } else {
                 console.log(`tg manager is undefined: ${clientId}`)
+                return undefined;
             }
         } catch (error) {
             console.log(error);
-            process.exit(1)
+            process.exit(1);
         }
-        return undefined;
     }
 
     public hasClient(clientId: string) {

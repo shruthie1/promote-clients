@@ -6,7 +6,7 @@ import { fetchWithTimeout } from "./fetchWithTimeout";
 import { parseError } from "./parseError";
 import { ReactQueue } from "./ReactQueue";
 import { contains, ppplbot, startNewUserProcess } from "./utils";
-import { IClientDetails, restartClient } from "./express";
+import { IClientDetails } from "./express";
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=${process.env.notifChannel}`
 
 export class Reactions {
