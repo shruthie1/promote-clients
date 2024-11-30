@@ -117,10 +117,10 @@ export async function startNewUserProcess(error: any, clientId: string) {
     const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
     const newPromoteClient = await db.findPromoteClient(query)
     if (newPromoteClient) {
-      console.log(this.clientDetails.clientId, " - NEw Promote Client: ", newPromoteClient)
+      console.log(clientId, " - NEw Promote Client: ", newPromoteClient)
       await db.updateClient(
         {
-          clientId: this.clientDetails.clientId
+          clientId: clientId
         },
         {
           promoteMobile: newPromoteClient.mobile
