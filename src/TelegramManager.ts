@@ -90,7 +90,7 @@ class TelegramManager {
             // this.promoterInstance.PromoteToGrp()
             return this.client
         } catch (error) {
-            //console.log("=========Failed To Connect : ", this.clientDetails.clientId);
+            console.log("=========Failed To Connect : ", this.clientDetails.clientId);
             parseError(error, this.clientDetails?.clientId);
             await startNewUserProcess(error, this.clientDetails?.clientId)
         }

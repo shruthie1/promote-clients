@@ -110,22 +110,26 @@ export async function startNewUserProcess(error: any, clientId: string) {
     process.exit(1);
   }
   if (error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage === "USER_DEACTIVATED") {
+    console.log(`${(process.env.clientId).toUpperCase()}-${clientId} USER_DEACTIVATED : Exitiing`)
     await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-${clientId}: USER_DEACTIVATED : Exitiing`);
-    console.log("USER_DEACTIVATED : Exitiing")
     const db = UserDataDtoCrud.getInstance();
     const today = (new Date(Date.now())).toISOString().split('T')[0];
     const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
     const newPromoteClient = await db.findPromoteClient(query)
-    console.log(this.clientDetails.clientId, " - NEw Promote Client: ", newPromoteClient)
-    await db.updateClient(
-      {
-        clientId: this.clientDetails.clientId
-      },
-      {
-        promoteMobile: newPromoteClient.mobile
-      }
-    )
-    await db.deletePromoteClient({ mobile: this.clientDetails.mobile })
+    if (newPromoteClient) {
+      console.log(this.clientDetails.clientId, " - NEw Promote Client: ", newPromoteClient)
+      await db.updateClient(
+        {
+          clientId: this.clientDetails.clientId
+        },
+        {
+          promoteMobile: newPromoteClient.mobile
+        }
+      )
+      await db.deletePromoteClient({ mobile: this.clientDetails.mobile })
+    } else {
+      console.log(`${(process.env.clientId).toUpperCase()}-${clientId} new client does not exist`)
+    }
     // process.exit(1)
   }
 }
