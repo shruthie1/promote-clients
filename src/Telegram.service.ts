@@ -34,7 +34,7 @@ export class TelegramService {
     }
 
     public async getClient(clientId: string) {
-        // console.log("Getting Client :", clientId)
+        console.log("Getting Client :", clientId)
         const tgManager = TelegramService.clientsMap.get(clientId);
         try {
             if (tgManager && tgManager.connected()) {
