@@ -156,6 +156,12 @@ export class UserDataDtoCrud {
         }
     }
 
+    async getClient(filter: any) {
+        const client = await this.client.db("tgclients").collection('clients').findOne(filter)
+        return client;
+    }
+
+
     async findPromoteClient(filter: any) {
         try {
             const clientsDb = this.client.db("tgclients").collection('promoteClients')

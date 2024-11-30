@@ -244,7 +244,7 @@ async function checkHealth() {
         }, 30000);
       }
     } else {
-      // console.log("Does not Exist Client: ", client.clientId)
+      console.log("Does not Exist Client: ", client.clientId)
     }
   }
 }
