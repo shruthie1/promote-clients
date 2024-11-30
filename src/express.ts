@@ -261,6 +261,11 @@ export function getMapKeys() {
   return Array.from(clientsMap.keys())
 }
 
+export function getClient(clientId) {
+  const client = clientsMap.get(clientId)
+  return client
+}
+
 export async function restartClient(clientId: string) {
   if (clientId) {
     const client = clientsMap.get(clientId)

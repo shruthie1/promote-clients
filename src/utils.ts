@@ -2,6 +2,7 @@ import axios from "axios";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { UserDataDtoCrud } from "./dbservice";
 import { parseError } from "./parseError";
+import { getClient } from "./express";
 
 export interface IChannel {
   channelId: string;
@@ -126,7 +127,8 @@ export async function startNewUserProcess(error: any, clientId: string) {
           promoteMobile: newPromoteClient.mobile
         }
       )
-      await db.deletePromoteClient({ mobile: this.clientDetails.mobile })
+      const clientDetails = getClient(clientId)
+      await db.deletePromoteClient({ mobile: clientDetails.mobile })
     } else {
       console.log(`${(process.env.clientId).toUpperCase()}-${clientId} new client does not exist`)
     }
