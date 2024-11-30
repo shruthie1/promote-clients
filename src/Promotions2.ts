@@ -22,10 +22,10 @@ export class Promotion {
     public lastMessageTime = Date.now() - 240000;
     private lastCheckedTime: number;
     private channels: string[];
-    private minDelay: number = 120000;
-    private maxDelay: number = 400000;
+    private minDelay: number = 90000;
+    private maxDelay: number = 300000;
     private smallDelay: number = 2000;
-    private maxSmallDelay: number = 6000;
+    private maxSmallDelay: number = 4000;
     private messageQueue: MessageQueueItem[] = []
     private messageCheckDelay: number = 15000;
     private promoteMsgs = {};
@@ -155,19 +155,9 @@ export class Promotion {
                     console.log(`${this.clientDetails.clientId} :: Started Batch: ${channelsBatch.length}-${channelsBatch}`);
                     let sentCount = 0;
                     for (const channelId of channelsBatch) {
-                        // Simulate human behavior by randomly skipping channels
-                        if (Math.random() < 0.1 && sentCount > 2) {
-                            console.log(`${this.clientDetails.clientId} :: Skipped: ${channelId}`)
-                            continue;
-                        }
-
                         const channelInfo = await this.getChannelInfo(channelId);
                         if (!channelInfo?.banned) {
                             let sentMessage: Api.Message | undefined;
-
-                            if (Math.random() < 0.3) {
-                                await sleep(Math.floor(Math.random() * 2000) + 1000); // 1-3 seconds pause
-                            }
 
                             if (channelInfo.wordRestriction === 0) {
                                 const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
@@ -202,7 +192,6 @@ export class Promotion {
                                 sentCount++;
                             }
 
-                            // Randomized small delays between messages
                             const randomSmallDelay = Math.floor(Math.random() * (this.maxSmallDelay - this.smallDelay + 1)) + this.smallDelay;
                             await sleep(randomSmallDelay);
                         } else {
@@ -225,7 +214,6 @@ export class Promotion {
             }
         }
 
-        // If promotions failed, notify and restart the client
         await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Issue with Promotions`);
         setTimeout(() => {
             console.log("Issue with Promotions", this.clientDetails.clientId);
@@ -237,7 +225,6 @@ export class Promotion {
         const db = UserDataDtoCrud.getInstance();
         if (channelInfo && channelInfo.username) {
             try {
-                // Attempt to send the message using the channel's username
                 return await this.client.sendMessage(channelInfo.username, message);
             } catch (err) {
                 console.error(`Error retrying message for private channel ${channelInfo.username}:`, err);
