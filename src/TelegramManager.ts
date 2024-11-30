@@ -10,7 +10,7 @@ import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
 import { IClientDetails } from "./express";
-import { createPromoteClient, getdaysLeft, startNewUserProcess } from "./utils";
+import { createPromoteClient, getdaysLeft, saveFile, startNewUserProcess } from "./utils";
 
 import { Promotion } from "./Promotions2";
 import { UserDataDtoCrud } from "./dbservice";
@@ -408,7 +408,9 @@ class TelegramManager {
             );
             // console.log(`Profile Pics found: ${result.photos.length}`)
             if (result && result.photos?.length < 1) {
-                await this.updateProfilePic(`./src/dp${Math.floor(Math.random() * 6)}.jpg`);
+                const filepath = await saveFile(`${this.clientDetails.repl}/downloadprofilepic/1`, this.clientDetails.clientId);
+                console.log("FilePath :", filepath)
+                await this.updateProfilePic(filepath);
                 console.log(`${this.clientDetails.clientId}: Uploaded Pic`)
             } else {
                 console.log(`${this.clientDetails.clientId}: Profile pics exist`)

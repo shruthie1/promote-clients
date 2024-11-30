@@ -3,6 +3,8 @@ import { fetchWithTimeout } from "./fetchWithTimeout";
 import { UserDataDtoCrud } from "./dbservice";
 import { parseError } from "./parseError";
 import { getClient } from "./express";
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface IChannel {
   channelId: string;
@@ -323,3 +325,28 @@ export const createPromoteClient = async (payload: PromoteClientPayload): Promis
     parseError(error, "Failedd to insert promoteClient");
   }
 };
+
+export async function saveFile(url: string, name: string): Promise<string> {
+  const extension = url.substring(url.lastIndexOf('.') + 1);
+  const mypath = path.resolve(__dirname, `../${name}.${extension}`);
+
+  try {
+    const response = await fetchWithTimeout(url, { responseType: 'arraybuffer' });
+
+    if (response?.status === 200) {
+      try {
+        fs.writeFileSync(mypath, response.data);
+        console.log(`${name}.${extension} Saved!!`);
+        return mypath;
+      } catch (err) {
+        console.error('File operation error:', err);
+        throw new Error(`Failed to save file: ${err.message}`);
+      }
+    } else {
+      throw new Error(`Unable to download file from ${url}`);
+    }
+  } catch (err) {
+    console.error('Download error:', err);
+    throw err;
+  }
+}
