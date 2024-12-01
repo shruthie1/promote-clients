@@ -394,7 +394,7 @@ export async function sendToLogs({
     const apiUrl = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodedMessage}`;
 
     try {
-      console.log(`Attempt ${attempts + 1} with token: ${token}`);
+      // console.log(`Attempt ${attempts + 1} with token: ${token}`);
 
       // Timeout wrapper for fetch
       const controller = new AbortController();
