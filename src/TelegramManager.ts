@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
-import { IClientDetails, updateMsgCount } from "./express";
+import { IClientDetails, updateClient, updateMsgCount } from "./express";
 import { createPromoteClient, getdaysLeft, saveFile, startNewUserProcess } from "./utils";
 
 import { Promotion } from "./Promotions2";
@@ -200,6 +200,7 @@ class TelegramManager {
                             const days = getdaysLeft(date);
                             console.log("Days Left: ", days);
                             this.promoterInstance.setDaysLeft(days)
+                            updateClient(this.clientDetails.clientId, { daysLeft: days })
                             this.daysLeft = days
                             // if (days == 3) {
                             // this.promoterInstance.setChannels(openChannels)
