@@ -143,11 +143,12 @@ export class Promotion {
     public async promoteInBatches() {
         this.channels = await this.fetchDialogs();
         let channelIndex = 0;
+        const batchLength = 1;
 
         if (this.channels.length > 0) {
             while (true) {
                 if (this.client) {
-                    const channelsBatch = this.channels.slice(channelIndex, channelIndex + 5);
+                    const channelsBatch = this.channels.slice(channelIndex, channelIndex + batchLength);
 
                     if (channelsBatch.length < 3) {
                         channelIndex = 0; // Restart index for a fresh batch
@@ -203,7 +204,7 @@ export class Promotion {
                     }
 
                     console.log(`${this.clientDetails.clientId} Sent: ${sentCount}`);
-                    channelIndex = (channelIndex + 5) % this.channels.length;
+                    channelIndex = (channelIndex + batchLength) % this.channels.length;
 
                     if (channelIndex !== 0) {
                         const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
