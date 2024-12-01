@@ -79,23 +79,39 @@ export class Promotion {
         try {
             await this.client?.connect()
             const dialogs = await this.client.getDialogs({ limit: 500 });
-            //console.log("Dialogs : ", dialogs.length)
-            const unreadUserDialogs = [];
+            const channelData = [];
+
             for (const dialog of dialogs) {
-                if (dialog.isUser && dialog.unreadCount > 0) {
-                    unreadUserDialogs.push(dialog);
-                } else if (dialog.isChannel || dialog.isGroup) {
+                if (dialog.isChannel || dialog.isGroup) {
                     const chatEntity = <Api.Channel>dialog.entity.toJSON();
                     const { id, defaultBannedRights, title, broadcast, username, participantsCount, restricted } = chatEntity;
                     if (!broadcast && !defaultBannedRights?.sendMessages && !restricted && id && participantsCount > 500) {
                         const channelId = id.toString().replace(/^-100/, "");
-                        channelIds.push(channelId)
+                        channelData.push({ channelId, participantsCount });
                     }
                 }
             }
+
+            // Sort by participantsCount in descending order
+            channelData.sort((a, b) => b.participantsCount - a.participantsCount);
+
+            // Get top 250 channels
+            const top250Channels = channelData.slice(0, 250);
+
+            // Fisher-Yates Shuffle
+            for (let i = top250Channels.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [top250Channels[i], top250Channels[j]] = [top250Channels[j], top250Channels[i]];
+            }
+
+            // Collect shuffled channel IDs
+            for (const channel of top250Channels) {
+                channelIds.push(channel.channelId);
+            }
+
+            // Proceed with unread dialogs and other actions
         } catch (error) {
             parseError(error, `${this.clientDetails.clientId}|${this.clientDetails.mobile} - Failed to fetch channels while promoting`, true);
-            // await startNewUserProcess(error);
         }
         return channelIds;
     }
