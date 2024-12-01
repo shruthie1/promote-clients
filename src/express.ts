@@ -31,7 +31,8 @@ export interface IClientDetails {
   name: string;
   startTime: number,
   successCount: number,
-  failedCount: number
+  failedCount: number,
+  messageCount: number
 }
 
 
@@ -186,7 +187,8 @@ async function startConn() {
         name: client.name,
         startTime: Date.now(),
         successCount: 0,
-        failedCount: 0
+        failedCount: 0,
+        messageCount: 0
       })
     }
   }
@@ -201,7 +203,8 @@ async function getALLClients() {
     result[key] = {
       service: telegramService.getClient(key) ? true : false,
       successCount: value.successCount,
-      failedCount: value.failedCount
+      failedCount: value.failedCount,
+      messageCount: value.messageCount
     }
   })
 
@@ -224,7 +227,8 @@ async function checkHealth() {
         name: clientData.name,
         startTime: client?.startTime || Date.now(),
         successCount: client.successCount,
-        failedCount: client.failedCount
+        failedCount: client.failedCount,
+        messageCount: client.messageCount
       }
       try {
         const telegramManager = await telegramService.getClient(clientDetails.clientId);
@@ -291,6 +295,10 @@ export function updateSuccessCount(clientId: string) {
   clientsMap.set(clientId, { ...client, successCount: client.successCount + 1 })
 }
 export function updateFailedCount(clientId: string) {
+  const client = clientsMap.get(clientId);
+  clientsMap.set(clientId, { ...client, failedCount: client.failedCount + 1 })
+}
+export function updateMsgCount(clientId: string) {
   const client = clientsMap.get(clientId);
   clientsMap.set(clientId, { ...client, failedCount: client.failedCount + 1 })
 }
