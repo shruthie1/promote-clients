@@ -119,7 +119,7 @@ export class Promotion {
                 restartClient(this.clientDetails.clientId)
             }
         } catch (error) {
-            await sendToLogs({ message: `${this.clientDetails.clientId.toUpperCase()}:❌ ${this.daysLeft}\n@${channelInfo.username}?\n${error.errorMessage}` })
+            await sendToLogs({ message: `${this.clientDetails.clientId.toUpperCase()}:❌ ${this.daysLeft}\n@${channelInfo.username}\n${error.errorMessage}` })
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(this.clientDetails.clientId, `Some Error Occured, ${error.errorMessage}`)
             }
