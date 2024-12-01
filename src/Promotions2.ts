@@ -180,7 +180,7 @@ export class Promotion {
                             } else {
                                 // Select a random available promotional message
                                 const randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
-                                const randomAvailableMsg = this.promoteMsgs[randomIndex];
+                                const randomAvailableMsg = this.promoteMsgs[randomIndex] || "Hiii";
                                 sentMessage = await this.sendMessageToChannel(channelInfo, { message: randomAvailableMsg });
 
                                 if (sentMessage) {
