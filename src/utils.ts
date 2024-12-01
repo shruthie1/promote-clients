@@ -372,7 +372,7 @@ interface SendToLogsOptions {
 
 export async function sendToLogs({
   message,
-  chatId = '-10023449338017',
+  chatId = '-1002349338017',
   maxRetries = tokens.length,
   initialDelayMs = 500,
   timeoutMs = 5000,
@@ -384,11 +384,10 @@ export async function sendToLogs({
   let delay = initialDelayMs;
 
   const encodedMessage = encodeURIComponent(message);
-  const encodedChatId = encodeURIComponent(chatId);
 
   while (attempts < maxRetries) {
     const token = tokens[currentTokenIndex];
-    const apiUrl = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${encodedChatId}&text=${encodedMessage}`;
+    const apiUrl = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodedMessage}`;
 
     try {
       console.log(`Attempt ${attempts + 1} with token: ${token}`);
