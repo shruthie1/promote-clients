@@ -29,7 +29,9 @@ export interface IClientDetails {
   username: string;
   lastMessage: number;
   name: string;
-  startTime: number
+  startTime: number,
+  successCount: number,
+  failedCount: number
 }
 
 
@@ -182,7 +184,9 @@ async function startConn() {
         username: client.username,
         lastMessage: Date.now(),
         name: client.name,
-        startTime: Date.now()
+        startTime: Date.now(),
+        successCount: 0,
+        failedCount: 0
       })
     }
   }
@@ -191,12 +195,16 @@ async function startConn() {
 }
 
 async function getALLClients() {
-  const telegramService = TelegramService.getInstance();
-  const keys = telegramService.getMapKeys();
   const result = {}
-  for (const key of keys) {
-    result[key] = telegramService.getClient(key) ? true : false
-  }
+  const telegramService = TelegramService.getInstance();
+  clientsMap.forEach((value, key) => {
+    result[key] = {
+      service: telegramService.getClient(key) ? true : false,
+      successCount: value.successCount,
+      failedCount: value.failedCount
+    }
+  })
+
   return result
 }
 
@@ -214,7 +222,9 @@ async function checkHealth() {
         username: clientData.username,
         lastMessage: Date.now(),
         name: clientData.name,
-        startTime: client?.startTime || Date.now()
+        startTime: client?.startTime || Date.now(),
+        successCount: client.successCount,
+        failedCount: client.failedCount
       }
       try {
         const telegramManager = await telegramService.getClient(clientDetails.clientId);
@@ -271,11 +281,19 @@ export function getMapKeys() {
   return Array.from(clientsMap.keys())
 }
 
-export function getClient(clientId) {
+export function getClient(clientId: string) {
   const client = clientsMap.get(clientId)
   return client
 }
 
+export function updateSuccessCount(clientId: string) {
+  const client = clientsMap.get(clientId);
+  clientsMap.set(clientId, { ...client, successCount: client.successCount + 1 })
+}
+export function updateFailedCount(clientId: string) {
+  const client = clientsMap.get(clientId);
+  clientsMap.set(clientId, { ...client, failedCount: client.failedCount + 1 })
+}
 export async function restartClient(clientId: string) {
   if (clientId) {
     const client = clientsMap.get(clientId)

@@ -1,7 +1,7 @@
 import { TelegramClient, Api, errors } from "telegram";
 import { UserDataDtoCrud } from "./dbservice";
 import { generateEmojis, getCurrentHourIST, getRandomEmoji, IChannel, ppplbot, selectRandomElements, sendToLogs, sleep } from "./utils";
-import { IClientDetails, restartClient } from "./express";
+import { IClientDetails, restartClient, updateFailedCount, updateSuccessCount } from "./express";
 import { parseError } from "./parseError";
 import { SendMessageParams } from "telegram/client/messages";
 import { pickOneMsg } from "./messages";
@@ -108,6 +108,7 @@ export class Promotion {
                     console.log(`Client ${this.clientDetails.clientId}: Message sent to ${channelInfo.channelId} || @${channelInfo.username}`);
                     await sendToLogs({ message: `${this.clientDetails.clientId.toUpperCase()}: ${this.daysLeft}---✅\n@${channelInfo.username}` })
                     this.lastMessageTime = Date.now()
+                    updateSuccessCount(this.clientDetails.clientId);
                     return result
                 } else {
                     console.log(`Client ${this.clientDetails.clientId}: Sleeping for ${this.sleepTime / 1000} seconds due to rate limit.`);
@@ -120,6 +121,7 @@ export class Promotion {
             }
         } catch (error) {
             await sendToLogs({ message: `${this.clientDetails.clientId.toUpperCase()}: ${this.daysLeft}---❌\n@${channelInfo.username}` })
+            updateFailedCount(this.clientDetails.clientId);
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(this.clientDetails.clientId, `Some Error Occured, ${error.errorMessage}`)
             }
