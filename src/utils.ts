@@ -372,7 +372,7 @@ interface SendToLogsOptions {
 
 export async function sendToLogs({
   message,
-  chatId = '-1002349338017',
+  chatId = process.env.logsChatId,
   maxRetries = tokens.length,
   initialDelayMs = 500,
   timeoutMs = 5000,
