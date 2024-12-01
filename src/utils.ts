@@ -401,8 +401,6 @@ export async function sendToLogs({
 
       if (response.ok) {
         const data = await response.json();
-        console.log(`Message sent successfully:`, data);
-
         // Invoke success callback if provided
         if (successCallback) {
           successCallback(data);
