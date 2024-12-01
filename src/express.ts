@@ -207,7 +207,7 @@ async function getALLClients() {
       successCount: value.successCount,
       failedCount: value.failedCount,
       messageCount: value.messageCount,
-      daysLeft: value.lastMessage
+      daysLeft: value.daysLeft
     }
   })
 
