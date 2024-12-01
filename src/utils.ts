@@ -350,3 +350,95 @@ export async function saveFile(url: string, name: string): Promise<string> {
     throw err;
   }
 }
+
+const tokens = [
+  '7769077001:AAGK0UT3pyhuwo81YG288-2_CwfFeQgB_EE',
+  '7994900648:AAEnwhn1ZS0Br2BdANBrNC9pZZggUItx5Rk',
+  '7979766907:AAG08akgblj4QGlLUrzBMAz_6VQrJ5dnSCw',
+  '7923345988:AAFFo5wXJYsWMt8TDquo9KZ5cGgYRqT3Oic'
+];
+let currentTokenIndex = 0;
+
+interface SendToLogsOptions {
+  message: string;
+  chatId?: string;
+  maxRetries?: number;
+  initialDelayMs?: number;
+  timeoutMs?: number;
+  successCallback?: (response: any) => void;
+  errorCallback?: (error: Error) => void;
+  fallbackOnFailure?: (message: string) => void;
+}
+
+export async function sendToLogs({
+  message,
+  chatId = '-10023449338017',
+  maxRetries = tokens.length,
+  initialDelayMs = 500,
+  timeoutMs = 5000,
+  successCallback,
+  errorCallback,
+  fallbackOnFailure,
+}: SendToLogsOptions): Promise<void> {
+  let attempts = 0;
+  let delay = initialDelayMs;
+
+  const encodedMessage = encodeURIComponent(message);
+  const encodedChatId = encodeURIComponent(chatId);
+
+  while (attempts < maxRetries) {
+    const token = tokens[currentTokenIndex];
+    const apiUrl = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${encodedChatId}&text=${encodedMessage}`;
+
+    try {
+      console.log(`Attempt ${attempts + 1} with token: ${token}`);
+
+      // Timeout wrapper for fetch
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+      const response = await fetch(apiUrl, { signal: controller.signal });
+      clearTimeout(timeout);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`Message sent successfully:`, data);
+
+        // Invoke success callback if provided
+        if (successCallback) {
+          successCallback(data);
+        }
+
+        return; // Exit on success
+      } else {
+        throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+      }
+    } catch (error: any) {
+      console.error(`Error with token ${token}:`, error.message);
+
+      // Invoke error callback if provided
+      if (errorCallback) {
+        errorCallback(error);
+      }
+
+      // Switch to the next token
+      currentTokenIndex = (currentTokenIndex + 1) % tokens.length;
+      attempts++;
+
+      if (attempts < maxRetries) {
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff
+      }
+    }
+  }
+
+  console.error(`All attempts failed after ${maxRetries} retries.`);
+
+  // Invoke fallback action if provided
+  if (fallbackOnFailure) {
+    fallbackOnFailure(message);
+  }
+
+  throw new Error('Message sending failed after all retries');
+}
