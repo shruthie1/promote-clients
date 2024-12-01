@@ -304,7 +304,7 @@ export function updateFailedCount(clientId: string) {
 }
 export function updateMsgCount(clientId: string) {
   const client = clientsMap.get(clientId);
-  clientsMap.set(clientId, { ...client, failedCount: client.failedCount + 1 })
+  clientsMap.set(clientId, { ...client,messageCount : client.messageCount + 1 })
 }
 export function updateClient(clientId: string, clientData: any) {
   const client = clientsMap.get(clientId);
