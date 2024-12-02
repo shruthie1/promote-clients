@@ -200,7 +200,6 @@ class TelegramManager {
                             const days = getdaysLeft(date);
                             console.log("Days Left: ", days);
                             this.promoterInstance.setDaysLeft(days)
-                            await updatePromoteClient(this.clientDetails.clientId, { daysLeft: days })
                             this.daysLeft = days
                             // if (days == 3) {
                             // this.promoterInstance.setChannels(openChannels)
@@ -213,6 +212,7 @@ class TelegramManager {
                             this.promoterInstance.setDaysLeft(99)
                             this.daysLeft = 99
                         }
+                        await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
                     }
                     if (this.daysLeft > 2) {
                         try {
