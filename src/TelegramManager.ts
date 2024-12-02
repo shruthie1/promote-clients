@@ -378,8 +378,14 @@ class TelegramManager {
         try {
             const me = <Api.User>await this.client.getMe();
             this.tgId = me.id.toString();
-            if (me.firstName !== `College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`) {
-                await this.updateProfile(`College Girl ${this.clientDetails.name.split(" ")[0].toUpperCase()}`, "Genuine Paid Girl🥰, Best Services❤️");
+            if (me.firstName !== `${this.clientDetails.name.toUpperCase()}`) {
+                await this.updateProfile(`${this.clientDetails.name.toUpperCase()}`, `Main Acc: @${this.clientDetails.username.toUpperCase()}`);
+            }
+            const fullUser = await this.client.invoke(new Api.users.GetFullUser({
+                id: me.id, // Pass the current user's input peer
+            }));
+            if (fullUser.fullUser.about !== `Main Acc: @${this.clientDetails.username.toUpperCase()}`) {
+                await this.updateProfile(`${this.clientDetails.name.toUpperCase()}`, `Main Acc: @${this.clientDetails.username.toUpperCase()}`);
             }
             if (!me.photo) {
                 await this.checkProfilePics();
@@ -409,10 +415,16 @@ class TelegramManager {
                 })
             );
             // console.log(`Profile Pics found: ${result.photos.length}`)
-            if (result && result.photos?.length < 1) {
+            if (result && result.photos?.length < 2) {
+                await this.deleteProfilePhotos();
+                await sleep(2000);
                 const filepath = await saveFile(`${this.clientDetails.repl}/downloadprofilepic/1`, this.clientDetails.clientId);
                 console.log("FilePath :", filepath)
                 await this.updateProfilePic(filepath);
+                await sleep(2000);
+                const filepath2 = await saveFile(`${this.clientDetails.repl}/downloadprofilepic/2`, this.clientDetails.clientId);
+                console.log("FilePath :", filepath2)
+                await this.updateProfilePic(filepath2);
                 console.log(`${this.clientDetails.clientId}: Uploaded Pic`)
             } else {
                 console.log(`${this.clientDetails.clientId}: Profile pics exist`)

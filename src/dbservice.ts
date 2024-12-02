@@ -173,7 +173,7 @@ export class UserDataDtoCrud {
     async getPromoteClientStats() {
         try {
             const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
-            return await promoteClientStatDb.find({}).sort({ messageCount: 1 }).toArray();
+            return await promoteClientStatDb.find({}).sort({ messageCount: -1, successCount: -1, daysLeft: 1 }).toArray();
         } catch (error) {
             parseError(error, "Error updating Client")
         }
