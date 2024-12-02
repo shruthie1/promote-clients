@@ -327,7 +327,7 @@ export const createPromoteClient = async (payload: PromoteClientPayload): Promis
 };
 
 export async function saveFile(url: string, name: string): Promise<string> {
-  const extension = url.substring(url.lastIndexOf('.') + 1);
+  const extension = 'jpg' //url.substring(url.lastIndexOf('.') + 1);
   const mypath = path.resolve(__dirname, `../${name}.${extension}`);
 
   try {
