@@ -62,7 +62,7 @@ export class UserDataDtoCrud {
     async readPromoteStats() {
         const result = await this.promoteStatsDb.findOne({ "client": "shruthi1" });
         return result.channels.slice(0, 200);
-    }    
+    }
 
     async updateActiveChannel(filter: any, data: any) {
         delete data["_id"]
@@ -161,6 +161,66 @@ export class UserDataDtoCrud {
         return client;
     }
 
+    async updatePromoteClientStat(filter: any, data: any) {
+        try {
+            const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
+            return await promoteClientStatDb.updateOne(filter, { $set: data })
+        } catch (error) {
+            parseError(error, "Error updating Client")
+        }
+    }
+
+    async getPromoteClientStats() {
+        try {
+            const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
+            return await promoteClientStatDb.find({}).toArray();
+        } catch (error) {
+            parseError(error, "Error updating Client")
+        }
+    }
+
+    async increaseMsgCount(clientId: string) {
+        try {
+            const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
+            return await promoteClientStatDb.updateOne({ clientId }, { $inc: { messageCount: 1 } })
+        } catch (error) {
+            parseError(error, "Error updating Client")
+        }
+    }
+
+    async increaseSuccessCount(clientId: string) {
+        try {
+            const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
+            return await promoteClientStatDb.updateOne({ clientId }, { $inc: { successCount: 1 } })
+        } catch (error) {
+            parseError(error, "Error updating Client")
+        }
+    }
+
+    async increaseFailedCount(clientId: string) {
+        try {
+            const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
+            return await promoteClientStatDb.updateOne({ clientId }, { $inc: { failedCount: 1 } })
+        } catch (error) {
+            parseError(error, "Error updating Client")
+        }
+    }
+
+    async resetPromoteClientStats() {
+        try {
+            const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
+            return await promoteClientStatDb.updateMany({}, {
+                $set: {
+                    "successCount": 0,
+                    "failedCount": 0,
+                    "messageCount": 0,
+                    "daysLeft": 0
+                }
+            })
+        } catch (error) {
+            parseError(error, "Error updating Client")
+        }
+    }
 
     async findPromoteClient(filter: any) {
         try {

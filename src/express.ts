@@ -30,9 +30,6 @@ export interface IClientDetails {
   lastMessage: number;
   name: string;
   startTime: number,
-  successCount: number,
-  failedCount: number,
-  messageCount: number,
   daysLeft: number
 }
 
@@ -68,6 +65,11 @@ process.on('unhandledRejection', (reason, promise) => {
 
 schedule.scheduleJob('test3', '*/5 * * * *', 'Asia/Kolkata', async () => {
   await checkHealth()
+})
+
+schedule.scheduleJob('test3', '25 0 * * *', 'Asia/Kolkata', async () => {
+  const db = UserDataDtoCrud.getInstance();
+  await db.resetPromoteClientStats()
 })
 
 const app = express();
@@ -187,9 +189,6 @@ async function startConn() {
         lastMessage: Date.now(),
         name: client.name,
         startTime: Date.now(),
-        successCount: 0,
-        failedCount: 0,
-        messageCount: 0,
         daysLeft: -1
       })
     }
@@ -199,17 +198,8 @@ async function startConn() {
 }
 
 async function getALLClients() {
-  const result = {}
-  const telegramService = TelegramService.getInstance();
-  clientsMap.forEach((value, key) => {
-    result[key] = {
-      service: telegramService.getClient(key) ? true : false,
-      successCount: value.successCount,
-      failedCount: value.failedCount,
-      messageCount: value.messageCount,
-      daysLeft: value.daysLeft
-    }
-  })
+  const db = UserDataDtoCrud.getInstance();
+  const result = await db.getPromoteClientStats()
 
   return result
 }
@@ -229,9 +219,6 @@ async function checkHealth() {
         lastMessage: Date.now(),
         name: clientData.name,
         startTime: client?.startTime || Date.now(),
-        successCount: client.successCount,
-        failedCount: client.failedCount,
-        messageCount: client.messageCount,
         daysLeft: client.daysLeft
       }
       try {
@@ -294,22 +281,23 @@ export function getClient(clientId: string) {
   return client
 }
 
-export function updateSuccessCount(clientId: string) {
-  const client = clientsMap.get(clientId);
-  clientsMap.set(clientId, { ...client, successCount: client.successCount + 1 })
+export async function updateSuccessCount(clientId: string) {
+  const db = UserDataDtoCrud.getInstance();
+  await db.increaseSuccessCount(clientId)
 }
-export function updateFailedCount(clientId: string) {
-  const client = clientsMap.get(clientId);
-  clientsMap.set(clientId, { ...client, failedCount: client.failedCount + 1 })
+export async function updateFailedCount(clientId: string) {
+  const db = UserDataDtoCrud.getInstance();
+  await db.increaseFailedCount(clientId)
 }
-export function updateMsgCount(clientId: string) {
-  const client = clientsMap.get(clientId);
-  clientsMap.set(clientId, { ...client, failedCount: client.failedCount + 1 })
+export async function updateMsgCount(clientId: string) {
+  const db = UserDataDtoCrud.getInstance();
+  await db.increaseMsgCount(clientId)
 }
-export function updateClient(clientId: string, clientData: any) {
-  const client = clientsMap.get(clientId);
-  clientsMap.set(clientId, { ...client, ...clientData })
+export async function updatePromoteClient(clientId: string, clientData: any) {
+  const db = UserDataDtoCrud.getInstance();
+  await db.updatePromoteClientStat({ clientId }, { ...clientData })
 }
+
 export async function restartClient(clientId: string) {
   if (clientId) {
     const client = clientsMap.get(clientId)
