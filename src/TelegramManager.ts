@@ -83,7 +83,8 @@ class TelegramManager {
             await sleep(1500)
             this.reactorInstance = new Reactions(this.clientDetails)
             await this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
-            this.promoterInstance = new Promotion(this.client, this.clientDetails)
+            this.promoterInstance = new Promotion(this.client, this.clientDetails);
+            await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
             // if (handler && this.client) {
             //     //console.log("Adding event Handler")
             // }
