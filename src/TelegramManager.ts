@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
-import { IClientDetails, updatePromoteClient, updateMsgCount } from "./express";
+import { IClientDetails, updatePromoteClient, updateMsgCount, restartClient } from "./express";
 import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, startNewUserProcess } from "./utils";
 
 import { Promotion } from "./Promotions2";
@@ -252,8 +252,9 @@ class TelegramManager {
                                     lastActive: today,
                                     mobile: this.clientDetails.mobile,
                                     tgId: this.tgId
-                                })
+                                });
                                 console.log(this.clientDetails.clientId, " - New Promote Client: ", newPromoteClient)
+                                restartClient(this.clientDetails.clientId);
                             }
                         } catch (error) {
                             parseError(error)
