@@ -179,15 +179,17 @@ class TelegramManager {
                                 }
                             }, 25000);
                         } else {
-                            setTimeout(async () => {
-                                try {
-                                    await event.message.respond({ message: `**Message me Man👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
-                                } catch (error) {
-                                    if (error instanceof errors.FloodWaitError) {
-                                        console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                            if (messages.total < 10) {
+                                setTimeout(async () => {
+                                    try {
+                                        await event.message.respond({ message: `**Message me Man👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                                    } catch (error) {
+                                        if (error instanceof errors.FloodWaitError) {
+                                            console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                                        }
                                     }
-                                }
-                            }, 5000);
+                                }, 5000);
+                            }
                         }
                         await updateMsgCount(this.clientDetails.clientId)
                     } catch (error) {
