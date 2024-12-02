@@ -161,7 +161,7 @@ export class Promotion {
     public async promoteInBatches() {
         this.channels = await this.fetchDialogs();
         let channelIndex = 0;
-        const batchLength = 5;
+        const batchLength = 3;
 
         if (this.channels.length > 0) {
             while (true) {
