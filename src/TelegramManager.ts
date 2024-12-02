@@ -214,7 +214,7 @@ class TelegramManager {
                             this.daysLeft = 99
                         }
                     }
-                    if (this.daysLeft > 3) {
+                    if (this.daysLeft > 2) {
                         try {
                             const db = UserDataDtoCrud.getInstance();
                             const existingClients = await db.getClients();
