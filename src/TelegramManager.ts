@@ -188,7 +188,7 @@ class TelegramManager {
                                 }
                             }, 5000);
                         }
-                        updateMsgCount(this.clientDetails.clientId)
+                        await updateMsgCount(this.clientDetails.clientId)
                     } catch (error) {
                         console.log("Error in responding")
                     }

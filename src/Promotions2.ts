@@ -120,11 +120,11 @@ export class Promotion {
         try {
             if (this.client) {
                 if (this.sleepTime < Date.now()) {
-                    const result = await this.client.sendMessage(channelInfo.channelId, message);
+                    const result = await this.client.sendMessage(channelInfo.username ? channelInfo.username : channelInfo.channelId, message);
                     console.log(`Client ${this.clientDetails.clientId}: Message sent to ${channelInfo.channelId} || @${channelInfo.username}`);
                     await sendToLogs({ message: `${this.clientDetails.clientId.toUpperCase()}: ${this.daysLeft}---✅\n@${channelInfo.username}` })
                     this.lastMessageTime = Date.now()
-                    updateSuccessCount(this.clientDetails.clientId);
+                    await updateSuccessCount(this.clientDetails.clientId);
                     return result
                 } else {
                     console.log(`Client ${this.clientDetails.clientId}: Sleeping for ${this.sleepTime / 1000} seconds due to rate limit.`);
@@ -137,7 +137,7 @@ export class Promotion {
             }
         } catch (error) {
             await sendToLogs({ message: `${this.clientDetails.clientId.toUpperCase()}: ${this.daysLeft}---❌\n@${channelInfo.username}` })
-            updateFailedCount(this.clientDetails.clientId);
+            await updateFailedCount(this.clientDetails.clientId);
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(this.clientDetails.clientId, `Some Error Occured, ${error.errorMessage}`)
             }
