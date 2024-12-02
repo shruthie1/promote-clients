@@ -133,7 +133,6 @@ export class Promotion {
             } else {
                 console.log("client Destroyed while promotions", this.clientDetails.clientId)
                 await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Client Destroyed.`);
-                restartClient(this.clientDetails.clientId)
             }
         } catch (error) {
             await sendToLogs({ message: `${this.clientDetails.clientId.toUpperCase()}: ${this.daysLeft}---❌\n@${channelInfo.username}` })

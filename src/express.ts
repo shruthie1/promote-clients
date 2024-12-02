@@ -299,31 +299,33 @@ export async function updatePromoteClient(clientId: string, clientData: any) {
 }
 
 export async function restartClient(clientId: string) {
-  if (clientId) {
-    const client = clientsMap.get(clientId)
-    if (client) {
-      if (client.startTime < Date.now() - 3 * 60 * 1000) {
-        clientsMap.set(clientId, { ...client, startTime: Date.now() })
-        console.log(`===================Restarting service : ${clientId.toUpperCase()}=======================`)
-        const telegramService = TelegramService.getInstance();
-        if (telegramService.hasClient(clientId)) {
-          await telegramService.deleteClient(clientId);
-          await sleep(5000);
-        } else {
-          console.log(`===================Client does not exist : ${clientId.toUpperCase()}=======================`)
-        }
-        const clientDetails = clientsMap.get(clientId);
-        await telegramService.createClient(clientDetails, false, true)
-      } else {
-        console.log(client, Date.now());
-        console.log(`===================Client Recently Started: ${clientId.toUpperCase()}=======================`)
-      }
+  if (!clientId) {
+    console.error(`ClientId ${clientId} is undefined`);
+    return;
+  }
+
+  const telegramService = TelegramService.getInstance();
+  const clientDetails = clientsMap.get(clientId);
+
+  if (!clientDetails) {
+    console.error(`Client details for ${clientId} do not exist`);
+    return;
+  }
+
+  console.log(`===================Restarting service : ${clientId.toUpperCase()}=======================`);
+
+  try {
+    const tgManager = await telegramService.getClient(clientId);
+
+    if (tgManager) {
+      await tgManager.restart(clientDetails);
     } else {
-      console.error(`Client ${clientId} does not exist`)
+      console.error(`TelegramManager instance not found for clientId: ${clientId}`);
     }
-  } else {
-    console.error(`ClientId ${clientId} is undefined`)
+  } catch (error) {
+    console.error(`Failed to restart client ${clientId}:`, error);
   }
 }
+
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
