@@ -10,7 +10,7 @@ import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
 import { IClientDetails, updatePromoteClient, updateMsgCount } from "./express";
-import { createPromoteClient, getdaysLeft, saveFile, startNewUserProcess } from "./utils";
+import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, startNewUserProcess } from "./utils";
 
 import { Promotion } from "./Promotions2";
 import { UserDataDtoCrud } from "./dbservice";
@@ -214,7 +214,7 @@ class TelegramManager {
                         }
                         await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
                     }
-                    if (this.daysLeft > 2) {
+                    if (this.daysLeft > 3) {
                         try {
                             const db = UserDataDtoCrud.getInstance();
                             const existingClients = await db.getClients();
@@ -226,7 +226,7 @@ class TelegramManager {
                             const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } }
                             const newPromoteClient = await db.findPromoteClient(query);
                             if (newPromoteClient) {
-                                console.log("Setting up new client for : ", this.clientDetails.clientId, "as days :", this.daysLeft);
+                                await sendToLogs({ message: `Setting up new client for :  ${this.clientDetails.clientId} "as days :" ${this.daysLeft}` });
                                 await db.updateClient(
                                     {
                                         clientId: this.clientDetails.clientId
@@ -235,7 +235,7 @@ class TelegramManager {
                                         promoteMobile: newPromoteClient.mobile
                                     }
                                 )
-                                const result = await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
+                                await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
                                 await this.deleteProfilePhotos();
                                 await sleep(1500)
                                 await this.updatePrivacyforDeletedAccount();
