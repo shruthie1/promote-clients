@@ -79,7 +79,7 @@ class TelegramManager {
             await sleep(1500)
             await this.joinChannel("clientupdates");
             await sleep(1500)
-            await this.updateUsername(`${this.clientDetails.name.split(' ').join("_")}_0${process.env.clientNumber}`)
+            await this.updateUsername('')//`${this.clientDetails.name.split(' ').join("_")}_0${process.env.clientNumber}`)
             await sleep(1500)
             this.reactorInstance = new Reactions(this.clientDetails)
             await this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
@@ -379,13 +379,13 @@ class TelegramManager {
             const me = <Api.User>await this.client.getMe();
             this.tgId = me.id.toString();
             if (me.firstName !== `${this.clientDetails.name.toUpperCase()}`) {
-                await this.updateProfile(`${this.clientDetails.name.toUpperCase()}`, `Main Acc: @${this.clientDetails.username.toUpperCase()}`);
+                await this.updateProfile(`${this.clientDetails.name.toUpperCase()}`, `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`);
             }
             const fullUser = await this.client.invoke(new Api.users.GetFullUser({
                 id: me.id, // Pass the current user's input peer
             }));
-            if (fullUser.fullUser.about !== `Main Acc: @${this.clientDetails.username.toUpperCase()}`) {
-                await this.updateProfile(`${this.clientDetails.name.toUpperCase()}`, `Main Acc: @${this.clientDetails.username.toUpperCase()}`);
+            if (fullUser.fullUser.about !== `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`) {
+                await this.updateProfile(`${this.clientDetails.name.toUpperCase()}`, `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`);
             }
             if (!me.photo) {
                 await this.checkProfilePics();
