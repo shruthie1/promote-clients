@@ -120,7 +120,7 @@ export class Promotion {
         try {
             if (this.client) {
                 if (this.sleepTime < Date.now()) {
-                    const result = await this.client.sendMessage(channelInfo.username ? channelInfo.username : channelInfo.channelId, message);
+                    const result = await this.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     console.log(`Client ${this.clientDetails.clientId}: Message sent to ${channelInfo.channelId} || @${channelInfo.username}`);
                     await sendToLogs({ message: `${this.clientDetails.clientId.toUpperCase()}: ${this.daysLeft}---✅\n@${channelInfo.username}` })
                     this.lastMessageTime = Date.now()
