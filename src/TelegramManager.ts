@@ -181,7 +181,7 @@ class TelegramManager {
                         const messages = await this.client.getMessages(event.chatId, { limit: 5 });
                         if (messages.total < 3) {
                             try {
-                                await event.message.respond({ message: `**Msg me on this profile👇👇**:\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                                await event.message.respond({ message: `**Msg me on this profile Baby👇👇**:\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
                             } catch (error) {
                                 if (error instanceof errors.FloodWaitError) {
                                     console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
@@ -189,7 +189,7 @@ class TelegramManager {
                             }
                             setTimeout(async () => {
                                 try {
-                                    await event.message.respond({ message: `**Hey, Msg me here Baby👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                                    await event.message.respond({ message: `**This is my official Account👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
                                 } catch (error) {
                                     if (error instanceof errors.FloodWaitError) {
                                         console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
