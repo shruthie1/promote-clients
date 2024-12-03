@@ -162,8 +162,14 @@ class TelegramManager {
                 const senderJson = await this.getSenderJson(event);
                 const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
                 if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800") {
-                    console.log(`${this.clientDetails.clientId.toUpperCase()}:: ${broadcastName} - `, event.message.text)
+                    console.log(`${this.clientDetails.clientId.toUpperCase()}:: ${broadcastName} - `, event.message.text);
+                    await sleep(2000);
                     try {
+                        try {
+                            await this.client.markAsRead(event.chatId);
+                        } catch (error) {
+
+                        }
                         try {
                             this.client.invoke(new Api.messages.SetTyping({
                                 peer: event.chatId,
@@ -175,7 +181,7 @@ class TelegramManager {
                         const messages = await this.client.getMessages(event.chatId, { limit: 5 });
                         if (messages.total < 3) {
                             try {
-                                await event.message.respond({ message: `**My Original Telegram👇👇**:\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                                await event.message.respond({ message: `**Msg me on this profile👇👇**:\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
                             } catch (error) {
                                 if (error instanceof errors.FloodWaitError) {
                                     console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
@@ -183,7 +189,7 @@ class TelegramManager {
                             }
                             setTimeout(async () => {
                                 try {
-                                    await event.message.respond({ message: `**Hey, Message me here👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                                    await event.message.respond({ message: `**Hey, Msg me here Baby👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
                                 } catch (error) {
                                     if (error instanceof errors.FloodWaitError) {
                                         console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
