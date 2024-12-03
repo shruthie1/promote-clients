@@ -22,12 +22,12 @@ export class Promotion {
     public lastMessageTime = Date.now() - 240000;
     private lastCheckedTime: number;
     private channels: string[];
-    private minDelay: number = 180000;
-    private maxDelay: number = 500000;
-    private smallDelay: number = 10000;
-    private maxSmallDelay: number = 15000;
+    private minDelay: number = 240000;
+    private maxDelay: number = 300000;
+    private smallDelay: number = 120000;
+    private maxSmallDelay: number = 180000;
     private messageQueue: MessageQueueItem[] = []
-    private messageCheckDelay: number = 15000;
+    private messageCheckDelay: number = 5000;
     private promoteMsgs = {};
 
     constructor(client: TelegramClient, clientDetails: IClientDetails) {
@@ -160,7 +160,7 @@ export class Promotion {
     public async promoteInBatches() {
         this.channels = await this.fetchDialogs();
         let channelIndex = 0;
-        const batchLength = 3;
+        const batchLength = 2;
 
         if (this.channels.length > 0) {
             while (true) {
