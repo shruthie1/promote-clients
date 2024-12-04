@@ -167,10 +167,10 @@ export class Promotion {
                 if (this.client) {
                     const channelsBatch = this.channels.slice(channelIndex, channelIndex + batchLength);
 
-                   // if (channelsBatch.length < 3) {
-                    //    channelIndex = 0; // Restart index for a fresh batch
-                   //     continue;
-                   // }
+                    if (channelIndex > 190) {
+                       channelIndex = 0; // Restart index for a fresh batch
+                       continue;
+                    }
 
                     console.log(`${this.clientDetails.clientId} :: Started Batch: ${channelsBatch.length}-${channelsBatch}`);
                     let sentCount = 0;
