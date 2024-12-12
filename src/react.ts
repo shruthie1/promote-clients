@@ -133,7 +133,7 @@ export class Reactions {
 
                         try {
                             event.client.invoke(new Api.messages.SetTyping({
-                                peer: event.chatId,
+                                peer: 'me',
                                 action: new Api.SendMessageTypingAction(),
                             }))
                         } catch (error) {
