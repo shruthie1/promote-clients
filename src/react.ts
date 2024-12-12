@@ -25,7 +25,7 @@ export class Reactions {
     private reactSleepTime = 19000;
     private floodTriggeredTime = 0;
     private floodCount = 0;
-    private targetReactionDelay = 5000;
+    private targetReactionDelay = 6000;
     private reactQueue: ReactQueue;
     private clientDetails: IClientDetails;
     private processId: number = Math.floor(Math.random() * 1234);
@@ -154,7 +154,7 @@ export class Reactions {
                             // if (floodTriggeredTime == 0 || floodTriggeredTime > (Date.now() - 30 * 60 * 1000)) {
                             // }
                             this.minWaitTime = Math.floor(this.minWaitTime + (error.seconds * 3));
-                            this.reactSleepTime = 17000;
+                            this.reactSleepTime = 18000;
                             this.targetReactionDelay = this.targetReactionDelay + 500
                             this.floodTriggeredTime = Date.now();
                             this.floodCount++;
