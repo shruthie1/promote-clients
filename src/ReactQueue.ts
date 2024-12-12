@@ -1,9 +1,20 @@
 export class ReactQueue {
-    private items: string[] = [];
-    private maxSize = 3;
+    private static instance: ReactQueue;
+    public items: string[] = [];
+    private maxSize = 7;
     private timer: NodeJS.Timeout;
 
-    constructor() { }
+    private constructor() { }
+
+    public static getInstance(): ReactQueue {
+        if (!ReactQueue.instance) {
+            ReactQueue.instance = new ReactQueue();
+        }
+        while (ReactQueue.instance.items.length >= ReactQueue.instance.maxSize) {
+            ReactQueue.instance.items.shift();
+        }
+        return ReactQueue.instance;
+    }
 
     public push(item: string) {
         while (this.items.length >= this.maxSize) {
@@ -15,9 +26,12 @@ export class ReactQueue {
         }
         this.timer = setTimeout(() => {
             this.pop();
-        }, 60000); // 1 minute
+        }, 100000); // 1 minute
     }
 
+    public clear() {
+        this.items = []
+    }
     public pop() {
         if (this.items.length === 0) {
             return undefined;
@@ -37,9 +51,5 @@ export class ReactQueue {
 
     public isFull() {
         return this.items.length === this.maxSize;
-    }
-
-    public clear() {
-        this.items = []
     }
 }

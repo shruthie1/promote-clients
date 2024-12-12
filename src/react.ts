@@ -20,12 +20,12 @@ export class Reactions {
     private totalReactionDelay = 0;
     private successfulReactions = 0;
     private averageReactionDelay = 0;
-    private minWaitTime = 18000;
+    private minWaitTime = 5000;
     private maxWaitTime = 21000;
     private reactSleepTime = 19000;
     private floodTriggeredTime = 0;
     private floodCount = 0;
-    private targetReactionDelay = 18000;
+    private targetReactionDelay = 5000;
     private reactQueue: ReactQueue;
     private clientDetails: IClientDetails;
     private processId: number = Math.floor(Math.random() * 1234);
@@ -33,7 +33,7 @@ export class Reactions {
 
     constructor(clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
-        this.reactQueue = new ReactQueue()
+        this.reactQueue = ReactQueue.getInstance();
     }
 
     private standardEmoticons = ['👍', '❤', '🔥', '👏', '🥰', '😁']
@@ -131,6 +131,19 @@ export class Reactions {
                             }
                         }
 
+                        try {
+                            event.client.invoke(new Api.messages.SetTyping({
+                                peer: event.chatId,
+                                action: new Api.SendMessageTypingAction(),
+                            }))
+                        } catch (error) {
+
+                        }
+                        try {
+                            event.client.markAsRead(event.chatId);
+                        } catch (error) {
+
+                        }
                         // const chatEntity = <Api.Channel>await getEntity(event.client, chatId);
                         // console.log("Reacted Successfully, Average Reaction Delay:", this.averageReactionDelay, "ms", reaction[0]?.toJSON().emoticon, chatEntity?.toJSON().title, chatEntity?.toJSON().username);
                         this.reactQueue.push(chatId);
@@ -165,6 +178,9 @@ export class Reactions {
             } else {
                 if (this.lastReactedtime < Date.now() - 60000 && (!this.flag || this.reactQueue.contains(chatId)) && this.reactionsRestarted < Date.now() - 30000) {
                     this.flag = true;
+                    this.lastReactedtime = Date.now();
+                    this.waitReactTime = Date.now();
+                    this.reactQueue.clear()
                     this.reactionsRestarted = Date.now();
                     // console.log(`=== Restarted Not Working ===\nClientID: ${this.clientDetails.clientId.toUpperCase()}\nFlag: ${this.flag}\nWaitReactTimePassed: ${this.waitReactTime < Date.now()}\nNotInReactQueue: ${!this.reactQueue.contains(chatId)}\nNotInRestrictedIDs: ${!contains(chatId, this.reactRestrictedIds)}\nlastReacted: ${Math.floor((Date.now() - this.lastReactedtime) / 1000)} seconds`);
                 }
