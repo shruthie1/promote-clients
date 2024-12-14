@@ -49,6 +49,7 @@ class TelegramManager {
             this.promoterInstance = null;
             this.reactorInstance = null;
             await this.client?.destroy();
+            await this.client?.disconnect();
             this.client = null;
             console.log("Client successfully destroyed.");
         } catch (error) {
