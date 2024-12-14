@@ -25,7 +25,7 @@ export class Reactions {
     private reactSleepTime = 19000;
     private floodTriggeredTime = 0;
     private floodCount = 0;
-    private targetReactionDelay = 6000;
+    private targetReactionDelay = 5000;
     private reactQueue: ReactQueue;
     private clientDetails: IClientDetails;
     private processId: number = Math.floor(Math.random() * 1234);
@@ -154,7 +154,7 @@ export class Reactions {
                             // if (floodTriggeredTime == 0 || floodTriggeredTime > (Date.now() - 30 * 60 * 1000)) {
                             // }
                             this.minWaitTime = Math.floor(this.minWaitTime + (error.seconds * 3));
-                            this.reactSleepTime = 18000;
+                            this.reactSleepTime = 17000;
                             this.targetReactionDelay = this.targetReactionDelay + 500
                             this.floodTriggeredTime = Date.now();
                             this.floodCount++;
@@ -178,9 +178,6 @@ export class Reactions {
             } else {
                 if (this.lastReactedtime < Date.now() - 60000 && (!this.flag || this.reactQueue.contains(chatId)) && this.reactionsRestarted < Date.now() - 30000) {
                     this.flag = true;
-                    this.lastReactedtime = Date.now();
-                    this.waitReactTime = Date.now();
-                    this.reactQueue.clear()
                     this.reactionsRestarted = Date.now();
                     // console.log(`=== Restarted Not Working ===\nClientID: ${this.clientDetails.clientId.toUpperCase()}\nFlag: ${this.flag}\nWaitReactTimePassed: ${this.waitReactTime < Date.now()}\nNotInReactQueue: ${!this.reactQueue.contains(chatId)}\nNotInRestrictedIDs: ${!contains(chatId, this.reactRestrictedIds)}\nlastReacted: ${Math.floor((Date.now() - this.lastReactedtime) / 1000)} seconds`);
                 }
