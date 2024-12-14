@@ -318,7 +318,8 @@ export async function restartClient(clientId: string) {
     const tgManager = await telegramService.getClient(clientId);
 
     if (tgManager) {
-      await tgManager.restart(clientDetails);
+      await telegramService.deleteClient(clientId);
+      await telegramService.createClient(clientDetails, false, true);
     } else {
       console.error(`TelegramManager instance not found for clientId: ${clientId}`);
     }

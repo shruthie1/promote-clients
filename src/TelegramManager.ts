@@ -97,18 +97,6 @@ class TelegramManager {
         }
     }
 
-    async restart(updatedClientDetails: IClientDetails, handler = true): Promise<void> {
-        try {
-            console.log(`Restarting client: ${updatedClientDetails.clientId}`);
-            this.setClientDetails(updatedClientDetails);
-            await this.destroy();
-            await this.createClient(handler);
-            console.log(`Client restarted: ${updatedClientDetails.clientId}`);
-        } catch (error) {
-            console.error(`Failed to restart client: ${updatedClientDetails.clientId}`, error);
-        }
-    }
-
     async updateUsername(baseUsername: string) {
         let newUserName = ''
         let username = (baseUsername && baseUsername !== '') ? baseUsername : '';
