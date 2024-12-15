@@ -179,11 +179,11 @@ async function startConn() {
   const clients = result?.data;
   console.log("Clients: ", clients?.length)
   for (const client of clients) {
-    if (extractNumberFromString(client.clientId) == process.env.clientNumber && client.promoteMobile) {
+    if (extractNumberFromString(client.clientId) == process.env.clientNumber && client.promoteMobile && typeof client.promoteMobile == 'string') {
       console.log(client.clientId)
       clientsMap.set(client.clientId, {
         clientId: client.clientId,
-        mobile: typeof client.promoteMobile == 'string' ? client.promoteMobile : client.promoteMobile[0],
+        mobile: client.promoteMobile,
         repl: client.repl,
         username: client.username,
         lastMessage: Date.now(),
