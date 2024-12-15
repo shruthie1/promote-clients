@@ -183,7 +183,7 @@ async function startConn() {
       console.log(client.clientId)
       clientsMap.set(client.clientId, {
         clientId: client.clientId,
-        mobile: client.promoteMobile,
+        mobile: typeof client.promoteMobile == 'string' ? client.promoteMobile : client.promoteMobile[0],
         repl: client.repl,
         username: client.username,
         lastMessage: Date.now(),
