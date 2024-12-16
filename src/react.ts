@@ -194,6 +194,11 @@ export class Reactions {
                     if (Math.floor((Date.now() - this.lastReactedtime) / 1000) > 500) {
                         console.log("Reactions Stopped", this.clientDetails.clientId, (Date.now() - this.lastReactedtime) / 1000)
                         // await restartClient(this.clientDetails.clientId);
+                        this.flag = true;
+                        this.lastReactedtime = Date.now();
+                        this.waitReactTime = Date.now();
+                        this.reactQueue.clear()
+                        this.reactionsRestarted = Date.now();
                     }
                     if (Math.floor((Date.now() - this.lastReactedtime) / 1000) > 800) {
                         console.log("Reactions Stopped", this.clientDetails.clientId, (Date.now() - this.lastReactedtime) / 1000);
