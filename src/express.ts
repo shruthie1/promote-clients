@@ -102,7 +102,7 @@ app.get('/exec/:cmd', async (req, res) => {
   try {
     res.send(console.log(execSync(cmd).toString()));
   } catch (error) {
-    parseError(error);
+    parseError(error, "Error Executing ");
   }
 });
 
@@ -164,7 +164,7 @@ app.get('/tryToConnect/:num', async (req, res, next) => {
       }
     }
   } catch (error) {
-    parseError(error);
+    parseError(error, "Error At Connecting");
   }
 });
 
@@ -175,23 +175,21 @@ function extractNumberFromString(str) {
 
 async function startConn() {
   console.log("Starting connections")
-  const result = await fetchWithTimeout(`${process.env.promoteChecker}/forward/clients`);
-  const clients = result?.data;
-  console.log("Clients: ", clients?.length)
-  for (const client of clients) {
-    if (extractNumberFromString(client.clientId) == process.env.clientNumber && client.promoteMobile && typeof client.promoteMobile == 'string') {
-      console.log(client.clientId)
-      clientsMap.set(client.clientId, {
-        clientId: client.clientId,
-        mobile: client.promoteMobile,
-        repl: client.repl,
-        username: client.username,
-        lastMessage: Date.now(),
-        name: client.name,
-        startTime: Date.now(),
-        daysLeft: -1
-      })
-    }
+  const result = await fetchWithTimeout(`${process.env.promoteChecker}/forward/clients/${process.env.clientId}`);
+  const client = result?.data;
+  console.log("Client: ", client)
+  for (const mobile of client.promoteMobile) {
+    console.log(mobile)
+    clientsMap.set(mobile, {
+      clientId: client.clientId,
+      mobile: mobile,
+      repl: client.repl,
+      username: client.username,
+      lastMessage: Date.now(),
+      name: client.name,
+      startTime: Date.now(),
+      daysLeft: -1
+    })
   }
   const telegramService = TelegramService.getInstance();
   await telegramService.connectClients()
@@ -207,58 +205,58 @@ async function getALLClients() {
 async function checkHealth() {
   console.log("============Checking Health==============")
   const telegramService = TelegramService.getInstance();
-  const clients = await (UserDataDtoCrud.getInstance()).getClients()
-  for (const clientData of clients) {
-    const client = clientsMap.get(clientData.clientId)
+  const client = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId })
+  for (const mobile of client.promoteMobile) {
+    const client = clientsMap.get(mobile)
     if (client) {
       const clientDetails: IClientDetails = {
-        clientId: clientData.clientId,
-        mobile: clientData.promoteMobile,
-        repl: clientData.repl,
-        username: clientData.username,
+        clientId: client.clientId,
+        mobile: mobile,
+        repl: client.repl,
+        username: client.username,
         lastMessage: Date.now(),
-        name: clientData.name,
+        name: client.name,
         startTime: client?.startTime || Date.now(),
         daysLeft: client.daysLeft
       }
       try {
-        const telegramManager = await telegramService.getClient(clientDetails.clientId);
+        const telegramManager = telegramService.getClient(mobile);
         if (telegramManager) {
           try {
             const me = await telegramManager.getMe();
             if (me.phone !== clientDetails.mobile) {
-              console.log(clientDetails.clientId, " : mobile changed", " me : ", me, "clientDetails: ", clientDetails);
-              clientsMap.set(clientDetails.clientId, clientDetails)
-              await restartClient(clientDetails?.clientId)
+              console.log(clientDetails.mobile, " : mobile changed", " me : ", me, "clientDetails: ", clientDetails);
+              clientsMap.set(mobile, clientDetails)
+              await restartClient(mobile)
             } else {
 
-              if (telegramManager.getLastMessageTime() < Date.now() - 5 * 60 * 1000) {
-                console.log(clientDetails.clientId, " : Promotions stopped - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
+              if (telegramService.getLastMessageTime(mobile) < Date.now() - 10 * 60 * 1000) {
+                console.log(clientDetails.clientId, " : Promotions stopped - ", `Now: ${Date.now()}`, `LAstMSg : ${telegramService.getLastMessageTime(mobile)}`, Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000), `DaysLeft: ${telegramService.getDaysLeft(mobile)}`)
                 await telegramManager.checktghealth();
-                if (telegramManager.daysLeft == -1 && telegramManager.getLastMessageTime() < Date.now() - 10 * 60 * 1000) {
-                  console.log("Promotion seems stopped", clientDetails.clientId)
-                  restartClient(clientDetails?.clientId)
+                if (telegramManager.daysLeft == -1 && telegramService.getLastMessageTime(mobile) < Date.now() - 20 * 60 * 1000) {
+                  console.log("Promotion seems stopped", clientDetails.mobile, "DaysLeft: ", telegramService.getDaysLeft(mobile))
+                  restartClient(mobile)
                 }
                 // await telegramService.deleteClient(client.clientId);
                 // await sleep(5000);
                 // await telegramService.createClient(clientDetails, false, true);
               } else {
-                console.log(clientDetails.clientId, me.username, " : Promotions Working fine - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
+                console.log(mobile, me.username, " : Promotions Working fine - ", Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
               }
-              clientsMap.set(clientDetails.clientId, clientDetails)
+              clientsMap.set(mobile, clientDetails)
               telegramManager.setClientDetails(clientDetails)
               setTimeout(async () => {
-                await telegramManager.checkMe();
+                await telegramManager?.checkMe();
               }, 30000);
             }
           } catch (e) {
-            parseError(e, clientDetails.clientId)
+            parseError(e, clientDetails.mobile)
           }
         } else {
-          console.log("Does not Exist Client 1: ", client.clientId)
+          console.log("Does not Exist Client 1: ", clientDetails.mobile)
         }
       } catch (error) {
-        console.log("Does not Exist Client 2: ", client.clientId)
+        console.log("Does not Exist Client 2: ", clientDetails.mobile)
       }
     }
   }
@@ -276,8 +274,8 @@ export function getMapKeys() {
   return Array.from(clientsMap.keys())
 }
 
-export function getClient(clientId: string) {
-  const client = clientsMap.get(clientId)
+export function getClientDetails(mobile: string) {
+  const client = clientsMap.get(mobile)
   return client
 }
 
@@ -298,33 +296,33 @@ export async function updatePromoteClient(clientId: string, clientData: any) {
   await db.updatePromoteClientStat({ clientId }, { ...clientData })
 }
 
-export async function restartClient(clientId: string) {
-  if (!clientId) {
-    console.error(`ClientId ${clientId} is undefined`);
+export async function restartClient(mobile: string) {
+  if (!mobile) {
+    console.error(`ClientId ${mobile} is undefined`);
     return;
   }
 
   const telegramService = TelegramService.getInstance();
-  const clientDetails = clientsMap.get(clientId);
+  const clientDetails = clientsMap.get(mobile);
 
   if (!clientDetails) {
-    console.error(`Client details for ${clientId} do not exist`);
+    console.error(`Client details for ${mobile} do not exist`);
     return;
   }
 
-  console.log(`===================Restarting service : ${clientId.toUpperCase()}=======================`);
+  console.log(`===================Restarting service : ${mobile.toUpperCase()}=======================`);
 
   try {
-    const tgManager = await telegramService.getClient(clientId);
+    const tgManager = await telegramService.getClient(mobile);
 
     if (tgManager) {
-      await telegramService.deleteClient(clientId);
+      await telegramService.disposeClient(mobile);
       await telegramService.createClient(clientDetails, false, true);
     } else {
-      console.error(`TelegramManager instance not found for clientId: ${clientId}`);
+      console.error(`TelegramManager instance not found for clientId: ${mobile}`);
     }
   } catch (error) {
-    console.error(`Failed to restart client ${clientId}:`, error);
+    console.error(`Failed to restart client ${mobile}:`, error);
   }
 }
 

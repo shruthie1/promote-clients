@@ -2,7 +2,7 @@ import axios from "axios";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { UserDataDtoCrud } from "./dbservice";
 import { parseError } from "./parseError";
-import { getClient } from "./express";
+import { getClientDetails } from "./express";
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -15,6 +15,7 @@ export interface IChannel {
   broadcast: boolean;
   sendMessages: boolean;
   canSendMsgs: boolean;
+  megagroup?: boolean
   wordRestriction?: number;
   dMRestriction?: number;
   availableMsgs?: string[];
@@ -105,41 +106,36 @@ export const defaultMessages = [
   "16", "17", "18", "19"
 ];
 
-export async function startNewUserProcess(error: any, clientId: string) {
+export async function startNewUserProcess(error: any, mobile: string) {
 
 
   if (error.errorMessage == 'CONNECTION_NOT_INITED' || error.errorMessage == 'AUTH_KEY_DUPLICATED') {
-    await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-${clientId}: AUTH KEY DUPLICATED : Deleting Archived Client`);
+    await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-PROM -${mobile}: AUTH KEY DUPLICATED : Deleting Archived Client`);
     console.log("AUTH KEY DUPLICATED : Deleting Archived Client")
     await axios.delete(`${process.env.tgcms}/archived-clients/${process.env.mobile}`);
     process.exit(1);
   }
   if (error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage === "USER_DEACTIVATED") {
-    const db = UserDataDtoCrud.getInstance();
-    const clientDetails = getClient(clientId);
-    const actualClient = await db.getClient({ clientId });
-    if (actualClient.promoteMobile == clientDetails.mobile) {
-      console.log(`${(process.env.clientId).toUpperCase()}-${clientId} USER_DEACTIVATED : Exitiing`)
-      await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-${clientId}: USER_DEACTIVATED : Exitiing`);
-      const today = (new Date(Date.now())).toISOString().split('T')[0];
-      const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
-      const newPromoteClient = await db.findPromoteClient(query)
-      if (newPromoteClient) {
-        console.log(clientId, " - NEw Promote Client: ", newPromoteClient)
-        await db.updateClient(
-          {
-            clientId: clientId
-          },
-          {
-            promoteMobile: newPromoteClient.mobile
-          }
-        )
-        await db.deletePromoteClient({ mobile: clientDetails.mobile })
-      } else {
-        console.log(`${(process.env.clientId).toUpperCase()}-${clientId} new client does not exist`)
-      }
-      // process.exit(1)
-    }
+    sendToLogs({ message: `${process.env.clientID}-PROM : ${mobile}: ${error.errorMessage}` })
+    // const db = UserDataDtoCrud.getInstance();
+    // const clientDetails = getClientDetails(clientId);
+    // const actualClient = await db.getClient({ clientId });
+    // if (actualClient.promoteMobile == clientDetails.mobile) {
+    //   console.log(`${(process.env.clientId).toUpperCase()}-${clientId} USER_DEACTIVATED : Exitiing`)
+    //   await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-${clientId}: USER_DEACTIVATED : Exitiing`);
+    //   const today = (new Date(Date.now())).toISOString().split('T')[0];
+    //   const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
+    //   const newPromoteClient = await db.findPromoteClient(query)
+    //   if (newPromoteClient) {
+    //     console.log(clientId, " - NEw Promote Client: ", newPromoteClient)
+    //     await db.pushPromoteMobile({ clientId: clientId }, newPromoteClient.mobile);
+    //     await db.pullPromoteMobile({ clientId: clientId }, clientDetails.mobile);
+    //     await db.deletePromoteClient({ mobile: clientDetails.mobile })
+    //   } else {
+    //     console.log(`${(process.env.clientId).toUpperCase()}-${clientId} new client does not exist`)
+    //   }
+    //   // process.exit(1)
+    // }
   }
 }
 
@@ -328,7 +324,7 @@ export const createPromoteClient = async (payload: PromoteClientPayload): Promis
 
 export async function saveFile(url: string, name: string): Promise<string> {
   const extension = 'jpg' //url.substring(url.lastIndexOf('.') + 1);
-  const mypath = path.resolve(__dirname, `../${name}.${extension}`);
+  const mypath = path.resolve(__dirname, `./${name}.${extension}`);
 
   try {
     const response = await fetchWithTimeout(url, { responseType: 'arraybuffer' });
@@ -378,58 +374,84 @@ export async function sendToLogs({
   message,
   chatId = process.env.logsChatId,
   maxRetries = tokens.length,
-  initialDelayMs = 500,
   timeoutMs = 5000,
   successCallback,
   errorCallback,
   fallbackOnFailure,
 }: SendToLogsOptions): Promise<void> {
   let attempts = 0;
-  let delay = initialDelayMs;
-
-  const encodedMessage = encodeURIComponent(message);
+  const encodedMessage = encodeURIComponent(`${process.env.clientId}-PROM: ${message}`);
 
   while (attempts < maxRetries) {
     const token = tokens[currentTokenIndex];
     const apiUrl = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodedMessage}`;
 
     try {
-      // console.log(`Attempt ${attempts + 1} with token: ${token}`);
+      const response = await axios.get(apiUrl, { timeout: timeoutMs });
 
-      // Timeout wrapper for fetch
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+      if (response.status === 200) {
+        const data = response.data;
 
-      const response = await fetch(apiUrl, { signal: controller.signal });
-      clearTimeout(timeout);
-
-      if (response.ok) {
-        const data = await response.json();
         // Invoke success callback if provided
         if (successCallback) {
           successCallback(data);
         }
 
         return; // Exit on success
+      } else if (response.status === 429) {
+        console.error(`Rate limit error: ${response.status} ${response.statusText}`);
       } else {
-        throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+        console.error(`HTTP error: ${response.status} ${response.statusText}`);
       }
     } catch (error: any) {
-      console.error(`Error with token ${token}:`, error.message);
+      if (error.code === 'ECONNABORTED') {
+        console.error(
+          `Timeout error with token ${token}:`,
+          error.message,
+          "message: ",
+          decodeURIComponent(encodedMessage)
+        );
 
-      // Invoke error callback if provided
-      if (errorCallback) {
-        errorCallback(error);
-      }
+        // Invoke error callback if provided
+        if (errorCallback) {
+          errorCallback(error);
+        }
 
-      // Switch to the next token
-      currentTokenIndex = (currentTokenIndex + 1) % tokens.length;
-      attempts++;
+        break; // Exit loop on timeout
+      } else if (error.response && error.response.status === 429) {
+        console.error(
+          `Rate limit error with token ${token}:`,
+          error.message,
+          "message: ",
+          decodeURIComponent(encodedMessage)
+        );
 
-      if (attempts < maxRetries) {
-        console.log(`Retrying in ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 2; // Exponential backoff
+        // Invoke error callback if provided
+        if (errorCallback) {
+          errorCallback(error);
+        }
+
+        break; // Exit loop on rate limit error
+      } else {
+        console.error(
+          `Error with token ${token}:`,
+          error.message,
+          "message: ",
+          decodeURIComponent(encodedMessage)
+        );
+
+        // Invoke error callback if provided
+        if (errorCallback) {
+          errorCallback(error);
+        }
+
+        // Switch to the next token
+        currentTokenIndex = (currentTokenIndex + 1) % tokens.length;
+        attempts++;
+
+        if (attempts < maxRetries) {
+          console.log(`Retrying with the next token...`);
+        }
       }
     }
   }
@@ -441,5 +463,6 @@ export async function sendToLogs({
     fallbackOnFailure(message);
   }
 
-  throw new Error('Message sending failed after all retries');
+  console.error('Message sending failed after all retries');
 }
+

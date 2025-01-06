@@ -3,14 +3,14 @@ import { ppplbot } from "./utils";
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=-1001823103248`
 
 export function parseError(
-  err: any,
-  prefix: string = `${process.env.clientId}`,
+  err: any = { message: "UNKNOWN", errorMessage: "unk" },
+  prefix: string,
   sendErr: boolean = true
 ) {
   let status = 'UNKNOWN';
   let message = 'An unknown error occurred';
   let error = 'UnknownError';
-  prefix = `${process.env.clientId} - ${prefix ? prefix : ""}`
+  prefix = `${process.env.clientId}-PROM: ${prefix ? prefix : ""}`
 
   const extractMessage = (data: any): string => {
     if (Array.isArray(data)) {
@@ -38,7 +38,7 @@ export function parseError(
     return JSON.stringify(data);
   };
 
-  if (err.response) {
+  if (err?.response) {
     const response = err.response;
     status =
       response.data?.status ||
@@ -60,7 +60,7 @@ export function parseError(
       err.name ||
       err.code ||
       'Error';
-  } else if (err.request) {
+  } else if (err?.request) {
     status = err.status || 'NO_RESPONSE';
     message = err.data?.message ||
       err.data?.errors ||
@@ -69,11 +69,11 @@ export function parseError(
       err.data ||
       err.message || 'The request was triggered but no response was received';
     error = err.name || err.code || 'NoResponseError';
-  } else if (err.message) {
+  } else if (err?.message) {
     status = err.status || 'UNKNOWN';
     message = err.message;
     error = err.name || err.code || 'Error';
-  } else if (err.errorMessage) {
+  } else if (err?.errorMessage) {
     status = err.status || 'UNKNOWN';
     message = err.errorMessage;
     error = err.name || err.code || 'Error';

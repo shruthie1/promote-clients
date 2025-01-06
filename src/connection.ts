@@ -33,7 +33,7 @@ async function retryConnection() {
             await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNABLE TO START at RETRY - EXITTING\n\nPid:${process.pid}\n\nenv: ${process.env.clientId}`);
             process.exit(1);
         }
-        if (!process.env.repl?.includes("glitch")) {
+        if (false &&!process.env.repl?.includes("glitch")) {
             const resp = await fetchWithTimeout(`${process.env.repl}/getProcessId`, { timeout: 100000 });
             try {
                 console.log(resp);
@@ -53,7 +53,7 @@ async function retryConnection() {
                 console.log('Cannot fetch pinger', error);
             }
         } else {
-            const respon = await fetchWithTimeout(`${process.env.promoteChecker}/promoteconnect/${prcessID}?clientId=${process.env.clientId}`);
+            const respon = await fetchWithTimeout(`${process.env.promoteChecker}/promoteconnect/${prcessID}?clientId=${process.env.promoteClientId}`);
             if (!respon.data) {
                 console.log("EXITTING")
                 process.exit(1);

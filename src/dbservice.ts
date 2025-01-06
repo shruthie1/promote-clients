@@ -103,7 +103,7 @@ export class UserDataDtoCrud {
             }
             await this.client?.close();
         } catch (error) {
-            parseError(error)
+            parseError(error, "Error Closing Connection")
         }
     }
 
@@ -156,6 +156,23 @@ export class UserDataDtoCrud {
         }
     }
 
+    async pushPromoteMobile(filter: any, mobile: string) {
+        try {
+            const clientsDb = this.client.db("tgclients").collection('clients');
+            return await clientsDb.updateOne(filter, { $addToSet: { promoteMobile: mobile } });
+        } catch (error) {
+            parseError(error, "Error pushing mobile to promoteMobile");
+        }
+    }
+
+    async pullPromoteMobile(filter: any, mobile: string) {
+        try {
+            const clientsDb: any = this.client.db("tgclients").collection('clients');
+            return await clientsDb.updateOne(filter, { $pull: { promoteMobile: mobile } });
+        } catch (error) {
+            parseError(error, "Error pulling mobile from promoteMobile");
+        }
+    }
     async getClient(filter: any) {
         const client = await this.client.db("tgclients").collection('clients').findOne(filter)
         return client;

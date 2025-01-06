@@ -85,9 +85,9 @@ const modifyPackageJson = (action: string, packageName: string, version?: string
 };
 // modifyPackageJson('add', 'lodash', '^4.17.21');
 // modifyPackageJson('remove', 'lodash');
-modifyPackageJson('change', 'telegram', '2.16.4');
+// modifyPackageJson('change', 'telegram', '2.16.4');
 // modifyPackageJson('add', 'cors', '^2.8.5');
-installPackage()
+// installPackage()
 
 async function installPackage() {
     console.log(" executing npm i")
@@ -115,6 +115,7 @@ export async function getDataAndSetEnvVariables(url: string) {
 async function setEnv() {
     // await getDataAndSetEnvVariables(`https://checker-production-c3c0.up.railway.app/forward/clients/${process.env.clientId}`);
     await getDataAndSetEnvVariables(`https://mychatgpt-xk3y.onrender.com/forward/configuration`);
+    await getDataAndSetEnvVariables(`https://mychatgpt-xk3y.onrender.com/forward/clients/${process.env.clientId}`);
     console.log("Env Mobile : ", process.env.mobile)
     require('./express')
 }
