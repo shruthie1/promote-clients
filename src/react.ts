@@ -29,6 +29,7 @@ export class Reactions {
     private targetReactionDelay = 6000;
     private reactQueue: ReactQueue;
     private nextMobileIndex = 0; // Index for round-robin mobile selection
+    private currentMobile: string; // Index for round-robin mobile selection
     private mobiles: string[] = [];
 
     private getClient: (clientId: string) => TelegramManager | undefined;
@@ -37,6 +38,7 @@ export class Reactions {
         this.reactQueue = ReactQueue.getInstance();
         this.mobiles = mobiles
         this.getClient = getClient;
+        this.currentMobile = this.selectNextMobile()
         console.log("Reaction Instance created")
     }
     private standardEmoticons = ['👍', '❤', '🔥', '👏', '🥰', '😁']
@@ -71,8 +73,8 @@ export class Reactions {
         "1887746719", "1916123414", "1970767061", "2057158588"
     ]
 
-    async react(event: NewMessageEvent): Promise<void> {
-        if (!this.flag || this.waitReactTime > Date.now()) {
+    async react(event: NewMessageEvent, targetMobile: string): Promise<void> {
+        if (!this.flag || this.waitReactTime > Date.now() || targetMobile !== this.currentMobile) {
             return
         }
         const chatId = event.message.chatId.toString();
@@ -81,7 +83,7 @@ export class Reactions {
                 const availableReactions = getAllReactions(chatId);
                 if (availableReactions && availableReactions.length > 1) {
                     const reaction = this.selectReaction(availableReactions);
-                    await this.processReaction(event, chatId, reaction);
+                    await this.processReaction(event, reaction);
                 } else {
                     await this.handleReactionsCache(event, chatId);
                 }
@@ -202,7 +204,7 @@ export class Reactions {
         );
     }
 
-    private async processReaction(event: NewMessageEvent, chatId: string, reaction: Api.ReactionEmoji[]): Promise<void> {
+    private async processReaction(event: NewMessageEvent, reaction: Api.ReactionEmoji[]): Promise<void> {
         this.flag = false;
         const mobile = this.selectNextMobile();
         const tgManager = this.getClient(mobile);
@@ -213,6 +215,7 @@ export class Reactions {
             console.log(`Client is undefined: ${mobile}`);
             await sleep(30000)
         }
+        this.currentMobile = this.selectNextMobile();
     }
 
     private async executeReaction(event: NewMessageEvent, mobile: string, client: TelegramClient, reaction: Api.ReactionEmoji[]): Promise<void> {

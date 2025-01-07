@@ -262,7 +262,7 @@ class TelegramManager {
                     }
                 }
             } else {
-                await this.reactorInstance?.react(event);
+                await this.reactorInstance?.react(event, this.clientDetails.mobile);
                 setSendPing(true)
             }
         } catch (error) {
