@@ -17,10 +17,9 @@ export class Reactions {
     private floodControl = new Map<string, { triggeredTime: number; releaseTime: number; count: number }>();
     private waitReactTime = Date.now();
     private lastReactedtime = Date.now() - 180000;
+    private reactionDelays: number[] = []; // Store the last 20 reaction delays
     private lastNotifiedTime = Date.now();
     private reactionsRestarted = Date.now();
-    private totalReactionDelay = 0;
-    private successfulReactions = 0;
     private averageReactionDelay = 0;
     private minWaitTime = 1500;
     private maxWaitTime = 21000;
@@ -29,8 +28,6 @@ export class Reactions {
     private floodCount = 0;
     private targetReactionDelay = 6000;
     private reactQueue: ReactQueue;
-    private processId: number = Math.floor(Math.random() * 1234);
-    private floodReleaseTime = 0;
     private nextMobileIndex = 0; // Index for round-robin mobile selection
     private mobiles: string[] = [];
 
@@ -199,7 +196,7 @@ export class Reactions {
 
     private shouldReact(chatId: string): boolean {
         return (
-            !contains(chatId, this.reactRestrictedIds)&&
+            !contains(chatId, this.reactRestrictedIds) &&
             !this.reactQueue.contains(chatId) &&
             this.mobiles?.length > 1
         );
@@ -226,7 +223,7 @@ export class Reactions {
             await this.sendReaction(client, event, reaction);
             // let chatEntity = <Api.Channel>await getEntity(client, event.message.chatId);
             console.log(`${mobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
-            this.updateReactionStats(mobile);
+            this.updateReactionStats();
             // await this.activeChannelsService.addReactions(chatId.replace(/^-100/, ""), [reaction[0].emoticon])
         } catch (error) {
             await this.handleReactionError(error, reaction, chatId, mobile);
@@ -256,12 +253,21 @@ export class Reactions {
         await client.invoke(MsgClass);
     }
 
-    private updateReactionStats(mobile: string): void {
-        const reactionDelay = Math.min(Date.now() - this.lastReactedtime, 25000);
-        this.lastReactedtime = Date.now();
-        this.totalReactionDelay += reactionDelay;
-        this.successfulReactions += 1;
-        this.averageReactionDelay = Math.floor(this.totalReactionDelay / this.successfulReactions);
+    private updateReactionStats(): void {
+        const reactionDelay = Math.min(Date.now() - this.lastReactedtime, 25000); // Calculate current delay
+        this.lastReactedtime = Date.now(); // Update last reacted time
+
+        // Add the new delay to the array
+        this.reactionDelays.push(reactionDelay);
+
+        // Ensure we only keep the last 20 delays
+        if (this.reactionDelays.length > 20) {
+            this.reactionDelays.shift();
+        }
+
+        // Calculate the average of the last 20 delays
+        const totalDelay = this.reactionDelays.reduce((sum, delay) => sum + delay, 0);
+        this.averageReactionDelay = Math.floor(totalDelay / this.reactionDelays.length);
     }
 
     private async handleReactionError(
@@ -298,8 +304,6 @@ export class Reactions {
             releaseTime,
             count: currentFlood.count + 1,
         });
-
-
         // this.waitReactTime = Date.now() + error.seconds * 1001;
         // this.minWaitTime += error.seconds * 3;
         this.reactSleepTime = 5000;
@@ -307,7 +311,6 @@ export class Reactions {
         this.minWaitTime += 500;
         this.floodTriggeredTime = Date.now();
         this.floodCount++;
-        this.floodReleaseTime = Date.now() + error.seconds * 1000 + 10000;
     }
 
 
