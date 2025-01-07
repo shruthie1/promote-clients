@@ -47,6 +47,7 @@ export class Promotion {
     }
 
     public setMobiles(mobiles: string[]) {
+        console.log("Setting Mobiles in Promotion instance", mobiles.length);
         this.mobiles = mobiles;
         for (const mobile of mobiles) {
             if (!this.limitControl.has(mobile)) {
@@ -115,7 +116,7 @@ export class Promotion {
         try {
             for (let batch = 0; batch < totalBatches; batch++) {
                 const mobile = this.selectNextMobile(); // Rotate mobile   
-                console.log(`Fetching dialogs for mobile: ${mobile}`); 
+                console.log(`Fetching dialogs for mobile: ${mobile}`);
                 const tgManager = this.getClient(mobile);
                 const client = tgManager?.client;
 

@@ -42,6 +42,7 @@ export class Reactions {
         console.log("Reaction Instance created")
     }
     public setMobiles(mobiles: string[]) {
+        console.log("Setting Mobiles in Reaction Instance", mobiles.length);
         this.mobiles = mobiles
     }
     private standardEmoticons = ['👍', '❤', '🔥', '👏', '🥰', '😁']
