@@ -204,10 +204,10 @@ class TelegramManager {
                             await this.setTyping(chatId)
                             await sleep(3000);
                             try {
-                                await event.message.respond({ message: `Hii **${senderJson.firstName.toUpperCase()} Baby!!${this.generateEmojis()}**`, linkPreview: true })
+                                await event.message.respond({ message: `Hii **${senderJson.firstName.toUpperCase()}** Baby!!😚😚`, linkPreview: true })
                                 await this.setAudioRecording(chatId)
                                 await sleep(4000);
-                                await event.message.respond({ message: `**This is my official Account!! ${this.generateEmojis()}\n\n\nMessage me Here Baby!!💋😚👇👇:**\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg me here **Baby!!👇👇:**\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
                                 await this.setVideoRecording(chatId)
                             } catch (error) {
                                 if (error instanceof errors.FloodWaitError) {
