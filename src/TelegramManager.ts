@@ -104,7 +104,7 @@ class TelegramManager {
                 const res = await this.client.invoke(new Api.account.UpdateUsername({ username }));
                 console.log(`Removed Username successfully.`);
             } catch (error) {
-                console.log(error)
+                console.log(error.errorMessage)
             }
         } else {
             while (increment < 10) {
