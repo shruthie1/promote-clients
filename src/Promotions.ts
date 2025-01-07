@@ -21,8 +21,8 @@ export class Promotion {
     private nextMobileIndex = 0; // Index for round-robin mobile selection
     private sleepTime = 0;
     private channels: string[];
-    private minDelay: number = 100000;
-    private maxDelay: number = 150000;
+    private minDelay: number = 185000;
+    private maxDelay: number = 240000;
     private messageQueue: MessageQueueItem[] = []
     private messageCheckDelay: number = 20000;
     private promoteMsgs = {};
@@ -483,7 +483,7 @@ export class Promotion {
     private getHealthyMobiles() {
         return this.mobiles.filter((mobile) => {
             const floodData = this.limitControl.get(mobile)
-            return floodData.daysLeft < 7 //Change it
+            return floodData.daysLeft < 7 && floodData.lastMessageTime < Date.now() - 3 * 60 * 1000 //Change it
         });
     }
 
