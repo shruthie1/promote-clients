@@ -41,6 +41,9 @@ export class Reactions {
         this.currentMobile = this.selectNextMobile()
         console.log("Reaction Instance created")
     }
+    public setMobiles(mobiles: string[]) {
+        this.mobiles = mobiles
+    }
     private standardEmoticons = ['👍', '❤', '🔥', '👏', '🥰', '😁']
     private emoticons = [
         '❤', '🔥', '👏', '🥰', '😁', '🤔',

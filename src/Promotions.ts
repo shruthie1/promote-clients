@@ -17,7 +17,7 @@ interface MessageQueueItem {
 }
 
 export class Promotion {
-    private limitControl = new Map<string, { triggeredTime: number; daysLeft: number, lastMessageTime: number }>();
+    private limitControl: Map<string, { triggeredTime: number; daysLeft: number; lastMessageTime: number }> = new Map<string, { triggeredTime: number; daysLeft: number, lastMessageTime: number }>();
     private nextMobileIndex = 0; // Index for round-robin mobile selection
     private sleepTime = 0;
     private channels: string[];
@@ -46,6 +46,14 @@ export class Promotion {
         }
     }
 
+    public setMobiles(mobiles: string[]) {
+        this.mobiles = mobiles;
+        for (const mobile of mobiles) {
+            if (!this.limitControl.has(mobile)) {
+                this.limitControl.set(mobile, { triggeredTime: 0, daysLeft: -1, lastMessageTime: Date.now() });
+            }
+        }
+    }
     public static getInstance(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined): Promotion {
         if (!Promotion.instance) {
             Promotion.instance = new Promotion(mobiles, getClient);
@@ -103,32 +111,32 @@ export class Promotion {
         const batchSize = 250;
         const channelDataSet = new Set<string>(); // Use Set to avoid duplicates
         const channelDetails: { channelId: string; participantsCount: number }[] = [];
-    
+
         try {
             for (let batch = 0; batch < totalBatches; batch++) {
-                const mobile =this.selectNextMobile()// Rotate mobile    
+                const mobile = this.selectNextMobile()// Rotate mobile    
                 const tgManager = this.getClient(mobile);
                 const client = tgManager?.client;
-    
+
                 if (!client) {
                     console.warn(`Client not available for mobile: ${mobile}`);
                     continue;
                 }
-    
+
                 await client.connect();
-    
+
                 let offsetId = 0; // Reset offset for each mobile in this example
                 const dialogs = await client.getDialogs({ limit: batchSize, offsetId });
-    
+
                 if (!dialogs || dialogs.length === 0) {
                     console.warn("No dialogs retrieved from the client.");
                     break;
                 }
-    
+
                 for (const dialog of dialogs) {
                     if (dialog.isChannel || dialog.isGroup) {
                         const chatEntity = dialog.entity as Api.Channel;
-    
+
                         // Extract channel information
                         if (
                             !chatEntity.broadcast && // Exclude broadcast channels
@@ -150,20 +158,20 @@ export class Promotion {
                     }
                 }
             }
-    
+
             // Sort channels by participantsCount
             channelDetails.sort((a, b) => b.participantsCount - a.participantsCount);
-    
+
             // Fisher-Yates Shuffle on top 250
             const topChannels = channelDetails.slice(0, 250);
             for (let i = topChannels.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [topChannels[i], topChannels[j]] = [topChannels[j], topChannels[i]];
             }
-    
+
             // Return only the shuffled channel IDs
             return topChannels.map(channel => channel.channelId);
-    
+
         } catch (error) {
             parseError(error, `Error occurred while fetching dialogs`, true);
             return [];
@@ -183,7 +191,7 @@ export class Promotion {
                 await sleep(2000);
                 if (this.sleepTime < Date.now()) {
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
-                    console.log(`Client ${mobile}: Message sent to ${channelInfo.channelId} || @${channelInfo.username}`);
+                    console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username}`);
                     await sendToLogs({ message: `${mobile}:---✅\n@${channelInfo.username}` })
                     const data = this.limitControl.get(mobile);
                     this.limitControl.set(mobile, { ...data, lastMessageTime: Date.now() })
@@ -245,40 +253,61 @@ export class Promotion {
         let channelIndex = 0;
         let mobile = this.selectNextMobile();
         let failCount = 0;
+
         if (this.channels.length > 0) {
             while (true) {
                 if (mobile) {
                     try {
-                        if (channelIndex > 190) {
+
+                        if (channelIndex > 100) {
+                            console.log("Refreshing channel list after reaching index 190...");
                             this.channels = await this.fetchDialogs();
+                            channelIndex = 0;
+                            continue;
+                        }
+                        let randomIndex = '0'
+
+                        const channelId = this.channels[channelIndex];
+                        const channelInfo = await this.getChannelInfo(channelId);
+
+                        if (!channelInfo) {
+                            console.error(`Channel info for ID ${channelId} not found.`);
+                            channelIndex++;
                             continue;
                         }
 
-                        let randomIndex = '_id'
-                        const channelId = this.channels[channelIndex]
-                        const channelInfo = await this.getChannelInfo(channelId);
-                        if (!channelInfo?.banned) {
-                            let sentMessage: Api.Message | undefined;
+                        if (!channelInfo.banned) {
+
+                            let sentMessage: Api.Message;
                             if (channelInfo.wordRestriction === 0) {
+                                // console.log(`Preparing unrestricted promotional message for channel: ${channelInfo.username}`);
                                 const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
                                 const emojis = generateEmojis();
                                 const randomEmoji = getRandomEmoji();
                                 const hour = getCurrentHourIST();
                                 const isMorning = (hour > 9 && hour < 22);
-                                const offset = Math.floor(Math.random() * 3)
+                                const offset = Math.floor(Math.random() * 3);
                                 const endMsg = pickOneMsg(['U bussy👀?', "I'm Aviilble!!😊💦", 'Trry Once!!😊💦', 'Trry Once!!😊💦', 'Waiiting fr ur mssg.....Dr!!💦', 'U Onliine?👀', "I'm Avilble!!😊", 'U Bussy??👀💦', 'U Intrstd??👀💦', 'U Awakke?👀💦', 'U therre???💦💦']);
-                                const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`//\n\n${(isMorning) ? "Just Now I Came from My **College!!**" : "I am Alone in My **Hostel Room** Now!!"}🙈🙈\n\n**${endMsg}**`
-                                const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;//${randomEmoji}\n-------------------------------------------\n   ${emojis}${emojis}${emojis}${emojis}\n========================` : ""}**`;
-                                sentMessage = await this.sendMessageToChannel(mobile, channelInfo, {
-                                    message: `${msg}\n${addon}`,
-                                });
+                                const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`;
+                                const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;
+
+                                // console.log(`Sending message: ${msg}\nAddon: ${addon}`);
+                                sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: `${msg}\n${addon}` });
                             } else {
-                                // Select a random available promotional message
+                                // console.log(`Channel has word restriction. Selecting random available message.`);
                                 randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
-                                const randomAvailableMsg = this.promoteMsgs[randomIndex] || "Hiii";
+                                console.log(`Selected Msg for ${channelId}, ${channelInfo.title}|ChannelIdex:${channelIndex} | index: ${randomIndex} | msg: ${this.promoteMsgs[randomIndex]}`);
+                                let randomAvailableMsg = this.promoteMsgs[randomIndex];
+                                if (!randomAvailableMsg) {
+                                    console.log(`Random Msg Does not EXIST:  ${channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
+                                    randomAvailableMsg = "**Hiiiiii**"
+                                }
+                                console.log(`Sending restricted message: ${randomAvailableMsg}`);
                                 sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: randomAvailableMsg });
                             }
+
                             if (sentMessage) {
+                                failCount = 0;
                                 this.messageQueue.push({
                                     mobile,
                                     channelId,
@@ -286,37 +315,45 @@ export class Promotion {
                                     timestamp: Date.now(),
                                     messageIndex: randomIndex,
                                 });
+
                                 mobile = this.selectNextMobile();
                                 const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                 console.log(`Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
                                 await sleep(randomBatchDelay);
                             } else {
+                                console.warn(`Message sending failed for channel: ${channelInfo.username || channelId}`);
                                 if (failCount < 2) {
-                                    failCount++
-                                    await sleep(10000)
+                                    failCount++;
+                                    console.log(`Retrying after a short delay. Fail count: ${failCount}`);
+                                    await sleep(10000);
                                 } else {
+                                    console.log(`Switching mobile after 3 consecutive failures.`);
                                     failCount = 0;
                                     mobile = this.selectNextMobile();
                                 }
                             }
                         } else {
-                            console.log(`Banned Channel - @${channelInfo.username}`);
-                            // this.channels = this.channels.filter(id => id !== channelId);
+                            console.warn(`Channel is banned: ${channelInfo.username || channelId}`);
                         }
+
                         channelIndex++;
                     } catch (error) {
-                        parseError(error, "Error in PromoteBatch")
-                        await sleep(30000)
+                        console.error(`Error in promoteInBatches for mobile ${mobile}:`, error);
+                        await sleep(30000);
                     }
                 } else {
-                    await sleep(30000)
+                    console.warn(`No mobile available. Retrying after delay.`);
+                    await sleep(30000);
                 }
             }
+        } else {
+            console.error(`No channels available for promotion.`);
         }
 
+        console.log("Sending failure alert...");
         await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Issue with Promotions`);
         setTimeout(() => {
-            console.log("Issue with Promotions",);
+            console.log("Issue with Promotions. Restarting client...");
             // restartClient(mobile);
         }, 300000);
     }

@@ -26,6 +26,10 @@ export class TelegramService {
         return this.promoterInstance?.getDaysLeft(mobile);
     }
 
+    setMobiles(mobiles: string[]) {
+        this.promoterInstance.setMobiles(mobiles)
+        this.reactorInstance.setMobiles(mobiles)
+    }
     public async connectClients() {
         console.log("Connecting....!!");
         const mobiles = getMapKeys();

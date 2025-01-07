@@ -1,13 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import { fetchWithTimeout } from './fetchWithTimeout';
-import { UserDataDtoCrud } from './dbservice';
 import { parseError } from './parseError';
 import { sendPing } from './connection';
 import { ppplbot } from './utils';
 import * as schedule from 'node-schedule-tz';
 import { execSync } from 'child_process';
 import { TelegramService } from './Telegram.service';
+import { UserDataDtoCrud } from './dbservice';
 
 let canTry2 = true;
 
@@ -201,15 +201,15 @@ async function getALLClients() {
 
   return result
 }
-
 async function checkHealth() {
-  console.log("============Checking Health==============")
+  console.log("============Checking Health==============");
   const telegramService = TelegramService.getInstance();
-  const client = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId })
+  const client = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
+
   for (const mobile of client.promoteMobile) {
-    const client = clientsMap.get(mobile)
+    const client = clientsMap.get(mobile);
     if (client) {
-      const clientDetails: IClientDetails = {
+      const clientDetails = {
         clientId: client.clientId,
         mobile: mobile,
         repl: client.repl,
@@ -217,8 +217,8 @@ async function checkHealth() {
         lastMessage: Date.now(),
         name: client.name,
         startTime: client?.startTime || Date.now(),
-        daysLeft: client.daysLeft
-      }
+        daysLeft: client.daysLeft,
+      };
       try {
         const telegramManager = telegramService.getClient(mobile);
         if (telegramManager) {
@@ -226,39 +226,65 @@ async function checkHealth() {
             const me = await telegramManager.getMe();
             if (me.phone !== clientDetails.mobile) {
               console.log(clientDetails.mobile, " : mobile changed", " me : ", me, "clientDetails: ", clientDetails);
-              clientsMap.set(mobile, clientDetails)
-              await restartClient(mobile)
+              clientsMap.set(mobile, clientDetails);
+              await restartClient(mobile);
             } else {
-
               if (telegramService.getLastMessageTime(mobile) < Date.now() - 10 * 60 * 1000) {
-                console.log(clientDetails.clientId, " : Promotions stopped - ", `Now: ${Date.now()}`, `LAstMSg : ${telegramService.getLastMessageTime(mobile)}`, Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000), `DaysLeft: ${telegramService.getDaysLeft(mobile)}`)
+                console.log(
+                  clientDetails.clientId,
+                  " : Promotions stopped - ",
+                  `Now: ${Date.now()}`,
+                  `LAstMSg : ${telegramService.getLastMessageTime(mobile)}`,
+                  Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000),
+                  `DaysLeft: ${telegramService.getDaysLeft(mobile)}`
+                );
                 await telegramManager.checktghealth();
-                if (telegramManager.daysLeft == -1 && telegramService.getLastMessageTime(mobile) < Date.now() - 20 * 60 * 1000) {
-                  console.log("Promotion seems stopped", clientDetails.mobile, "DaysLeft: ", telegramService.getDaysLeft(mobile))
-                  restartClient(mobile)
+                if (
+                  telegramManager.daysLeft == -1 &&
+                  telegramService.getLastMessageTime(mobile) < Date.now() - 20 * 60 * 1000
+                ) {
+                  console.log(
+                    "Promotion seems stopped",
+                    clientDetails.mobile,
+                    "DaysLeft: ",
+                    telegramService.getDaysLeft(mobile)
+                  );
+                  restartClient(mobile);
                 }
                 telegramService.startPromotion();
-                // await telegramService.deleteClient(client.clientId);
-                // await sleep(5000);
-                // await telegramService.createClient(clientDetails, false, true);
               } else {
-                console.log(mobile, me.username, " : Promotions Working fine - ", Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000), `DaysLeft: ${telegramService.getDaysLeft(mobile)}`)
+                console.log(
+                  mobile,
+                  me.username,
+                  " : Promotions Working fine - ",
+                  Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000),
+                  `DaysLeft: ${telegramService.getDaysLeft(mobile)}`
+                );
               }
-              clientsMap.set(mobile, clientDetails)
-              telegramManager.setClientDetails(clientDetails)
+              clientsMap.set(mobile, clientDetails);
+              telegramManager.setClientDetails(clientDetails);
               setTimeout(async () => {
                 await telegramManager?.checkMe();
               }, 30000);
             }
           } catch (e) {
-            parseError(e, clientDetails.mobile)
+            parseError(e, clientDetails.mobile);
           }
         } else {
-          console.log("Does not Exist Client 1: ", clientDetails.mobile)
+          console.log("Does not Exist Client 1: ", clientDetails.mobile);
         }
       } catch (error) {
-        console.log("Does not Exist Client 2: ", clientDetails.mobile)
+        console.log("Does not Exist Client 2: ", clientDetails.mobile);
       }
+    }
+  }
+  telegramService.setMobiles(client.promoteMobile);
+  const promoteMobilesSet = new Set(client.promoteMobile);
+  for (const mobile of clientsMap.keys()) {
+    if (!promoteMobilesSet.has(mobile)) {
+      console.log(`Removing old client entry from clientsMap: ${mobile}`);
+      await telegramService.disposeClient(mobile);
+      clientsMap.delete(mobile);
     }
   }
 }
@@ -268,33 +294,36 @@ app.listen(port, () => {
 });
 
 export function getMapValues() {
-  return Array.from(clientsMap.values())
+  return Array.from(clientsMap.values());
 }
 
 export function getMapKeys() {
-  return Array.from(clientsMap.keys())
+  return Array.from(clientsMap.keys());
 }
 
 export function getClientDetails(mobile: string) {
-  const client = clientsMap.get(mobile)
-  return client
+  const client = clientsMap.get(mobile);
+  return client;
 }
 
 export async function updateSuccessCount(clientId: string) {
   const db = UserDataDtoCrud.getInstance();
-  await db.increaseSuccessCount(clientId)
+  await db.increaseSuccessCount(clientId);
 }
+
 export async function updateFailedCount(clientId: string) {
   const db = UserDataDtoCrud.getInstance();
-  await db.increaseFailedCount(clientId)
+  await db.increaseFailedCount(clientId);
 }
+
 export async function updateMsgCount(clientId: string) {
   const db = UserDataDtoCrud.getInstance();
-  await db.increaseMsgCount(clientId)
+  await db.increaseMsgCount(clientId);
 }
+
 export async function updatePromoteClient(clientId: string, clientData: any) {
   const db = UserDataDtoCrud.getInstance();
-  await db.updatePromoteClientStat({ clientId }, { ...clientData })
+  await db.updatePromoteClientStat({ clientId }, { ...clientData });
 }
 
 export async function restartClient(mobile: string) {
@@ -326,6 +355,5 @@ export async function restartClient(mobile: string) {
     console.error(`Failed to restart client ${mobile}:`, error);
   }
 }
-
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
