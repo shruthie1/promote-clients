@@ -85,9 +85,9 @@ const modifyPackageJson = (action: string, packageName: string, version?: string
 };
 // modifyPackageJson('add', 'lodash', '^4.17.21');
 // modifyPackageJson('remove', 'lodash');
-// modifyPackageJson('change', 'telegram', '2.16.4');
+modifyPackageJson('change', 'telegram', '2.26.16');
 // modifyPackageJson('add', 'cors', '^2.8.5');
-// installPackage()
+installPackage()
 
 async function installPackage() {
     console.log(" executing npm i")

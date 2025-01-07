@@ -206,30 +206,29 @@ export class Reactions {
 
     private async processReaction(event: NewMessageEvent, reaction: Api.ReactionEmoji[]): Promise<void> {
         this.flag = false;
-        const mobile = this.selectNextMobile();
-        const tgManager = this.getClient(mobile);
+        const tgManager = this.getClient(this.currentMobile);
         if (tgManager?.client) {
-            await this.executeReaction(event, mobile, tgManager.client, reaction);
+            await this.executeReaction(event, tgManager.client, reaction);
         } else {
             this.flag = true;
-            console.log(`Client is undefined: ${mobile}`);
+            console.log(`Client is undefined: ${this.currentMobile}`);
             await sleep(30000)
         }
         this.currentMobile = this.selectNextMobile();
     }
 
-    private async executeReaction(event: NewMessageEvent, mobile: string, client: TelegramClient, reaction: Api.ReactionEmoji[]): Promise<void> {
+    private async executeReaction(event: NewMessageEvent, client: TelegramClient, reaction: Api.ReactionEmoji[]): Promise<void> {
         const chatId = event.chatId.toString();
 
         try {
             // console.log(chatId, event.message.id.toString(), reaction[0].emoticon, new Date().toISOString().split('T')[1].split('.')[0])
             await this.sendReaction(client, event, reaction);
             // let chatEntity = <Api.Channel>await getEntity(client, event.message.chatId);
-            console.log(`${mobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
+            console.log(`${this.currentMobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
             this.updateReactionStats();
             // await this.activeChannelsService.addReactions(chatId.replace(/^-100/, ""), [reaction[0].emoticon])
         } catch (error) {
-            await this.handleReactionError(error, reaction, chatId, mobile);
+            await this.handleReactionError(error, reaction, chatId, this.currentMobile);
         } finally {
             if (this.averageReactionDelay < this.targetReactionDelay) {
                 this.reactSleepTime = Math.min(this.reactSleepTime + 200, this.maxWaitTime);
