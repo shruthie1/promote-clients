@@ -70,18 +70,16 @@ class TelegramManager {
             await this.client.connect();
             console.log("Connected : ", this.clientDetails.mobile)
             const me = await this.checkMe();
-            // await sleep(1500)
-            // console.log("Connected: ", this.clientDetails.clientId, this.clientDetails.mobile, me.username);
-            // await this.updatePrivacy();
-            // await sleep(1500)
-            // // await this.checkProfilePics();
-            // await sleep(1500)
-            // await this.joinChannel("clientupdates");
-            // await sleep(1500)
-            // await this.updateUsername('')//`${this.clientDetails.name.split(' ').join("_")}_0${process.env.clientNumber}`)
-            // await sleep(1500)
+            await this.updatePrivacy();
+            await sleep(1500)
+            await this.checkProfilePics();
+            await sleep(1500)
+            await this.joinChannel("clientupdates");
+            await sleep(1500)
+            await this.updateUsername('')
             console.log("Adding event Handler")
             this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
+            this.client.addEventHandler((event) => this.handleOtherEvents(event));
             // await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
             // if (handler && this.client) {
             //     //console.log("Adding event Handler")
@@ -138,6 +136,42 @@ class TelegramManager {
         return newUserName;
     }
 
+    async handleOtherEvents(ev: any) {
+        try {
+            if (ev?.className == "UpdatePhoneCall") {
+                if (this.phoneCall && this.phoneCall.participantId?.toString() == ev.phoneCall.participantId?.toString()) {
+                    console.log(`Phone Call Updated, ${ev.className}`)
+                    if (ev.phoneCall.className == "PhoneCallAccepted") {
+                        try {
+                            const res = await this.client.invoke(new Api.phone.DiscardCall({
+                                peer: new Api.InputPhoneCall({ id: this.phoneCall.id, accessHash: this.phoneCall.accessHash }),
+                                reason: new Api.PhoneCallDiscardReasonHangup()
+                            }));
+                        } catch (error) {
+                            console.log(error)
+                        }
+                    }
+                    if (ev.phoneCall.className == "PhoneCallDiscarded") {
+                        this.phoneCall = undefined;
+                        destroyPhoneCallState();
+                        // await joinPhoneCall(call.phoneCall.connections, sendSignalingData, true, true, apiUpdate)
+                    }
+                } else {
+                    console.log('unknown Phone Call Updated', this.phoneCall, ev.phonecall)
+                    try {
+                        const res = await this.client.invoke(new Api.phone.DiscardCall({
+                            peer: new Api.InputPhoneCall({ id: this.phoneCall.id, accessHash: this.phoneCall.accessHash }),
+                            reason: new Api.PhoneCallDiscardReasonHangup()
+                        }));
+                    } catch (error) {
+                        console.log(error)
+                    }
+                }
+            }
+        } catch (error) {
+            parseError(error, "Error At HAnling other event")
+        }
+    }
 
     handleEvents = async (event: NewMessageEvent) => {
         try {
@@ -403,17 +437,25 @@ class TelegramManager {
 
     async checkMe() {
         try {
-            const me = <Api.User>await this.client.getMe();
-            this.tgId = me.id.toString();
-            // if (me.firstName !== `${this.clientDetails.name.toUpperCase()}`) {
-            //     await this.updateProfile(`${this.clientDetails.name.toUpperCase()}`, `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`);
-            // }
-            // const fullUser = await this.client.invoke(new Api.users.GetFullUser({
-            //     id: me.id, // Pass the current user's input peer
-            // }));
-            // if (fullUser.fullUser.about !== `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`) {
-            //     await this.updateProfile(`${this.clientDetails.name.toUpperCase()}`, `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`);
-            // }
+            const me = <Api.User>await this.getMe();
+            if (me.firstName !== this.clientDetails.name) {
+                await this.updateProfile(this.clientDetails.name, `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`);
+                await sleep(2000);
+                await this.deleteProfilePhotos();
+                await sleep(2000);
+                const filepath = await saveFile(process.env.img, this.clientDetails.clientId);
+                console.log("FilePath :", filepath)
+                await this.updateProfilePic(filepath);
+            }
+            const fullUser = await this.client.invoke(new Api.users.GetFullUser({
+                id: me.id, // Pass the current user's input peer
+            }));
+            if (fullUser.fullUser.about !== `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`) {
+                console.log("updating About")
+                await this.updateProfile(this.clientDetails.name, `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`);
+            } else {
+                console.log("About is Good")
+            }
             if (!me.photo) {
                 await this.checkProfilePics();
                 await sleep(2000);
@@ -421,8 +463,34 @@ class TelegramManager {
             }
             return me;
         } catch (error) {
-            parseError(error, `${this.clientDetails?.mobile} || ${this.clientDetails.mobile}`);
-            await startNewUserProcess(error, this.clientDetails?.mobile)
+            parseError(error, `${this.clientDetails.name} - prom`);
+        }
+    }
+    async checkProfilePics() {
+        try {
+            const result = await this.client.invoke(
+                new Api.photos.GetUserPhotos({
+                    userId: "me"
+                })
+            );
+            // console.log(`Profile Pics found: ${result.photos.length}`)
+            if (result && result.photos?.length < 1) {
+                await this.deleteProfilePhotos();
+                await sleep(2000);
+                const filepath = await saveFile(process.env.img, this.clientDetails.clientId);
+                console.log("FilePath :", filepath)
+                await this.updateProfilePic(filepath);
+                // await sleep(2000);
+                // const filepath2 = await saveFile(`${this.clientDetails.repl}/downloadprofilepic/2`, this.clientDetails.clientId);
+                // console.log("FilePath :", filepath2)
+                // await tgClient.updateProfilePic(filepath2);
+                console.log(`${this.clientDetails.clientId}: Uploaded Pic`)
+            } else {
+                console.log(`${this.clientDetails.clientId}: Profile pics exist`)
+            }
+            // console.log("Updated profile Photos");
+        } catch (error) {
+            parseError(error, `${this.clientDetails?.clientId} || ${this.clientDetails.mobile}`);
         }
     }
 
@@ -432,31 +500,6 @@ class TelegramManager {
                 channel: await this.client?.getEntity(entity)
             })
         );
-    }
-
-    async checkProfilePics() {
-        try {
-            const result = await this.client.invoke(
-                new Api.photos.GetUserPhotos({
-                    userId: "me"
-                })
-            );
-            // console.log(`Profile Pics found: ${result.photos.length}`)
-            if (result && result.photos?.length < 2) {
-                await this.deleteProfilePhotos();
-                await sleep(2000);
-                const filepath = await saveFile(process.env.img, this.clientDetails.clientId);
-                console.log("FilePath :", filepath)
-                await this.updateProfilePic(filepath);
-                console.log(`${this.clientDetails.mobile}: Uploaded Pic`)
-            } else {
-                console.log(`${this.clientDetails.mobile}: Profile pics exist`)
-            }
-            // console.log("Updated profile Photos");
-        } catch (error) {
-            parseError(error, `${this.clientDetails.mobile}`);
-            await startNewUserProcess(error, this.clientDetails?.mobile)
-        }
     }
 
     async getMe() {
