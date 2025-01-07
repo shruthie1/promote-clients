@@ -43,12 +43,11 @@ class TelegramManager {
 
     async destroy() {
         try {
-            await this.client?.destroy();
             await this.client?.disconnect();
             this.client = null;
-            console.log("Client successfully destroyed.");
+            console.log("Client successfully disconnected.");
         } catch (error) {
-            console.log("Error destroying client:", error);
+            console.log("Error disconnecting client:", error);
         }
     }
 
@@ -552,7 +551,7 @@ class TelegramManager {
             const result = await this.client.invoke(
                 new Api.account.UpdateProfile(data)
             );
-            console.log(`${this.clientDetails.mobile}:Updated NAme: `, firstName, result);
+            console.log(`${this.clientDetails.mobile}:Updated NAme: `, firstName);
         } catch (error) {
             console.error(`${this.clientDetails.mobile}:Failed to update name`);
         }
