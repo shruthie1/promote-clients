@@ -413,7 +413,7 @@ export class Promotion {
 
     async checktghealth(mobile: string, force: boolean = false) {
         const floodData = this.limitControl.get(mobile);
-        if ((floodData.triggeredTime < Date.now() - 120 * 60 * 1000 || force)) {//&& daysLeftForRelease() < 0) {
+        if ((floodData.triggeredTime < Date.now() - (120 * 60 * 1000)) || force) {//&& daysLeftForRelease() < 0) {
             const tgManager = this.getClient(mobile)
             try {
                 if (tgManager.client) {
