@@ -283,7 +283,7 @@ class TelegramManager {
                             }
                             await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
                         }
-                        if (this.daysLeft > 2) {
+                        if (this.daysLeft > 2 && (this.lastCheckedTime < Date.now() - 30 * 60 * 1000)) {
                             try {
                                 const db = UserDataDtoCrud.getInstance();
                                 const existingClients = await db.getClients();
