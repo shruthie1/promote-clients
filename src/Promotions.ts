@@ -190,6 +190,7 @@ export class Promotion {
                 );
                 await sleep(2000);
                 if (this.sleepTime < Date.now()) {
+                    console.log(`Sending Message: ${message.message}`);
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username}`);
                     await sendToLogs({ message: `${mobile}:---✅\n@${channelInfo.username}` })
@@ -302,7 +303,6 @@ export class Promotion {
                                     console.log(`Random Msg Does not EXIST:  ${channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
                                     randomAvailableMsg = "**Hiiiiii**"
                                 }
-                                console.log(`Sending Message: ${randomAvailableMsg}`);
                                 sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: randomAvailableMsg });
                             }
 
