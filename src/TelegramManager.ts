@@ -63,7 +63,7 @@ class TelegramManager {
                     useIPV6: true,
                     useWSS: true
                 });
-                // this.client.setLogLevel(LogLevel.NONE);
+                this.client.setLogLevel(LogLevel.NONE);
                 //TelegramManager.client._errorHandler = this.errorHandler
                 await this.client.connect();
                 console.log("Connected : ", this.clientDetails.mobile)

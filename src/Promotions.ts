@@ -1,7 +1,7 @@
 import { TelegramClient, Api, errors } from "telegram";
 import { UserDataDtoCrud } from "./dbservice";
 import { generateEmojis, getCurrentHourIST, getRandomEmoji, IChannel, ppplbot, selectRandomElements, sendToLogs, sleep } from "./utils";
-import { IClientDetails, restartClient, updateFailedCount, updateSuccessCount } from "./express";
+import { updateFailedCount, updateSuccessCount } from "./express";
 import { parseError } from "./parseError";
 import { SendMessageParams } from "telegram/client/messages";
 import { pickOneMsg } from "./messages";
