@@ -97,50 +97,77 @@ export class Promotion {
             console.error(`Error checking message ${messageItem.messageId} in ${messageItem.channelId}: ${error.message}`);
         }
     }
-
     async fetchDialogs() {
-        const channelIds = [];
-        const mobile = this.selectNextMobile();
-        const tgManager = this.getClient(mobile);
-        const client = tgManager?.client
-        try {
-            await client?.connect()
-            const dialogs = await client.getDialogs({ limit: 500 });
-            const channelData = [];
 
-            for (const dialog of dialogs) {
-                if (dialog.isChannel || dialog.isGroup) {
-                    const chatEntity = <Api.Channel>dialog.entity.toJSON();
-                    const { id, defaultBannedRights, title, broadcast, username, participantsCount, restricted } = chatEntity;
-                    if (!broadcast && !defaultBannedRights?.sendMessages && !restricted && id && participantsCount > 500) {
-                        const channelId = id.toString().replace(/^-100/, "");
-                        channelData.push({ channelId, participantsCount });
+        const totalBatches = 3; // Fetch three batches
+        const batchSize = 250;
+        const channelDataSet = new Set<string>(); // Use Set to avoid duplicates
+        const channelDetails: { channelId: string; participantsCount: number }[] = [];
+    
+        try {
+            for (let batch = 0; batch < totalBatches; batch++) {
+                const mobile =this.selectNextMobile()// Rotate mobile    
+                const tgManager = this.getClient(mobile);
+                const client = tgManager?.client;
+    
+                if (!client) {
+                    console.warn(`Client not available for mobile: ${mobile}`);
+                    continue;
+                }
+    
+                await client.connect();
+    
+                let offsetId = 0; // Reset offset for each mobile in this example
+                const dialogs = await client.getDialogs({ limit: batchSize, offsetId });
+    
+                if (!dialogs || dialogs.length === 0) {
+                    console.warn("No dialogs retrieved from the client.");
+                    break;
+                }
+    
+                for (const dialog of dialogs) {
+                    if (dialog.isChannel || dialog.isGroup) {
+                        const chatEntity = dialog.entity as Api.Channel;
+    
+                        // Extract channel information
+                        if (
+                            !chatEntity.broadcast && // Exclude broadcast channels
+                            chatEntity.participantsCount > 500 && // Minimum participants
+                            !chatEntity.defaultBannedRights?.sendMessages && // Allow messaging
+                            !chatEntity.restricted && // Exclude restricted channels
+                            chatEntity.id
+                        ) {
+                            const channelId = chatEntity.id.toString().replace(/^-100/, "");
+                            if (!channelDataSet.has(channelId)) {
+                                // Add to Set to prevent duplicates
+                                channelDataSet.add(channelId);
+                                channelDetails.push({
+                                    channelId,
+                                    participantsCount: chatEntity.participantsCount,
+                                });
+                            }
+                        }
                     }
                 }
             }
-
-            // Sort by participantsCount in descending order
-            channelData.sort((a, b) => b.participantsCount - a.participantsCount);
-
-            // Get top 250 channels
-            const top250Channels = channelData.slice(0, 250);
-
-            // Fisher-Yates Shuffle
-            for (let i = top250Channels.length - 1; i > 0; i--) {
+    
+            // Sort channels by participantsCount
+            channelDetails.sort((a, b) => b.participantsCount - a.participantsCount);
+    
+            // Fisher-Yates Shuffle on top 250
+            const topChannels = channelDetails.slice(0, 250);
+            for (let i = topChannels.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [top250Channels[i], top250Channels[j]] = [top250Channels[j], top250Channels[i]];
+                [topChannels[i], topChannels[j]] = [topChannels[j], topChannels[i]];
             }
-
-            // Collect shuffled channel IDs
-            for (const channel of top250Channels) {
-                channelIds.push(channel.channelId);
-            }
-
-            // Proceed with unread dialogs and other actions
+    
+            // Return only the shuffled channel IDs
+            return topChannels.map(channel => channel.channelId);
+    
         } catch (error) {
-            parseError(error, `${mobile}- Failed to fetch channels while promoting`, true);
+            parseError(error, `Error occurred while fetching dialogs`, true);
+            return [];
         }
-        return channelIds;
     }
 
     async sendMessageToChannel(mobile: string, channelInfo: IChannel, message: SendMessageParams) {
@@ -153,8 +180,6 @@ export class Promotion {
                         action: new Api.SendMessageTypingAction(),
                     })
                 );
-                await sleep(2000);
-                tgManager.setTyping(channelInfo.channelId)
                 await sleep(2000);
                 if (this.sleepTime < Date.now()) {
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
@@ -225,7 +250,7 @@ export class Promotion {
                 if (mobile) {
                     try {
                         if (channelIndex > 190) {
-                            channelIndex = 0; // Restart index for a fresh batch
+                            this.channels = await this.fetchDialogs();
                             continue;
                         }
 
@@ -266,7 +291,7 @@ export class Promotion {
                                 console.log(`Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
                                 await sleep(randomBatchDelay);
                             } else {
-                                if (failCount < 3) {
+                                if (failCount < 2) {
                                     failCount++
                                     await sleep(10000)
                                 } else {
