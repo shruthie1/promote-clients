@@ -126,7 +126,6 @@ export class Promotion {
                 }
 
                 await client.connect();
-                console.log(`Connected to Telegram client for mobile: ${mobile}`);
 
                 let offsetId = 0; // Reset offset for each mobile in this example
                 const dialogs = await client.getDialogs({ limit: batchSize, offsetId });

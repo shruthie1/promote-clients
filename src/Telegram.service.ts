@@ -128,8 +128,8 @@ export class TelegramService {
             try {
                 const client = await telegramManager.createClient(handler);
                 TelegramService.clientsMap.set(clientDetails.mobile, telegramManager);
-                await client.getMe();
                 if (client) {
+                    await client.getMe();
                     if (autoDisconnect) {
                         setTimeout(async () => {
                             if (client.connected || await this.getClient(clientDetails.mobile)) {
@@ -160,7 +160,7 @@ export class TelegramService {
             }
         } else {
             console.log("Client Already exists: ", clientDetails.mobile)
-            return await this.getClient(clientDetails.mobile)
+            return this.getClient(clientDetails.mobile)
         }
     }
 }
