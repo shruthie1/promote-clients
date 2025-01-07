@@ -151,7 +151,7 @@ export class TelegramService {
                     }
                     return telegramManager;
                 } else {
-                    console.log("Client Expired")
+                    console.log(`Client Expired: ${clientDetails.mobile}`)
                     // throw new BadRequestException('Client Expired');
                 }
             } catch (error) {
