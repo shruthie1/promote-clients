@@ -287,6 +287,7 @@ export async function checkHealth() {
         startTime: Date.now(),
         daysLeft: -1
       };
+      clientsMap.set(mobile, clientDetails);
       await telegramService.createClient(clientDetails, false, true);
     }
   }
