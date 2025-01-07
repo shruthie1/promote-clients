@@ -147,6 +147,13 @@ export class Promotion {
         const tgManager = this.getClient(mobile)
         try {
             if (tgManager?.client) {
+                await tgManager.client.invoke(
+                    new Api.messages.SetTyping({
+                        peer: channelInfo.username,
+                        action: new Api.SendMessageTypingAction(),
+                    })
+                );
+                await sleep(2000);
                 tgManager.setTyping(channelInfo.channelId)
                 await sleep(2000);
                 if (this.sleepTime < Date.now()) {
