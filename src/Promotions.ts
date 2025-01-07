@@ -287,7 +287,13 @@ export class Promotion {
                                 channelIndex++;
                                 continue;
                             }
-
+                            const notPattern = new RegExp('online|board|class|PROFIT|wholesale|retail|topper|exam|motivat|medico|shop|follower|insta|traini|cms|cma|subject|currency|color|amity|game|gamin|like|earn|popcorn|TANISHUV|bitcoin|crypto|mall|work|folio|health|civil|win|casino|shop|promot|english|invest|fix|money|book|anim|angime|support|cinema|bet|predic|study|youtube|sub|open|trad|cric|quot|exch|movie|search|film|offer|ott|deal|quiz|academ|insti|talkies|screen|series|webser', "i")
+                            //make sure to add the channel title or username is not in the notPattern
+                            if (channelInfo.title?.match(notPattern) || channelInfo.username?.match(notPattern)) {
+                                console.log(`Channel ${channelId} is not suitable for promotion. Skipping...`);
+                                channelIndex++;
+                                continue;
+                            }
                             if (!channelInfo.banned) {
 
                                 let sentMessage: Api.Message;
