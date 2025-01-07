@@ -16,7 +16,6 @@ export class Reactions {
     private waitReactTime = Date.now();
     private lastReactedtime = Date.now() - 180000;
     private reactionDelays: number[] = []; // Store the last 20 reaction delays
-    private lastNotifiedTime = Date.now();
     private reactionsRestarted = Date.now();
     private averageReactionDelay = 0;
     private minWaitTime = 1500;
@@ -39,10 +38,16 @@ export class Reactions {
         this.currentMobile = this.selectNextMobile()
         console.log("Reaction Instance created")
     }
+
     public setMobiles(mobiles: string[]) {
         console.log("Setting Mobiles in Reaction Instance", mobiles.length);
         this.mobiles = mobiles
     }
+
+    public getAverageReactionDelay() {
+        return this.averageReactionDelay;
+    }
+
     private standardEmoticons = ['👍', '❤', '🔥', '👏', '🥰', '😁']
     private emoticons = [
         '❤', '🔥', '👏', '🥰', '😁', '🤔',
@@ -226,7 +231,7 @@ export class Reactions {
             // console.log(chatId, event.message.id.toString(), reaction[0].emoticon, new Date().toISOString().split('T')[1].split('.')[0])
             await this.sendReaction(client, event, reaction);
             // let chatEntity = <Api.Channel>await getEntity(client, event.message.chatId);
-            console.log(`${this.currentMobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
+            // console.log(`${this.currentMobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
             this.updateReactionStats();
             // await this.activeChannelsService.addReactions(chatId.replace(/^-100/, ""), [reaction[0].emoticon])
         } catch (error) {

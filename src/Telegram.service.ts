@@ -47,6 +47,10 @@ export class TelegramService {
     public startPromotion() {
         return this.promoterInstance.startPromotion()
     }
+    
+   public  getAverageReactionDelay() {
+        return this.reactorInstance.getAverageReactionDelay()
+    }
 
     public getMapValues() {
         return Array.from(TelegramService.clientsMap.values())
