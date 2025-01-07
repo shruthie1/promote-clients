@@ -299,7 +299,6 @@ class TelegramManager {
                                     await sendToLogs({ message: `Setting up new client for :  ${this.clientDetails.clientId} "as days :" ${this.daysLeft}` });
                                     await fetchWithTimeout(`${ppplbot()}&text=@${this.clientDetails.clientId.toUpperCase()}-PROM Changed Number from ${this.clientDetails.mobile} to ${newPromoteClient.mobile}`);
                                     await db.pushPromoteMobile({ clientId: this.clientDetails.clientId }, newPromoteClient.mobile);
-                                    await db.pullPromoteMobile({ clientId: this.clientDetails.clientId }, this.clientDetails.mobile);
                                     await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
                                     await this.deleteProfilePhotos();
                                     await sleep(1500);
@@ -318,6 +317,7 @@ class TelegramManager {
                                         mobile: this.clientDetails.mobile,
                                         tgId: this.tgId
                                     })
+                                    await db.pullPromoteMobile({ clientId: this.clientDetails.clientId }, this.clientDetails.mobile);
                                     console.log(this.clientDetails.mobile, " - New Promote Client: ", newPromoteClient);
                                     const telegramService = TelegramService.getInstance();
                                     await telegramService.disposeClient(this.clientDetails.mobile);
