@@ -31,14 +31,18 @@ export class TelegramService {
         const mobiles = getMapKeys();
         console.log("Total clients:", mobiles.length);
         this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this))
+        this.promoterInstance = Promotion.getInstance(mobiles, this.getClient.bind(this));
         for (const mobile of mobiles) {
             const clientDetails = getClientDetails(mobile)
             await this.createClient(clientDetails, false, true);
         }
-        this.promoterInstance = new Promotion(mobiles, this.getClient.bind(this));
+        this.promoterInstance.startPromotion()
         console.log("Connected....!!");
     }
 
+    public startPromotion() {
+        return this.promoterInstance.startPromotion()
+    }
 
     public getMapValues() {
         return Array.from(TelegramService.clientsMap.values())

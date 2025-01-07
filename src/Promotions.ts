@@ -29,17 +29,28 @@ export class Promotion {
     private mobiles: string[] = [];
 
     private getClient: (clientId: string) => TelegramManager | undefined;
+    static instance: Promotion;
+    private isPromoting: boolean = false;
 
-    constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
-        this.mobiles = mobiles
+    private constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
+        this.mobiles = mobiles;
         this.getClient = getClient;
-        console.log("Promotion Instance created")
+        console.log("Promotion Instance created");
         setInterval(() => this.checkQueuedMessages(), this.messageCheckDelay);
         const db = UserDataDtoCrud.getInstance();
         db.getPromoteMsgs().then((data) => {
             this.promoteMsgs = data;
-            this.promoteInBatches()
-        })
+        });
+        for (const mobile of mobiles) {
+            this.limitControl.set(mobile, { triggeredTime: 0, daysLeft: -1, lastMessageTime: Date.now() });
+        }
+    }
+
+    public static getInstance(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined): Promotion {
+        if (!Promotion.instance) {
+            Promotion.instance = new Promotion(mobiles, getClient);
+        }
+        return Promotion.instance;
     }
 
     async checkQueuedMessages() {
@@ -57,17 +68,19 @@ export class Promotion {
     }
 
     setDaysLeft(mobile: string, daysLeft: number) {
-        const data = this.limitControl.get(mobile) || { triggeredTime: 0, daysLeft: -1, lastMessageTime: Date.now() };
+        console.log("Setting DaysLeft:", daysLeft)
+        const data = this.limitControl.get(mobile)
         this.limitControl.set(mobile, { ...data, triggeredTime: Date.now(), daysLeft: daysLeft })
     }
 
     getDaysLeft(mobile: string) {
-        const data = this.limitControl.get(mobile) || { triggeredTime: 0, daysLeft: -1, lastMessageTime: Date.now() };
+        const data = this.limitControl.get(mobile);
+        console.log("Getting DaysLeft:", data.daysLeft)
         return data.daysLeft;
     }
 
     getLastMessageTime(mobile: string) {
-        const data = this.limitControl.get(mobile) || { triggeredTime: 0, daysLeft: -1, lastMessageTime: Date.now() };
+        const data = this.limitControl.get(mobile);
         return data.lastMessageTime;
     }
 
@@ -134,11 +147,13 @@ export class Promotion {
         const tgManager = this.getClient(mobile)
         try {
             if (tgManager?.client) {
+                tgManager.setTyping(channelInfo.channelId)
+                await sleep(2000);
                 if (this.sleepTime < Date.now()) {
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     console.log(`Client ${mobile}: Message sent to ${channelInfo.channelId} || @${channelInfo.username}`);
                     await sendToLogs({ message: `${mobile}:---✅\n@${channelInfo.username}` })
-                    const data = this.limitControl.get(mobile) || { triggeredTime: 0, daysLeft: -1, lastMessageTime: Date.now() };
+                    const data = this.limitControl.get(mobile);
                     this.limitControl.set(mobile, { ...data, lastMessageTime: Date.now() })
                     await updateSuccessCount(mobile);
                     return result
@@ -172,6 +187,26 @@ export class Promotion {
         }
     }
 
+    public async startPromotion() {
+        if (this.isPromoting) {
+            console.log("Promotion already running, ignoring trigger.");
+            return;
+        }
+        this.isPromoting = true;
+        try {
+            while (true) {
+                console.log("Starting promoteInBatches...");
+                await this.promoteInBatches();
+                console.log("promoteInBatches completed. Retrying in 10 seconds.");
+                await sleep(10000); // Retry mechanism after small delay
+            }
+        } catch (error) {
+            console.error("Error in promoteInBatches loop:", error);
+        } finally {
+            this.isPromoting = false;
+            console.log("Promotion stopped unexpectedly.");
+        }
+    }
 
     public async promoteInBatches() {
         this.channels = await this.fetchDialogs();
@@ -288,9 +323,8 @@ export class Promotion {
     }
 
     async checktghealth(mobile: string, force: boolean = false) {
-        const floodData = this.limitControl.get(mobile) || { triggeredTime: 0, daysLeft: -1, lastMessageTime: Date.now() };
+        const floodData = this.limitControl.get(mobile);
         if ((floodData.triggeredTime < Date.now() - 120 * 60 * 1000 || force)) {//&& daysLeftForRelease() < 0) {
-            this.limitControl.set(mobile, { ...floodData, triggeredTime: Date.now(), daysLeft: floodData.daysLeft })
             const tgManager = this.getClient(mobile)
             try {
                 if (tgManager.client) {
@@ -375,8 +409,8 @@ export class Promotion {
 
     private getHealthyMobiles() {
         return this.mobiles.filter((mobile) => {
-            const floodData = this.limitControl.get(mobile) || { triggeredTime: 0, daysLeft: -1 };
-            return floodData.daysLeft < 0
+            const floodData = this.limitControl.get(mobile)
+            return floodData.daysLeft < 7 //Change it
         });
     }
 

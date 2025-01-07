@@ -62,10 +62,10 @@ class TelegramManager {
                 useIPV6: true,
                 useWSS: true
             });
-            this.client.setLogLevel(LogLevel.NONE);
+            // this.client.setLogLevel(LogLevel.NONE);
             //TelegramManager.client._errorHandler = this.errorHandler
             await this.client.connect();
-            //console.log("Connected : ", this.clientDetails.clientId)
+            console.log("Connected : ", this.clientDetails.mobile)
             const me = await this.checkMe();
             // await sleep(1500)
             // console.log("Connected: ", this.clientDetails.clientId, this.clientDetails.mobile, me.username);
@@ -137,132 +137,136 @@ class TelegramManager {
 
 
     handleEvents = async (event: NewMessageEvent) => {
-        if (event.isPrivate) {
-            if (event.message.text === `exit${this?.clientDetails?.clientId}`) {
-                //console.log(`EXITTING PROCESS!!`);
-                (await TelegramService.getInstance()).deleteClient(this.clientDetails.mobile)
-            } else {
-                const senderJson = await this.getSenderJson(event);
-                const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
-                if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800") {
-                    console.log(`${this.clientDetails.mobile.toUpperCase()}:: ${broadcastName} - `, event.message.text);
-                    await sleep(2000);
-                    try {
+        try {
+            if (event.isPrivate) {
+                if (event.message.text === `exit${this?.clientDetails?.clientId}`) {
+                    //console.log(`EXITTING PROCESS!!`);
+                    (await TelegramService.getInstance()).deleteClient(this.clientDetails.mobile)
+                } else {
+                    const senderJson = await this.getSenderJson(event);
+                    const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
+                    if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800") {
+                        console.log(`${this.clientDetails.mobile.toUpperCase()}:: ${broadcastName} - `, event.message.text);
+                        await sleep(2000);
                         try {
-                            await this.client.markAsRead(event.chatId);
-                        } catch (error) {
-
-                        }
-                        try {
-                            this.client.invoke(new Api.messages.SetTyping({
-                                peer: event.chatId,
-                                action: new Api.SendMessageTypingAction(),
-                            }))
-                        } catch (error) {
-
-                        }
-                        const messages = await this.client.getMessages(event.chatId, { limit: 5 });
-                        if (messages.total < 3) {
                             try {
-                                await event.message.respond({ message: `**Msg me on this profile Baby👇👇**:\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                                await this.client.markAsRead(event.chatId);
                             } catch (error) {
-                                if (error instanceof errors.FloodWaitError) {
-                                    console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
-                                }
+
                             }
-                            setTimeout(async () => {
+                            try {
+                                this.client.invoke(new Api.messages.SetTyping({
+                                    peer: event.chatId,
+                                    action: new Api.SendMessageTypingAction(),
+                                }))
+                            } catch (error) {
+
+                            }
+                            const messages = await this.client.getMessages(event.chatId, { limit: 5 });
+                            if (messages.total < 3) {
                                 try {
-                                    await event.message.respond({ message: `**This is my official Account👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                                    await event.message.respond({ message: `**Msg me on this profile Baby👇👇**:\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
                                 } catch (error) {
                                     if (error instanceof errors.FloodWaitError) {
                                         console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                                     }
                                 }
-                            }, 25000);
-                        } else {
-                            if (messages.total < 10) {
                                 setTimeout(async () => {
                                     try {
-                                        await event.message.respond({ message: `**Message me Man👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                                        await event.message.respond({ message: `**This is my official Account👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
                                     } catch (error) {
                                         if (error instanceof errors.FloodWaitError) {
                                             console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                                         }
                                     }
-                                }, 5000);
+                                }, 25000);
+                            } else {
+                                if (messages.total < 10) {
+                                    setTimeout(async () => {
+                                        try {
+                                            await event.message.respond({ message: `**Message me Man👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                                        } catch (error) {
+                                            if (error instanceof errors.FloodWaitError) {
+                                                console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                                            }
+                                        }
+                                    }, 5000);
+                                }
                             }
+                            await updateMsgCount(this.clientDetails.clientId)
+                        } catch (error) {
+                            console.log("Error in responding")
                         }
-                        await updateMsgCount(this.clientDetails.clientId)
-                    } catch (error) {
-                        console.log("Error in responding")
-                    }
-                } else {
-                    if (event.message.chatId.toString() == "178220800") {
-                        console.log(`${this.clientDetails.mobile.toUpperCase()}:: ${broadcastName} :: `, event.message.text)
-                        if (event.message.text.toLowerCase().includes('automatically released')) {
-                            const date = event.message.text.split("limited until ")[1].split(",")[0]
-                            const days = getdaysLeft(date);
-                            console.log("Days Left: ", days);
-                            this.promoterInstance.setDaysLeft(this.clientDetails.mobile, days)
-                            this.daysLeft = days
-                            // if (days == 3) {
-                            // this.promoterInstance.setChannels(openChannels)
+                    } else {
+                        if (event.message.chatId.toString() == "178220800") {
+                            console.log(`${this.clientDetails.mobile.toUpperCase()}:: ${broadcastName} :: `, event.message.text)
+                            if (event.message.text.toLowerCase().includes('automatically released')) {
+                                const date = event.message.text.split("limited until ")[1].split(",")[0]
+                                const days = getdaysLeft(date);
+                                console.log("Days Left: ", days);
+                                this.daysLeft = days
+                                this.promoterInstance.setDaysLeft(this.clientDetails.mobile, days)
+                                // if (days == 3) {
+                                // this.promoterInstance.setChannels(openChannels)
+                                // }
+                            } else if (event.message.text.toLowerCase().includes('good news')) {
+                                this.promoterInstance.setDaysLeft(this.clientDetails.mobile, 0)
+                                this.daysLeft = -1
+                            } else if (event.message.text.toLowerCase().includes('can trigger a harsh')) {
+                                // this.promoterInstance.setChannels(openChannels)
+                                this.promoterInstance.setDaysLeft(this.clientDetails.mobile, 99)
+                                this.daysLeft = 99
+                            }
+                            await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
+                        }
+                        if (this.daysLeft > 3) {
+                            // try {
+                            //     const db = UserDataDtoCrud.getInstance();
+                            //     const existingClients = await db.getClients();
+                            //     const promoteMobiles = [];
+                            //     for (const existingClient of existingClients) {
+                            //         promoteMobiles.push(existingClient.promoteMobile)
+                            //     }
+                            //     const today = (new Date(Date.now())).toISOString().split('T')[0];
+                            //     const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } }
+                            //     const newPromoteClient = await db.findPromoteClient(query);
+                            //     if (newPromoteClient) {
+                            //         await sendToLogs({ message: `Setting up new client for :  ${this.clientDetails.clientId} "as days :" ${this.daysLeft}` });
+                            //         await db.pushPromoteMobile({ clientId: this.clientDetails.clientId }, newPromoteClient.mobile);
+                            //         await db.pullPromoteMobile({ clientId: this.clientDetails.clientId }, this.clientDetails.mobile);
+                            //         await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
+                            //         await this.deleteProfilePhotos();
+                            //         await sleep(1500)
+                            //         await this.updatePrivacyforDeletedAccount();
+                            //         await sleep(1500)
+                            //         await this.updateUsername('');
+                            //         await sleep(1500)
+                            //         await this.updateProfile('Deleted Account', '');
+                            //         await sleep(1500)
+                            //         const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
+                            //         console.log("Today: ", today, "Available Date: ", availableDate)
+                            //         await createPromoteClient({
+                            //             availableDate,
+                            //             channels: 30,
+                            //             lastActive: today,
+                            //             mobile: this.clientDetails.mobile,
+                            //             tgId: this.tgId
+                            //         });
+                            //         console.log(this.clientDetails.clientId, " - New Promote Client: ", newPromoteClient)
+                            //         restartClient(this.clientDetails.clientId);
+                            //     }
+                            // } catch (error) {
+                            //     parseError(error, "Error HAndling MEssage Event")
                             // }
-                        } else if (event.message.text.toLowerCase().includes('good news')) {
-                            this.promoterInstance.setDaysLeft(this.clientDetails.mobile, 0)
-                            this.daysLeft = -1
-                        } else if (event.message.text.toLowerCase().includes('can trigger a harsh')) {
-                            // this.promoterInstance.setChannels(openChannels)
-                            this.promoterInstance.setDaysLeft(this.clientDetails.mobile, 99)
-                            this.daysLeft = 99
                         }
-                        await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
-                    }
-                    if (this.daysLeft > 3) {
-                        // try {
-                        //     const db = UserDataDtoCrud.getInstance();
-                        //     const existingClients = await db.getClients();
-                        //     const promoteMobiles = [];
-                        //     for (const existingClient of existingClients) {
-                        //         promoteMobiles.push(existingClient.promoteMobile)
-                        //     }
-                        //     const today = (new Date(Date.now())).toISOString().split('T')[0];
-                        //     const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } }
-                        //     const newPromoteClient = await db.findPromoteClient(query);
-                        //     if (newPromoteClient) {
-                        //         await sendToLogs({ message: `Setting up new client for :  ${this.clientDetails.clientId} "as days :" ${this.daysLeft}` });
-                        //         await db.pushPromoteMobile({ clientId: this.clientDetails.clientId }, newPromoteClient.mobile);
-                        //         await db.pullPromoteMobile({ clientId: this.clientDetails.clientId }, this.clientDetails.mobile);
-                        //         await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
-                        //         await this.deleteProfilePhotos();
-                        //         await sleep(1500)
-                        //         await this.updatePrivacyforDeletedAccount();
-                        //         await sleep(1500)
-                        //         await this.updateUsername('');
-                        //         await sleep(1500)
-                        //         await this.updateProfile('Deleted Account', '');
-                        //         await sleep(1500)
-                        //         const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
-                        //         console.log("Today: ", today, "Available Date: ", availableDate)
-                        //         await createPromoteClient({
-                        //             availableDate,
-                        //             channels: 30,
-                        //             lastActive: today,
-                        //             mobile: this.clientDetails.mobile,
-                        //             tgId: this.tgId
-                        //         });
-                        //         console.log(this.clientDetails.clientId, " - New Promote Client: ", newPromoteClient)
-                        //         restartClient(this.clientDetails.clientId);
-                        //     }
-                        // } catch (error) {
-                        //     parseError(error, "Error HAndling MEssage Event")
-                        // }
                     }
                 }
+            } else {
+                await this.reactorInstance?.react(event);
+                setSendPing(true)
             }
-        } else {
-            await this.reactorInstance?.react(event);
-            setSendPing(true)
+        } catch (error) {
+            parseError(error, "SomeError Parsing Msg")
         }
     }
 
@@ -475,6 +479,47 @@ class TelegramManager {
             console.log(`${this.clientDetails.mobile}:Updated NAme: `, firstName, result);
         } catch (error) {
             console.error(`${this.clientDetails.mobile}:Failed to update name`);
+        }
+    }
+    async setTyping(chatId: string) {
+        try {
+            await this.client.invoke(
+                new Api.messages.SetTyping({
+                    peer: chatId,
+                    action: new Api.SendMessageTypingAction(),
+                })
+            );
+            await sleep(2000);
+        } catch (error) {
+            console.log('Cannot set Typing');
+        }
+    }
+
+    async setVideoRecording(chatId: string) {
+        try {
+            await this.client.invoke(
+                new Api.messages.SetTyping({
+                    peer: chatId,
+                    action: new Api.SendMessageRecordVideoAction(),
+                })
+            );
+            await sleep(2000);
+        } catch (error) {
+            console.log('Cannot set Typing');
+        }
+    }
+
+    async setAudioRecording(chatId: string) {
+        try {
+            await this.client.invoke(
+                new Api.messages.SetTyping({
+                    peer: chatId,
+                    action: new Api.SendMessageRecordAudioAction(),
+                })
+            );
+            await sleep(2000);
+        } catch (error) {
+            console.log('Cannot set Typing');
         }
     }
 

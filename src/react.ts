@@ -27,7 +27,7 @@ export class Reactions {
     private reactSleepTime = 5000;
     private floodTriggeredTime = 0;
     private floodCount = 0;
-    private targetReactionDelay = 4500;
+    private targetReactionDelay = 6000;
     private reactQueue: ReactQueue;
     private processId: number = Math.floor(Math.random() * 1234);
     private floodReleaseTime = 0;

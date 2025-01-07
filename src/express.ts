@@ -237,11 +237,12 @@ async function checkHealth() {
                   console.log("Promotion seems stopped", clientDetails.mobile, "DaysLeft: ", telegramService.getDaysLeft(mobile))
                   restartClient(mobile)
                 }
+                telegramService.startPromotion();
                 // await telegramService.deleteClient(client.clientId);
                 // await sleep(5000);
                 // await telegramService.createClient(clientDetails, false, true);
               } else {
-                console.log(mobile, me.username, " : Promotions Working fine - ", Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
+                console.log(mobile, me.username, " : Promotions Working fine - ", Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000), `DaysLeft: ${telegramService.getDaysLeft(mobile)}`)
               }
               clientsMap.set(mobile, clientDetails)
               telegramManager.setClientDetails(clientDetails)

@@ -374,7 +374,7 @@ export async function sendToLogs({
   message,
   chatId = process.env.logsChatId,
   maxRetries = tokens.length,
-  timeoutMs = 5000,
+  timeoutMs = 500,
   successCallback,
   errorCallback,
   fallbackOnFailure,
@@ -456,13 +456,13 @@ export async function sendToLogs({
     }
   }
 
-  console.error(`All attempts failed after ${maxRetries} retries.`);
+  // console.error(`All attempts failed after ${attempts} retries.`);
 
   // Invoke fallback action if provided
   if (fallbackOnFailure) {
     fallbackOnFailure(message);
   }
 
-  console.error('Message sending failed after all retries');
+  // console.error('Message sending failed after all retries');
 }
 
