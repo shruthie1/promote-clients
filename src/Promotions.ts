@@ -109,7 +109,7 @@ export class Promotion {
 
     async fetchDialogs() {
         const totalBatches = 3; // Fetch three batches
-        const batchSize = 250;
+        const batchSize = 150;
         const channelDataSet = new Set<string>(); // Use Set to avoid duplicates
         const channelDetails: { channelId: string; participantsCount: number }[] = [];
         console.log(`Fetching dialogs from clients...`);
@@ -163,7 +163,7 @@ export class Promotion {
 
             // Sort channels by participantsCount
             channelDetails.sort((a, b) => b.participantsCount - a.participantsCount);
-            console.log(`Sorted channels by participants count`);
+            console.log(`Sorted channels by participants count: ${channelDetails.length}`);
 
             // Fisher-Yates Shuffle on top 250
             const topChannels = channelDetails.slice(0, 250);
