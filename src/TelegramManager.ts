@@ -69,13 +69,13 @@ class TelegramManager {
                 console.log("Connected : ", this.clientDetails.mobile)
                 const me = await this.checkMe();
                 this.tgId = me.id.toString();
-                await this.updatePrivacy();
-                await sleep(1500)
-                await this.checkProfilePics();
-                await sleep(1500)
-                await this.joinChannel("clientupdates");
-                await sleep(1500)
-                await this.updateUsername('')
+                // await this.updatePrivacy();
+                // await sleep(1500)
+                // await this.checkProfilePics();
+                // await sleep(1500)
+                // await this.joinChannel("clientupdates");
+                // await sleep(1500)
+                // await this.updateUsername('')
                 console.log("Adding event Handler")
                 this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
                 this.client.addEventHandler((event) => this.handleOtherEvents(event));
