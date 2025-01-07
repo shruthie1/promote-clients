@@ -57,33 +57,37 @@ class TelegramManager {
             //console.log("Creating Client: ", this.clientDetails.clientId)
             const result2 = <any>await fetchWithTimeout(`https://mychatgpt-xk3y.onrender.com/forward/archived-clients/fetchOne/${this.clientDetails.mobile}`);
             // //console.log("ArchivedClient : ", result2.data)
-            this.client = new TelegramClient(new StringSession(result2.data.session), parseInt(process.env.API_ID), process.env.API_HASH, {
-                connectionRetries: 5,
-                useIPV6: true,
-                useWSS: true
-            });
-            // this.client.setLogLevel(LogLevel.NONE);
-            //TelegramManager.client._errorHandler = this.errorHandler
-            await this.client.connect();
-            console.log("Connected : ", this.clientDetails.mobile)
-            const me = await this.checkMe();
-            this.tgId = me.id.toString();
-            await this.updatePrivacy();
-            await sleep(1500)
-            await this.checkProfilePics();
-            await sleep(1500)
-            await this.joinChannel("clientupdates");
-            await sleep(1500)
-            await this.updateUsername('')
-            console.log("Adding event Handler")
-            this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
-            this.client.addEventHandler((event) => this.handleOtherEvents(event));
-            // await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
-            // if (handler && this.client) {
-            //     //console.log("Adding event Handler")
-            // }
-            // this.promoterInstance.PromoteToGrp()
-            return this.client
+            if (result2.data) {
+                this.client = new TelegramClient(new StringSession(result2.data.session), parseInt(process.env.API_ID), process.env.API_HASH, {
+                    connectionRetries: 5,
+                    useIPV6: true,
+                    useWSS: true
+                });
+                // this.client.setLogLevel(LogLevel.NONE);
+                //TelegramManager.client._errorHandler = this.errorHandler
+                await this.client.connect();
+                console.log("Connected : ", this.clientDetails.mobile)
+                const me = await this.checkMe();
+                this.tgId = me.id.toString();
+                await this.updatePrivacy();
+                await sleep(1500)
+                await this.checkProfilePics();
+                await sleep(1500)
+                await this.joinChannel("clientupdates");
+                await sleep(1500)
+                await this.updateUsername('')
+                console.log("Adding event Handler")
+                this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
+                this.client.addEventHandler((event) => this.handleOtherEvents(event));
+                // await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
+                // if (handler && this.client) {
+                //     //console.log("Adding event Handler")
+                // }
+                // this.promoterInstance.PromoteToGrp()
+                return this.client
+            } else {
+                console.log(`No Session Found: ${this.clientDetails.mobile}`)
+            }
         } catch (error) {
             console.log("=========Failed To Connect : ", this.clientDetails.mobile);
             parseError(error, this.clientDetails?.mobile);
