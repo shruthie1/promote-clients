@@ -43,11 +43,12 @@ class TelegramManager {
 
     async destroy() {
         try {
+            // await this.client?.destroy();
             await this.client?.disconnect();
             this.client = null;
-            console.log("Client successfully disconnected.");
+            console.log("Client successfully destroyed.");
         } catch (error) {
-            console.log("Error disconnecting client:", error);
+            console.log("Error destroying client:", error);
         }
     }
 
@@ -181,7 +182,8 @@ class TelegramManager {
                 await sendToLogs({ message: `@${process.env.clientId}-PROM:${this.clientDetails.mobile}:\n${event.message.text}` })
                 if (event.message.text === `exit${this?.clientDetails?.clientId}`) {
                     //console.log(`EXITTING PROCESS!!`);
-                    (await TelegramService.getInstance()).deleteClient(this.clientDetails.mobile)
+                    const telegramService = TelegramService.getInstance();
+                    await telegramService.disposeClient(this.clientDetails.mobile);
                 } else {
                     const senderJson = await this.getSenderJson(event);
                     const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
@@ -308,14 +310,16 @@ class TelegramManager {
                                     await sleep(1500);
                                     const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
                                     console.log("Today: ", today, "Available Date: ", availableDate);
-                                    await createPromoteClient({
+                                    await db.createPromoteClient({
                                         availableDate,
                                         channels: 30,
                                         lastActive: today,
                                         mobile: this.clientDetails.mobile,
                                         tgId: this.tgId
-                                    });
+                                    })
                                     console.log(this.clientDetails.mobile, " - New Promote Client: ", newPromoteClient);
+                                    const telegramService = TelegramService.getInstance();
+                                    await telegramService.disposeClient(this.clientDetails.mobile);
                                 }
                             } catch (error) {
                                 parseError(error, "Error Handling Message Event");

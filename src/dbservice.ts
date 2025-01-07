@@ -266,4 +266,24 @@ export class UserDataDtoCrud {
             parseError(error, "Error deleting Client")
         }
     }
+
+    async createPromoteClient(clientData: any) {
+        try {
+            const clientsDb = this.client.db("tgclients").collection('promoteClients');
+            const newClient = {
+                _id: new ObjectId(),
+                tgId: clientData.tgId,
+                mobile: clientData.mobile,
+                lastActive: clientData.lastActive,
+                availableDate: new Date(clientData.availableDate),
+                channels: clientData.channels,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+            const result = await clientsDb.insertOne(newClient);
+            return { _id: result.insertedId, ...newClient };
+        } catch (error) {
+            parseError(error, "Error creating Promote Client");
+        }
+    }
 }
