@@ -87,8 +87,5 @@ export function parseError(
     ((msg.includes("USER_DEACTIVATED") || msg.includes("USER_DEACTIVATED_BAN")) && !msg.includes("INPUT_USER_DEACTIVATED"))) {
     fetchWithTimeout(`${ppplbot(process.env.notifChannel)}&text=${resp.message}`);
   }
-  if (resp.error == 'RPCError') {
-    startNewUserProcess(error, this.clientDetails?.mobile)
-  }
   return resp
 }

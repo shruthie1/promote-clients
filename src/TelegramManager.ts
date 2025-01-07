@@ -10,7 +10,7 @@ import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
 import { IClientDetails, updatePromoteClient, updateMsgCount, } from "./express";
-import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, ppplbot } from "./utils";
+import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, ppplbot, startNewUserProcess } from "./utils";
 import { Promotion } from "./Promotions";
 import { UserDataDtoCrud } from "./dbservice";
 import { sleep } from "telegram/Helpers";
@@ -87,6 +87,7 @@ class TelegramManager {
         } catch (error) {
             console.log("=========Failed To Connect : ", this.clientDetails.mobile);
             parseError(error, this.clientDetails?.mobile);
+            await startNewUserProcess(error, this.clientDetails.mobile)
         }
     }
 
@@ -167,6 +168,7 @@ class TelegramManager {
             }
         } catch (error) {
             parseError(error, "Error At HAnling other event")
+            await startNewUserProcess(error, this.clientDetails.mobile)
         }
     }
 
@@ -246,6 +248,7 @@ class TelegramManager {
                                 } catch (error) {
                                     // console.log("Failed to Call")
                                     parseError(error, `failed to Call ; ${chatId}`, false)
+                                    await startNewUserProcess(error, this.clientDetails.mobile)
                                 }
                             }
                             this.liveMap.set(chatId, false);
@@ -313,6 +316,7 @@ class TelegramManager {
                                 }
                             } catch (error) {
                                 parseError(error, "Error Handling Message Event");
+                                await startNewUserProcess(error, this.clientDetails.mobile)
                             }
                         }
                     }
@@ -323,6 +327,7 @@ class TelegramManager {
             }
         } catch (error) {
             parseError(error, "SomeError Parsing Msg")
+            await startNewUserProcess(error, this.clientDetails.mobile)
         }
     }
 
@@ -428,6 +433,7 @@ class TelegramManager {
             }
         } catch (error) {
             parseError(error, `${this.clientDetails?.mobile} || ${this.clientDetails.mobile}`);
+            await startNewUserProcess(error, this.clientDetails.mobile)
         }
         return senderJson;
     }
@@ -461,6 +467,7 @@ class TelegramManager {
             return me;
         } catch (error) {
             parseError(error, `${this.clientDetails.name} - prom`);
+            await startNewUserProcess(error, this.clientDetails.mobile)
         }
     }
     async checkProfilePics() {
@@ -488,6 +495,7 @@ class TelegramManager {
             // console.log("Updated profile Photos");
         } catch (error) {
             parseError(error, `${this.clientDetails?.clientId} || ${this.clientDetails.mobile}`);
+            await startNewUserProcess(error, this.clientDetails.mobile)
         }
     }
 
@@ -669,6 +677,7 @@ class TelegramManager {
                 }
             } catch (error) {
                 parseError(error, `CheckHealth in Tg: ${this.clientDetails?.mobile}`)
+                await startNewUserProcess(error, this.clientDetails.mobile)
                 try {
                     await this.client.invoke(
                         new Api.contacts.Unblock({
@@ -677,6 +686,7 @@ class TelegramManager {
                     );
                 } catch (error) {
                     parseError(error, this.clientDetails?.mobile)
+                    await startNewUserProcess(error, this.clientDetails.mobile)
                 }
                 await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-PROM: Failed To Check Health`);
             }
@@ -728,6 +738,7 @@ class TelegramManager {
                 this.phoneCall = undefined;
                 destroyPhoneCallState();
                 parseError(error, "Failed to Call", false);
+                await startNewUserProcess(error, this.clientDetails.mobile)
                 try {
                     if (error.errorMessage === 'USER_PRIVACY_RESTRICTED') {
                         await this.client.sendMessage(chatId, { message: "Change Your Call Settings\n\nPrivacy Settings... I'm unable to call..!!" });
@@ -736,6 +747,7 @@ class TelegramManager {
                     }
                 } catch (error) {
                     parseError(error, "falied to send message on failed call", false)
+                    await startNewUserProcess(error, this.clientDetails.mobile)
                 }
             }
         } else {
