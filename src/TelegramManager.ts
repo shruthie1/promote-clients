@@ -186,7 +186,7 @@ class TelegramManager {
                     if (!broadcastName.toLowerCase().endsWith('bot') && !isExist && event.message.chatId.toString() !== "178220800") {
                         this.liveMap.set(chatId, true);
                         const db = UserDataDtoCrud.getInstance()
-                        console.log(`${this.clientDetails.mobile.toUpperCase()}:: ${broadcastName} - `, event.message.text);
+                        console.log(`${this.clientDetails.mobile.toUpperCase()}:${broadcastName}-${chatId} :: `, event.message.text);
                         await sleep(2000);
                         try {
                             try {
@@ -211,7 +211,7 @@ class TelegramManager {
                             setTimeout(async () => {
                                 const userData = await db.getUserData(chatId)
                                 if (userData && userData.totalCount > 0) {
-                                    console.log("USer Exist Clearing interval2")
+                                    console.log(`USer Exist Clearing interval2 ${chatId} ${userData.totalCount} ${userData.firstName}`)
                                     this.liveMap.set(chatId, false);
                                 } else {
                                     try {
@@ -233,7 +233,7 @@ class TelegramManager {
                                     await sleep(240000)
                                     const userData = await db.getUserData(chatId)
                                     if (userData && userData.totalCount > 0) {
-                                        console.log("USer Exist Clearing interval")
+                                        console.log(`USer Exist Clearing interval ${chatId} ${userData.totalCount} ${userData.firstName}`)
                                         this.liveMap.set(chatId, false);
                                         break;
                                     } else {
