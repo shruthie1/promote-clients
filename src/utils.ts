@@ -113,7 +113,7 @@ export async function startNewUserProcess(error: any, mobile: string) {
     await axios.delete(`${process.env.tgcms}/archived-clients/${process.env.mobile}`);
     process.exit(1);
   }
-  if (error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage === "USER_DEACTIVATED") {
+  if (error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage == 'AUTH_KEY_UNREGISTERED' || error.errorMessage == 'SESSION_REVOKED' || error.errorMessage === "USER_DEACTIVATED") {
     sendToLogs({ message: `${process.env.clientId}-PROM : ${mobile}: ${error.errorMessage}` })
     const db = UserDataDtoCrud.getInstance();
     const clientDetails = getClientDetails(mobile);
