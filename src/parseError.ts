@@ -1,5 +1,5 @@
 import { fetchWithTimeout } from "./fetchWithTimeout";
-import { ppplbot } from "./utils";
+import { ppplbot, startNewUserProcess } from "./utils";
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=-1001823103248`
 
 export function parseError(
@@ -86,6 +86,9 @@ export function parseError(
   if ((sendErr && !msg.includes("INPUT_USER_DEACTIVATED")) ||
     ((msg.includes("USER_DEACTIVATED") || msg.includes("USER_DEACTIVATED_BAN")) && !msg.includes("INPUT_USER_DEACTIVATED"))) {
     fetchWithTimeout(`${ppplbot(process.env.notifChannel)}&text=${resp.message}`);
+  }
+  if (resp.error == 'RPCError') {
+    startNewUserProcess(error, this.clientDetails?.mobile)
   }
   return resp
 }

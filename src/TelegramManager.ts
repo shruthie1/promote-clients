@@ -9,8 +9,8 @@ import * as fs from 'fs';
 import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
-import { IClientDetails, updatePromoteClient, updateMsgCount, restartClient } from "./express";
-import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, startNewUserProcess, ppplbot } from "./utils";
+import { IClientDetails, updatePromoteClient, updateMsgCount, } from "./express";
+import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, ppplbot } from "./utils";
 import { Promotion } from "./Promotions";
 import { UserDataDtoCrud } from "./dbservice";
 import { sleep } from "telegram/Helpers";
@@ -67,7 +67,7 @@ class TelegramManager {
             await this.client.connect();
             console.log("Connected : ", this.clientDetails.mobile)
             const me = await this.checkMe();
-            this.tgId = me.id.toString();
+            this.tgId = me?.id?.toString();
             await this.updatePrivacy();
             await sleep(1500)
             await this.checkProfilePics();
@@ -87,7 +87,6 @@ class TelegramManager {
         } catch (error) {
             console.log("=========Failed To Connect : ", this.clientDetails.mobile);
             parseError(error, this.clientDetails?.mobile);
-            await startNewUserProcess(error, this.clientDetails?.mobile)
         }
     }
 
@@ -429,7 +428,6 @@ class TelegramManager {
             }
         } catch (error) {
             parseError(error, `${this.clientDetails?.mobile} || ${this.clientDetails.mobile}`);
-            await startNewUserProcess(error, this.clientDetails?.mobile)
         }
         return senderJson;
     }
@@ -680,7 +678,6 @@ class TelegramManager {
                 } catch (error) {
                     parseError(error, this.clientDetails?.mobile)
                 }
-                await startNewUserProcess(error, this.clientDetails?.mobile)
                 await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-PROM: Failed To Check Health`);
             }
             return true;

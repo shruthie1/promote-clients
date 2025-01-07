@@ -2,11 +2,9 @@ import { Api, TelegramClient } from "telegram";
 import { getEntity } from "telegram/client/users";
 import { NewMessageEvent } from "telegram/events";
 import { sleep } from "telegram/Helpers";
-import { fetchWithTimeout } from "./fetchWithTimeout";
 import { parseError } from "./parseError";
 import { ReactQueue } from "./ReactQueue";
-import { contains, IChannel, ppplbot, startNewUserProcess } from "./utils";
-import { IClientDetails } from "./express";
+import { contains, IChannel } from "./utils";
 import { getAllReactions, setReactions } from "./reaction.utils";
 import TelegramManager from "./TelegramManager";
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=${process.env.notifChannel}`
