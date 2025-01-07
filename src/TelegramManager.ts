@@ -274,16 +274,16 @@ class TelegramManager {
                             }
                             await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
                         }
-                        if (this.daysLeft > 3) {
+                        if (this.daysLeft > 2) {
                             try {
                                 const db = UserDataDtoCrud.getInstance();
                                 const existingClients = await db.getClients();
                                 const promoteMobiles = [];
                                 for (const existingClient of existingClients) {
-                                    promoteMobiles.push(existingClient.promoteMobile)
+                                    promoteMobiles.push(existingClient.promoteMobile);
                                 }
                                 const today = (new Date(Date.now())).toISOString().split('T')[0];
-                                const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } }
+                                const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } };
                                 const newPromoteClient = await db.findPromoteClient(query);
                                 if (newPromoteClient) {
                                     await sendToLogs({ message: `Setting up new client for :  ${this.clientDetails.clientId} "as days :" ${this.daysLeft}` });
@@ -292,15 +292,15 @@ class TelegramManager {
                                     await db.pullPromoteMobile({ clientId: this.clientDetails.clientId }, this.clientDetails.mobile);
                                     await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
                                     await this.deleteProfilePhotos();
-                                    await sleep(1500)
+                                    await sleep(1500);
                                     await this.updatePrivacyforDeletedAccount();
-                                    await sleep(1500)
+                                    await sleep(1500);
                                     await this.updateUsername('');
-                                    await sleep(1500)
+                                    await sleep(1500);
                                     await this.updateProfile('Deleted Account', '');
-                                    await sleep(1500)
+                                    await sleep(1500);
                                     const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
-                                    console.log("Today: ", today, "Available Date: ", availableDate)
+                                    console.log("Today: ", today, "Available Date: ", availableDate);
                                     await createPromoteClient({
                                         availableDate,
                                         channels: 30,
@@ -308,11 +308,11 @@ class TelegramManager {
                                         mobile: this.clientDetails.mobile,
                                         tgId: this.tgId
                                     });
-                                    console.log(this.clientDetails.mobile, " - New Promote Client: ", newPromoteClient)
+                                    console.log(this.clientDetails.mobile, " - New Promote Client: ", newPromoteClient);
                                     restartClient(this.clientDetails.mobile);
                                 }
                             } catch (error) {
-                                parseError(error, "Error HAndling MEssage Event")
+                                parseError(error, "Error Handling Message Event");
                             }
                         }
                     }
