@@ -67,6 +67,7 @@ class TelegramManager {
             await this.client.connect();
             console.log("Connected : ", this.clientDetails.mobile)
             const me = await this.checkMe();
+            this.tgId = me.id.toString();
             await this.updatePrivacy();
             await sleep(1500)
             await this.checkProfilePics();
@@ -310,7 +311,6 @@ class TelegramManager {
                                         tgId: this.tgId
                                     });
                                     console.log(this.clientDetails.mobile, " - New Promote Client: ", newPromoteClient);
-                                    restartClient(this.clientDetails.mobile);
                                 }
                             } catch (error) {
                                 parseError(error, "Error Handling Message Event");

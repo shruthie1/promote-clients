@@ -201,12 +201,12 @@ async function getALLClients() {
 
   return result
 }
-async function checkHealth() {
+export async function checkHealth() {
   console.log("============Checking Health==============");
   const telegramService = TelegramService.getInstance();
-  const client = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
+  const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
 
-  for (const mobile of client.promoteMobile) {
+  for (const mobile of clientData.promoteMobile) {
     const client = clientsMap.get(mobile);
     if (client) {
       const clientDetails = {
@@ -276,10 +276,22 @@ async function checkHealth() {
       } catch (error) {
         console.log("Does not Exist Client 2: ", clientDetails.mobile);
       }
+    } else {
+      const clientDetails = {
+        clientId: clientData.clientId,
+        mobile: mobile,
+        repl: clientData.repl,
+        username: clientData.username,
+        lastMessage: Date.now(),
+        name: clientData.name,
+        startTime: Date.now(),
+        daysLeft: -1
+      };
+      await telegramService.createClient(clientDetails, false, true);
     }
   }
-  telegramService.setMobiles(client.promoteMobile);
-  const promoteMobilesSet = new Set(client.promoteMobile);
+  telegramService.setMobiles(clientData.promoteMobile);
+  const promoteMobilesSet = new Set(clientData.promoteMobile);
   for (const mobile of clientsMap.keys()) {
     if (!promoteMobilesSet.has(mobile)) {
       console.log(`Removing old client entry from clientsMap: ${mobile}`);
