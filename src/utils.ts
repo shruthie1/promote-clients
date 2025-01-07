@@ -380,7 +380,7 @@ export async function sendToLogs({
   fallbackOnFailure,
 }: SendToLogsOptions): Promise<void> {
   let attempts = 0;
-  const encodedMessage = encodeURIComponent(`${process.env.clientId}-PROM: ${message}`);
+  const encodedMessage = encodeURIComponent(`@${process.env.clientId}-PROM: ${message}`);
 
   while (attempts < maxRetries) {
     const token = tokens[currentTokenIndex];

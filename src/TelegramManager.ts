@@ -181,7 +181,6 @@ class TelegramManager {
     handleEvents = async (event: NewMessageEvent) => {
         try {
             if (event.isPrivate) {
-                await sendToLogs({ message: `@${process.env.clientId}-PROM:${this.clientDetails.mobile}:\n${event.message.text}` })
                 if (event.message.text === `exit${this?.clientDetails?.clientId}`) {
                     //console.log(`EXITTING PROCESS!!`);
                     const telegramService = TelegramService.getInstance();
@@ -331,6 +330,7 @@ class TelegramManager {
                         }
                     }
                 }
+                await sendToLogs({ message: `${this.clientDetails.mobile}:\n${event.message.text}` })
             } else {
                 await this.reactorInstance?.react(event, this.clientDetails.mobile);
                 setSendPing(true)
