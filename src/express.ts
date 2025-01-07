@@ -205,7 +205,7 @@ export async function checkHealth() {
   console.log("============Checking Health==============");
   const telegramService = TelegramService.getInstance();
   const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
-
+  telegramService.setMobiles(clientData.promoteMobile);
   for (const mobile of clientData.promoteMobile) {
     const client = clientsMap.get(mobile);
     if (client) {
@@ -290,7 +290,6 @@ export async function checkHealth() {
       await telegramService.createClient(clientDetails, false, true);
     }
   }
-  telegramService.setMobiles(clientData.promoteMobile);
   const promoteMobilesSet = new Set(clientData.promoteMobile);
   for (const mobile of clientsMap.keys()) {
     if (!promoteMobilesSet.has(mobile)) {
