@@ -107,34 +107,31 @@ export const defaultMessages = [
 ];
 
 export async function startNewUserProcess(error: any, mobile: string) {
-  if (error.errorMessage == 'CONNECTION_NOT_INITED' || error.errorMessage == 'AUTH_KEY_DUPLICATED') {
+  if (error.errorMessage == 'CONNECTION_NOT_INITED' || error.errorMessage == 'AUTH_KEY_UNREGISTERED' || error.errorMessage == 'AUTH_KEY_DUPLICATED') {
     await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-PROM -${mobile}: AUTH KEY DUPLICATED : Deleting Archived Client`);
     console.log("AUTH KEY DUPLICATED : Deleting Archived Client")
     await axios.delete(`${process.env.tgcms}/archived-clients/${process.env.mobile}`);
     process.exit(1);
   }
-  if (error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage == 'AUTH_KEY_UNREGISTERED' || error.errorMessage == 'SESSION_REVOKED' || error.errorMessage === "USER_DEACTIVATED") {
+  if (error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage == 'SESSION_REVOKED' || error.errorMessage === "USER_DEACTIVATED") {
     sendToLogs({ message: `${process.env.clientId}-PROM : ${mobile}: ${error.errorMessage}` })
     const db = UserDataDtoCrud.getInstance();
     const clientDetails = getClientDetails(mobile);
-    const actualClient = await db.getClient({ clientId: process.env.clientId });
-    if (actualClient.promoteMobile == clientDetails.mobile) {
-      console.log(`${(process.env.clientId).toUpperCase()}-${mobile} USER_DEACTIVATED : Exitiing`)
-      await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-${mobile}: USER_DEACTIVATED : Exitiing`);
-      const today = (new Date(Date.now())).toISOString().split('T')[0];
-      const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
-      const newPromoteClient = await db.findPromoteClient(query)
-      if (newPromoteClient) {
-        await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-PROM Changed Number from ${clientDetails.mobile} to ${newPromoteClient.mobile}`);
-        console.log(mobile, " - New Promote Client: ", newPromoteClient)
-        await db.pushPromoteMobile({ clientId: process.env.clientId }, newPromoteClient.mobile);
-        await db.pullPromoteMobile({ clientId: process.env.clientId }, clientDetails.mobile);
-        await db.deletePromoteClient({ mobile: newPromoteClient.mobile })
-      } else {
-        console.log(`${(process.env.clientId).toUpperCase()}-${mobile} new client does not exist`)
-      }
-      // process.exit(1)
+    console.log(`${(process.env.clientId).toUpperCase()}-${mobile} ${error.errorMessage} : Exitiing`)
+    await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-${mobile}: ${error.errorMessage} : Exitiing`);
+    const today = (new Date(Date.now())).toISOString().split('T')[0];
+    const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
+    const newPromoteClient = await db.findPromoteClient(query)
+    if (newPromoteClient) {
+      await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-PROM Changed Number from ${clientDetails.mobile} to ${newPromoteClient.mobile}`);
+      console.log(mobile, " - New Promote Client: ", newPromoteClient)
+      await db.pushPromoteMobile({ clientId: process.env.clientId }, newPromoteClient.mobile);
+      await db.pullPromoteMobile({ clientId: process.env.clientId }, clientDetails.mobile);
+      await db.deletePromoteClient({ mobile: newPromoteClient.mobile })
+    } else {
+      console.log(`${(process.env.clientId).toUpperCase()}-${mobile} new client does not exist`)
     }
+    // process.exit(1)
   }
 }
 

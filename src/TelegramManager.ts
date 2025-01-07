@@ -67,7 +67,7 @@ class TelegramManager {
             await this.client.connect();
             console.log("Connected : ", this.clientDetails.mobile)
             const me = await this.checkMe();
-            this.tgId = me?.id?.toString();
+            this.tgId = me.id.toString();
             await this.updatePrivacy();
             await sleep(1500)
             await this.checkProfilePics();
