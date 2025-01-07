@@ -296,13 +296,13 @@ export class Promotion {
                             } else {
                                 // console.log(`Channel has word restriction. Selecting random available message.`);
                                 randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
-                                console.log(`Selected Msg for ${channelId}, ${channelInfo.title}|ChannelIdex:${channelIndex} | index: ${randomIndex} | msg: ${this.promoteMsgs[randomIndex]}`);
+                                console.log(`Selected Msg for ${channelId}, ${channelInfo.title} | ChannelIdex:${channelIndex} | MsgIndex: ${randomIndex}`);
                                 let randomAvailableMsg = this.promoteMsgs[randomIndex];
                                 if (!randomAvailableMsg) {
                                     console.log(`Random Msg Does not EXIST:  ${channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
                                     randomAvailableMsg = "**Hiiiiii**"
                                 }
-                                console.log(`Sending restricted message: ${randomAvailableMsg}`);
+                                console.log(`Sending Message: ${randomAvailableMsg}`);
                                 sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: randomAvailableMsg });
                             }
 
