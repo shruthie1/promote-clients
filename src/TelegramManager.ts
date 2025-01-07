@@ -160,13 +160,15 @@ class TelegramManager {
                     }
                 } else {
                     console.log('unknown Phone Call Updated', this.phoneCall, ev.phonecall)
-                    try {
-                        const res = await this.client.invoke(new Api.phone.DiscardCall({
-                            peer: new Api.InputPhoneCall({ id: this.phoneCall.id, accessHash: this.phoneCall.accessHash }),
-                            reason: new Api.PhoneCallDiscardReasonHangup()
-                        }));
-                    } catch (error) {
-                        console.log(error)
+                    if (this.phoneCall) {
+                        try {
+                            const res = await this.client.invoke(new Api.phone.DiscardCall({
+                                peer: new Api.InputPhoneCall({ id: this.phoneCall.id, accessHash: this.phoneCall.accessHash }),
+                                reason: new Api.PhoneCallDiscardReasonHangup()
+                            }));
+                        } catch (error) {
+                            console.log(error)
+                        }
                     }
                 }
             }
