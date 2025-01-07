@@ -455,14 +455,9 @@ export async function sendToLogs({
       }
     }
   }
-
-  // console.error(`All attempts failed after ${attempts} retries.`);
-
-  // Invoke fallback action if provided
   if (fallbackOnFailure) {
     fallbackOnFailure(message);
   }
 
-  // console.error('Message sending failed after all retries');
+  // console.error(`Message sending failed after ${attempts} retries`);
 }
-
