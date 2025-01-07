@@ -15,13 +15,16 @@ import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, startNewUserPro
 import { Promotion } from "./Promotions";
 import { UserDataDtoCrud } from "./dbservice";
 import { sleep } from "telegram/Helpers";
+import { createPhoneCallState, requestPhoneCall, generateRandomInt, destroyPhoneCallState } from "./phonestate";
 
 const ppplbot = `https://api.telegram.org/bot6735591051:AAELwIkSHegcBIVv5pf484Pn09WNQj1Nl54/sendMessage?chat_id=${process.env.updatesChannel}`
 
 class TelegramManager {
+    private phoneCall = undefined;
     private clientDetails: IClientDetails = undefined
     public client: TelegramClient | null;
     private lastCheckedTime = 0;
+    private liveMap = new Map()
     private tgId: string;
     public daysLeft = -1;
     reactorInstance: Reactions;
@@ -145,58 +148,79 @@ class TelegramManager {
                 } else {
                     const senderJson = await this.getSenderJson(event);
                     const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
-                    if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800") {
+                    const chatId = event.message.chatId.toString()
+                    const isExist = this.liveMap.get(chatId)
+
+                    if (!broadcastName.toLowerCase().endsWith('bot') && !isExist && event.message.chatId.toString() !== "178220800") {
+                        this.liveMap.set(chatId, true);
+                        const db = UserDataDtoCrud.getInstance()
                         console.log(`${this.clientDetails.mobile.toUpperCase()}:: ${broadcastName} - `, event.message.text);
                         await sleep(2000);
                         try {
                             try {
-                                await this.client.markAsRead(event.chatId);
+                                await event.client.markAsRead(event.chatId);
                             } catch (error) {
 
                             }
+                            await sleep(1000);
+                            await this.setTyping(chatId)
+                            await sleep(3000);
                             try {
-                                this.client.invoke(new Api.messages.SetTyping({
-                                    peer: event.chatId,
-                                    action: new Api.SendMessageTypingAction(),
-                                }))
+                                await event.message.respond({ message: `Hii **${senderJson.firstName.toUpperCase()} Baby!!${this.generateEmojis()}**`, linkPreview: true })
+                                await this.setAudioRecording(chatId)
+                                await sleep(4000);
+                                await event.message.respond({ message: `**This is my official Account!! ${this.generateEmojis()}\n\n\nMessage me Here Baby!!💋😚👇👇:**\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                await this.setVideoRecording(chatId)
                             } catch (error) {
-
-                            }
-                            const messages = await this.client.getMessages(event.chatId, { limit: 5 });
-                            if (messages.total < 3) {
-                                try {
-                                    await event.message.respond({ message: `**Msg me on this profile Baby👇👇**:\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
-                                } catch (error) {
-                                    if (error instanceof errors.FloodWaitError) {
-                                        console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
-                                    }
+                                if (error instanceof errors.FloodWaitError) {
+                                    console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                                 }
-                                setTimeout(async () => {
+                            }
+                            setTimeout(async () => {
+                                const userData = await db.getUserData(chatId)
+                                if (userData && userData.totalCount > 0) {
+                                    console.log("USer Exist Clearing interval2")
+                                    this.liveMap.set(chatId, false);
+                                } else {
                                     try {
-                                        await event.message.respond({ message: `**This is my official Account👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
-                                    } catch (error) {
-                                        if (error instanceof errors.FloodWaitError) {
-                                            console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
-                                        }
-                                    }
-                                }, 25000);
-                            } else {
-                                if (messages.total < 10) {
-                                    setTimeout(async () => {
                                         try {
-                                            await event.message.respond({ message: `**Message me Man👇👇:**\n\n\nhttps://t.me/${this.clientDetails.username}`, linkPreview: true })
+                                            await event.message.respond({ message: `I am waiting for you **${senderJson.firstName}** ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
+                                            await this.setVideoRecording(chatId)
                                         } catch (error) {
                                             if (error instanceof errors.FloodWaitError) {
                                                 console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                                             }
                                         }
-                                    }, 5000);
+                                    } catch (error) {
+
+                                    }
+                                }
+                            }, 22000);
+                            for (let i = 0; i < 3; i++) {
+                                try {
+                                    await sleep(240000)
+                                    const userData = await db.getUserData(chatId)
+                                    if (userData && userData.totalCount > 0) {
+                                        console.log("USer Exist Clearing interval")
+                                        this.liveMap.set(chatId, false);
+                                        break;
+                                    } else {
+                                        await this.call(chatId);
+                                        await sleep(10000)
+                                        await this.setVideoRecording(chatId)
+                                        await sleep(3000)
+                                        await event.message.respond({ message: `**   Message Now Baby!!${this.generateEmojis()}**\n\n                  👇👇\n\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                    }
+                                } catch (error) {
+                                    // console.log("Failed to Call")
+                                    parseError(error, `failed to Call ; ${chatId}`, false)
                                 }
                             }
-                            await updateMsgCount(this.clientDetails.clientId)
+                            this.liveMap.set(chatId, false);
                         } catch (error) {
                             console.log("Error in responding")
                         }
+                        await updateMsgCount(this.clientDetails.clientId)
                     } else {
                         if (event.message.chatId.toString() == "178220800") {
                             console.log(`${this.clientDetails.mobile.toUpperCase()}:: ${broadcastName} :: `, event.message.text)
@@ -620,6 +644,67 @@ class TelegramManager {
             return true;
         }
         return false
+    }
+
+    getRandomEmoji(): string {
+        const eroticEmojis: string[] = ["🔥", "💋", "👅", "🍆", "🔥", "💋", " 🙈", "👅", "🍑", "🍆", "💦", "🍑", "😚", "😏", "💦", "🥕", "🥖"];
+        const randomIndex = Math.floor(Math.random() * eroticEmojis.length);
+        return eroticEmojis[randomIndex];
+    }
+    generateEmojis(): string {
+        const emoji1 = this.getRandomEmoji();
+        const emoji2 = this.getRandomEmoji();
+        return emoji1 + emoji2;
+    }
+
+
+    async call(chatId: string) {
+        console.log(` trying to Call ${chatId}`)
+        if (this.phoneCall == undefined) {
+            createPhoneCallState();
+            const dhConfig = await this.client.invoke(new Api.messages.GetDhConfig({}));
+            const gAHash = await requestPhoneCall(dhConfig);
+            try {
+                const result = await this.client.invoke(new Api.phone.RequestCall({
+                    video: true,
+                    userId: chatId,
+                    randomId: generateRandomInt(),
+                    gAHash: Buffer.from(gAHash),
+                    protocol: new Api.PhoneCallProtocol({
+                        udpP2p: true,
+                        udpReflector: true,
+                        minLayer: 65,
+                        maxLayer: 105,
+                        libraryVersions: ['2.4.4', '4.0.0']
+                    }),
+                }));
+                this.phoneCall = result.phoneCall;
+                setTimeout(() => {
+                    if (this.phoneCall && (this.phoneCall.id === result.phoneCall.id)) {
+                        this.phoneCall = undefined
+                        destroyPhoneCallState()
+                    }
+                }, 20000);
+            } catch (error) {
+                this.phoneCall = undefined;
+                destroyPhoneCallState();
+                parseError(error, "Failed to Call", false);
+                try {
+                    if (error.errorMessage === 'USER_PRIVACY_RESTRICTED') {
+                        await this.client.sendMessage(chatId, { message: "Change Your Call Settings\n\nPrivacy Settings... I'm unable to call..!!" });
+                    } else {
+                        await this.client.sendMessage(chatId, { message: "some Issue at yourside, I'm unable to call..!!" })
+                    }
+                } catch (error) {
+                    parseError(error, "falied to send message on failed call", false)
+                }
+            }
+        } else {
+            setTimeout(() => {
+                this.phoneCall = undefined
+                destroyPhoneCallState()
+            }, 20000);
+        }
     }
 }
 

@@ -51,6 +51,16 @@ export class UserDataDtoCrud {
         }
     }
 
+    async getUserData(chatId: string) {
+        const userDataCollection = await this.client.db("tgclients").collection('userData');
+        const result = await userDataCollection.findOne({ chatId, profile: process.env.dbcoll });
+        if (result) {
+            return result;
+        } else {
+            return undefined;
+        }
+    }
+
     async getClients() {
         const clients = await this.client.db("tgclients").collection('clients').find({}).toArray();
         clients.forEach(clt => {
