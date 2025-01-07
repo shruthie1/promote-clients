@@ -17,7 +17,7 @@ interface MessageQueueItem {
 }
 
 export class Promotion {
-    private limitControl: Map<string, { triggeredTime: number; daysLeft: number; lastMessageTime: number }> = new Map<string, { triggeredTime: number; daysLeft: number, lastMessageTime: number }>();
+    private limitControl: Map<string, { daysLeft: number; lastMessageTime: number }> = new Map<string, { daysLeft: number, lastMessageTime: number }>();
     private nextMobileIndex = 0; // Index for round-robin mobile selection
     private sleepTime = 0;
     private channels: string[];
@@ -42,7 +42,7 @@ export class Promotion {
             this.promoteMsgs = data;
         });
         for (const mobile of mobiles) {
-            this.limitControl.set(mobile, { triggeredTime: 0, daysLeft: -1, lastMessageTime: Date.now() - 5 * 60 * 1000 });
+            this.limitControl.set(mobile, { daysLeft: -1, lastMessageTime: Date.now() - 5 * 60 * 1000 });
         }
     }
 
@@ -51,7 +51,7 @@ export class Promotion {
         this.mobiles = mobiles;
         for (const mobile of mobiles) {
             if (!this.limitControl.has(mobile)) {
-                this.limitControl.set(mobile, { triggeredTime: 0, daysLeft: -1, lastMessageTime: Date.now() - 5 * 60 * 1000 });
+                this.limitControl.set(mobile, { daysLeft: -1, lastMessageTime: Date.now() - 5 * 60 * 1000 });
             }
         }
     }
@@ -79,7 +79,7 @@ export class Promotion {
     setDaysLeft(mobile: string, daysLeft: number) {
         console.log("Setting DaysLeft:", daysLeft)
         const data = this.limitControl.get(mobile)
-        this.limitControl.set(mobile, { ...data, triggeredTime: Date.now(), daysLeft: daysLeft })
+        this.limitControl.set(mobile, { ...data, daysLeft: daysLeft })
     }
 
     getDaysLeft(mobile: string) {
@@ -398,7 +398,8 @@ export class Promotion {
         // const db = UserDataDtoCrud.getInstance();
         // parseError(error, `Error sending message to ${channelInfo.channelId} (@${channelInfo.username}):`, false)
         if (error.errorMessage === 'USER_BANNED_IN_CHANNEL') {
-            const result = await this.checktghealth(mobile);
+            //trigger checktghealth method from  TelegramManager class
+            await this.getClient(mobile).checktghealth();
             // if (!result && daysLeftForRelease() < 0) {
             //     await leaveChannel(client, channelInfo);
             // }
@@ -409,34 +410,6 @@ export class Promotion {
             const errorDetails = parseError(error, `${mobile}`, false)
         }
         return undefined;
-    }
-
-    async checktghealth(mobile: string, force: boolean = false) {
-        const floodData = this.limitControl.get(mobile);
-        if ((floodData.triggeredTime < Date.now() - (120 * 60 * 1000)) || force) {//&& daysLeftForRelease() < 0) {
-            const tgManager = this.getClient(mobile)
-            try {
-                if (tgManager.client) {
-                    await tgManager.client.sendMessage('@spambot', { message: '/start' })
-                } else {
-                    //console.log("instanse not exist")
-                }
-            } catch (error) {
-                parseError(error, `${mobile}, CheckHealth in Promote`)
-                try {
-                    await tgManager.client.invoke(
-                        new Api.contacts.Unblock({
-                            id: '178220800'
-                        })
-                    );
-                } catch (error) {
-                    parseError(error, 'Error Unblocking')
-                }
-                // await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Failed To Check Health`);
-            }
-            return true;
-        }
-        return false
     }
 
     async handleDeletedMessage(channelId: string, messageIndex: string) {
