@@ -111,7 +111,7 @@ export async function startNewUserProcess(error: any, mobile: string) {
     try {
       await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-PROM -${mobile}: AUTH KEY DUPLICATED : Deleting Archived Client`);
       console.log("AUTH KEY DUPLICATED : Deleting Archived Client")
-      await axios.delete(`${process.env.tgcms}/archived-clients/${process.env.mobile}`);
+      await axios.delete(`${process.env.tgcms}/archived-clients/${mobile}`);
     } catch (error) {
       parseError(error, "Failed to delete archived client");
     }
