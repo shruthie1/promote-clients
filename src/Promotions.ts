@@ -105,16 +105,17 @@ export class Promotion {
             console.error(`Error checking message ${messageItem.messageId} in ${messageItem.channelId}: ${error.message}`);
         }
     }
-    async fetchDialogs() {
 
+    async fetchDialogs() {
         const totalBatches = 3; // Fetch three batches
         const batchSize = 250;
         const channelDataSet = new Set<string>(); // Use Set to avoid duplicates
         const channelDetails: { channelId: string; participantsCount: number }[] = [];
-
+        console.log(`Fetching dialogs from clients...`);
         try {
             for (let batch = 0; batch < totalBatches; batch++) {
-                const mobile = this.selectNextMobile()// Rotate mobile    
+                const mobile = this.selectNextMobile(); // Rotate mobile   
+                console.log(`Fetching dialogs for mobile: ${mobile}`); 
                 const tgManager = this.getClient(mobile);
                 const client = tgManager?.client;
 
@@ -124,6 +125,7 @@ export class Promotion {
                 }
 
                 await client.connect();
+                console.log(`Connected to Telegram client for mobile: ${mobile}`);
 
                 let offsetId = 0; // Reset offset for each mobile in this example
                 const dialogs = await client.getDialogs({ limit: batchSize, offsetId });
@@ -161,6 +163,7 @@ export class Promotion {
 
             // Sort channels by participantsCount
             channelDetails.sort((a, b) => b.participantsCount - a.participantsCount);
+            console.log(`Sorted channels by participants count`);
 
             // Fisher-Yates Shuffle on top 250
             const topChannels = channelDetails.slice(0, 250);
@@ -168,6 +171,7 @@ export class Promotion {
                 const j = Math.floor(Math.random() * (i + 1));
                 [topChannels[i], topChannels[j]] = [topChannels[j], topChannels[i]];
             }
+            console.log(`Shuffled top channels`);
 
             // Return only the shuffled channel IDs
             return topChannels.map(channel => channel.channelId);
