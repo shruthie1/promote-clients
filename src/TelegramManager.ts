@@ -124,7 +124,7 @@ class TelegramManager {
                         await sleep(2000);
                     }
                 } catch (error) {
-                    console.log(error.message)
+                    console.log(error.errorMessage)
                     if (error.errorMessage == 'USERNAME_NOT_MODIFIED') {
                         newUserName = username;
                         break;
