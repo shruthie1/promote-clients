@@ -679,7 +679,7 @@ class TelegramManager {
     }
 
     async checktghealth(force: boolean = false) {
-        if ((this.lastCheckedTime < (Date.now() - 30 * 60 * 1000)) || force) {//&& daysLeftForRelease() < 0) {
+        if ((this.lastCheckedTime < (Date.now() - 30 * 60 * 1000) && this.daysLeft < 0) || force) {//&& daysLeftForRelease() < 0) {
             this.lastCheckedTime = Date.now();
             try {
                 if (this.client) {
