@@ -336,7 +336,7 @@ export class Promotion {
                                 } else {
                                     console.warn(`Message sending failed for channel: ${channelInfo.username || channelId}`);
                                     const floodData = this.limitControl.get(mobile)
-                                    await sendToLogs({ message: `${mobile}:------❌\n@${channelInfo.username}\nDaysLeft:${floodData.daysLeft}\nLastMsg: ${(Date.now() - floodData.lastMessageTime) / 1000}\nFailCount: ${failCount}` });
+                                    await sendToLogs({ message: `${mobile}:------❌\n@${channelInfo.username}\nDaysLeft:${floodData.daysLeft}\nLastMsg: ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)} Mins\nFailCount: ${failCount}` });
                                     if (failCount < 2) {
                                         failCount++;
                                         console.log(`Retrying after a short delay. Fail count: ${failCount}`);
