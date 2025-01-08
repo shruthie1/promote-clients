@@ -320,7 +320,10 @@ export class Promotion {
                                 }
 
                                 if (sentMessage) {
-                                    failCount = 0;
+                                    if (failCount > 0) {
+                                        channelIndex = channelIndex - failCount
+                                        failCount = 0;
+                                    }
                                     this.messageQueue.push({
                                         mobile,
                                         channelId,
@@ -347,6 +350,7 @@ export class Promotion {
                                         const randomDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                         console.log(`Sleeping for ${(randomDelay / 60000).toFixed(2)} Mins`);
                                         await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}` });
+                                        channelIndex = channelIndex - failCount
                                         failCount = 0;
                                         mobile = this.selectNextMobile();
                                         await sleep(randomDelay);
