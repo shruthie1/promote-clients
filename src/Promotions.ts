@@ -197,7 +197,7 @@ export class Promotion {
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     if (result) {
                         const data = this.limitControl.get(mobile);
-                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username}--✅\nLastMsg:  ${((Date.now() - data.lastMessageTime) / 60000).toFixed(2)}mins` });
+                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nLastMsg:  ${((Date.now() - data.lastMessageTime) / 60000).toFixed(2)}mins` });
                         this.limitControl.set(mobile, { ...data, lastMessageTime: Date.now() });
                         await updateSuccessCount(process.env.clientId);
                         return result;
@@ -339,14 +339,14 @@ export class Promotion {
                                     if (failCount < 3) {
                                         console.log(`Retrying after a short delay. Fail count: ${failCount}`);
                                         const randomDelay = Math.floor(Math.random() * (30000 - 10000)) + 10000;
-                                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username}--❌\nFailCount:  ${failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}` });
+                                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}` });
                                         failCount++;
                                         await sleep(randomDelay);
                                     } else {
                                         console.log(`Switching mobile after 3 consecutive failures.`);
                                         const randomDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                         console.log(`Sleeping for ${(randomDelay / 60000).toFixed(2)} Mins`);
-                                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username}--❌\nFailCount:  ${failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}` });
+                                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}` });
                                         failCount = 0;
                                         mobile = this.selectNextMobile();
                                         await sleep(randomDelay);
