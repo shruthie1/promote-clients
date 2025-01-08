@@ -236,7 +236,7 @@ export async function checkHealth() {
                 clientsMap.set(mobile, clientDetails);
                 await restartClient(mobile);
               } else {
-                if (telegramService.getLastMessageTime(mobile) < Date.now() - 10 * 60 * 1000) {
+                if (telegramService.getLastMessageTime(mobile) < Date.now() - 15 * 60 * 1000) {
                   console.log(
                     clientDetails.clientId,
                     " : Promotions Seems stopped - ",
@@ -248,7 +248,7 @@ export async function checkHealth() {
                   await telegramManager.checktghealth();
                   if (
                     telegramManager.daysLeft == -1 &&
-                    telegramService.getLastMessageTime(mobile) < Date.now() - 20 * 60 * 1000
+                    telegramService.getLastMessageTime(mobile) < Date.now() - 25 * 60 * 1000
                   ) {
                     console.log(
                       "Promotion stopped",
