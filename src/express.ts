@@ -8,6 +8,7 @@ import * as schedule from 'node-schedule-tz';
 import { execSync } from 'child_process';
 import { TelegramService } from './Telegram.service';
 import { UserDataDtoCrud } from './dbservice';
+import { Api } from 'telegram';
 
 let canTry2 = true;
 
@@ -233,7 +234,7 @@ export async function checkHealth() {
                 if (telegramService.getLastMessageTime(mobile) < Date.now() - 10 * 60 * 1000) {
                   console.log(
                     clientDetails.clientId,
-                    " : Promotions stopped - ",
+                    " : Promotions Seems stopped - ",
                     `Now: ${Date.now()}`,
                     `LAstMSg : ${telegramService.getLastMessageTime(mobile)}`,
                     Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000),
@@ -245,7 +246,7 @@ export async function checkHealth() {
                     telegramService.getLastMessageTime(mobile) < Date.now() - 20 * 60 * 1000
                   ) {
                     console.log(
-                      "Promotion seems stopped",
+                      "Promotion stopped",
                       clientDetails.mobile,
                       "DaysLeft: ",
                       telegramService.getDaysLeft(mobile)
@@ -261,6 +262,13 @@ export async function checkHealth() {
                     Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000),
                     `DaysLeft: ${telegramService.getDaysLeft(mobile)}`
                   );
+                  try {
+                    await telegramManager.client.invoke(new Api.updates.GetState());
+                    await telegramManager.client.markAsRead('myvcacc')
+                    await telegramManager.setTyping('myvcacc')
+                  } catch (e) {
+                    parseError(e, `${mobile} Error at Health Check`);
+                  }
                 }
                 clientsMap.set(mobile, clientDetails);
                 telegramManager.setClientDetails(clientDetails);
@@ -307,7 +315,7 @@ export async function checkHealth() {
       parseError(error, "Error at Removing Old Client Entry");
     }
   }
-  console.log("Average Reaction Delay: ",telegramService.getAverageReactionDelay());
+  console.log("Average Reaction Delay: ", telegramService.getAverageReactionDelay());
   sendToLogs({ message: `Average Reaction Delay: ${telegramService.getAverageReactionDelay()}` });
 }
 
