@@ -197,8 +197,6 @@ export class Promotion {
                     console.log(`Sending Message: ${message.message}`);
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     if (result) {
-                        console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username}`);
-                        await sendToLogs({ message: `${mobile}:---✅\n@${channelInfo.username}` });
                         const data = this.limitControl.get(mobile);
                         this.limitControl.set(mobile, { ...data, lastMessageTime: Date.now() });
                         await updateSuccessCount(mobile);
@@ -217,7 +215,6 @@ export class Promotion {
                 return undefined;
             }
         } catch (error) {
-            await sendToLogs({ message: `${mobile.toUpperCase()}:---❌\n@${channelInfo.username}` });
             await updateFailedCount(mobile);
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(mobile, `Some Error Occured, ${error.errorMessage}`);
@@ -332,13 +329,15 @@ export class Promotion {
                                         timestamp: Date.now(),
                                         messageIndex: randomIndex,
                                     });
-
-                                    mobile = this.selectNextMobile();
+                                    console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username}`);
+                                    await sendToLogs({ message: `${mobile}:---✅\n@${channelInfo.username}` });
                                     const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                     console.log(`Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
                                     await sleep(randomBatchDelay);
+                                    mobile = this.selectNextMobile();
                                 } else {
                                     console.warn(`Message sending failed for channel: ${channelInfo.username || channelId}`);
+                                    await sendToLogs({ message: `${mobile.toUpperCase()}:---❌\n@${channelInfo.username}: FailCount: ${failCount}` });
                                     if (failCount < 2) {
                                         failCount++;
                                         console.log(`Retrying after a short delay. Fail count: ${failCount}`);
