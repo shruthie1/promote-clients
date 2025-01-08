@@ -233,6 +233,15 @@ export class UserDataDtoCrud {
         }
     }
 
+    async increaseReactCount(clientId: string) {
+        try {
+            const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
+            return await promoteClientStatDb.updateOne({ clientId }, { $inc: { reactCount: 1 } })
+        } catch (error) {
+            parseError(error, "Error updating Client")
+        }
+    }
+
     async resetPromoteClientStats() {
         try {
             const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
@@ -241,7 +250,9 @@ export class UserDataDtoCrud {
                     "successCount": 0,
                     "failedCount": 0,
                     "messageCount": 0,
-                    "daysLeft": 0
+                    "daysLeft": 0,
+                    "lastStarted": new Date(),
+                    "reactCount": 0
                 }
             })
         } catch (error) {

@@ -134,7 +134,9 @@ app.get('/tryToConnect/:num', async (req, res, next) => {
         if (sendPing === false) {
           console.log('Trying to Initiate CLIENT');
           canTry2 = false;
-          await UserDataDtoCrud.getInstance().connect()
+          const db = UserDataDtoCrud.getInstance()
+          await db.connect()
+          await db.updatePromoteClientStat({ clientId: process.env.clientId }, { lastStarted: new Date() });
           setTimeout(() => {
             canTry2 = true;
           }, 70000);

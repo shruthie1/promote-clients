@@ -199,7 +199,7 @@ export class Promotion {
                     if (result) {
                         const data = this.limitControl.get(mobile);
                         this.limitControl.set(mobile, { ...data, lastMessageTime: Date.now() });
-                        await updateSuccessCount(mobile);
+                        await updateSuccessCount(process.env.clientId);
                         return result;
                     } else {
                         console.error(`Client ${mobile}: Failed to send message to ${channelInfo.channelId} || @${channelInfo.username}`);
@@ -215,7 +215,7 @@ export class Promotion {
                 return undefined;
             }
         } catch (error) {
-            await updateFailedCount(mobile);
+            await updateFailedCount(process.env.clientId);
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(mobile, `Some Error Occured, ${error.errorMessage}`);
             }

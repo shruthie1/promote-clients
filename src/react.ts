@@ -7,6 +7,7 @@ import { ReactQueue } from "./ReactQueue";
 import { contains, IChannel } from "./utils";
 import { getAllReactions, setReactions } from "./reaction.utils";
 import TelegramManager from "./TelegramManager";
+import { UserDataDtoCrud } from "./dbservice";
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=${process.env.notifChannel}`
 
 export class Reactions {
@@ -232,7 +233,7 @@ export class Reactions {
             await this.sendReaction(client, event, reaction);
             // let chatEntity = <Api.Channel>await getEntity(client, event.message.chatId);
             // console.log(`${this.currentMobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
-            this.updateReactionStats();
+            await this.updateReactionStats();
             // await this.activeChannelsService.addReactions(chatId.replace(/^-100/, ""), [reaction[0].emoticon])
         } catch (error) {
             await this.handleReactionError(error, reaction, chatId, this.currentMobile);
@@ -262,7 +263,7 @@ export class Reactions {
         await client.invoke(MsgClass);
     }
 
-    private updateReactionStats(): void {
+    private async updateReactionStats(): Promise<void> {
         const reactionDelay = Math.min(Date.now() - this.lastReactedtime, 25000); // Calculate current delay
         this.lastReactedtime = Date.now(); // Update last reacted time
 
@@ -277,6 +278,8 @@ export class Reactions {
         // Calculate the average of the last 20 delays
         const totalDelay = this.reactionDelays.reduce((sum, delay) => sum + delay, 0);
         this.averageReactionDelay = Math.floor(totalDelay / this.reactionDelays.length);
+        const db = UserDataDtoCrud.getInstance()
+        await db.increaseReactCount(process.env.clienId)
     }
 
     private async handleReactionError(
