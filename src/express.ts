@@ -209,8 +209,10 @@ export async function checkHealth() {
   console.log("============Checking Health==============");
   const telegramService = TelegramService.getInstance();
   const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
+  await sendToLogs({ message: `Average Reaction Delay: ${telegramService.getAverageReactionDelay()}` });
   telegramService.setMobiles(clientData.promoteMobile);
   for (const mobile of clientData.promoteMobile) {
+    await sleep(1000);
     try {
       const client = clientsMap.get(mobile);
       if (client) {
@@ -319,7 +321,6 @@ export async function checkHealth() {
     }
   }
   console.log("Average Reaction Delay: ", telegramService.getAverageReactionDelay());
-  sendToLogs({ message: `Average Reaction Delay: ${telegramService.getAverageReactionDelay()}` });
 }
 
 app.listen(port, () => {
