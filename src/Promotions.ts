@@ -368,6 +368,7 @@ export class Promotion {
                     } else {
                         console.warn(`No mobile available. Retrying after delay.`);
                         await sleep(30000);
+                        mobile = this.selectNextMobile();
                     }
                 }
             } else {
