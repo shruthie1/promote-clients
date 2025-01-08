@@ -279,7 +279,7 @@ export class Reactions {
         const totalDelay = this.reactionDelays.reduce((sum, delay) => sum + delay, 0);
         this.averageReactionDelay = Math.floor(totalDelay / this.reactionDelays.length);
         const db = UserDataDtoCrud.getInstance()
-        await db.increaseReactCount(process.env.clienId)
+        await db.increaseReactCount(process.env.clientId)
     }
 
     private async handleReactionError(
