@@ -84,7 +84,6 @@ export class Promotion {
 
     getDaysLeft(mobile: string) {
         const data = this.limitControl.get(mobile);
-        console.log("Getting DaysLeft:", data.daysLeft)
         return data.daysLeft;
     }
 
@@ -237,7 +236,6 @@ export class Promotion {
 
     public async startPromotion() {
         if (this.isPromoting) {
-            console.log("Promotion already running, ignoring trigger.");
             return;
         }
         this.isPromoting = true;
@@ -337,7 +335,8 @@ export class Promotion {
                                     mobile = this.selectNextMobile();
                                 } else {
                                     console.warn(`Message sending failed for channel: ${channelInfo.username || channelId}`);
-                                    await sendToLogs({ message: `${mobile}:------❌\n@${channelInfo.username}\nFailCount: ${failCount}` });
+                                    const floodData = this.limitControl.get(mobile)
+                                    await sendToLogs({ message: `${mobile}:------❌\n@${channelInfo.username}\nDaysLeft:${floodData.daysLeft}\nLastMsg: ${(Date.now() - floodData.lastMessageTime) / 1000}\nFailCount: ${failCount}` });
                                     if (failCount < 2) {
                                         failCount++;
                                         console.log(`Retrying after a short delay. Fail count: ${failCount}`);
