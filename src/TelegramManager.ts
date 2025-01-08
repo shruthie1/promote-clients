@@ -263,6 +263,7 @@ class TelegramManager {
                             console.log("Error in responding")
                         }
                         await updateMsgCount(this.clientDetails.clientId)
+                        await sendToLogs({ message: `${this.clientDetails.mobile}:${broadcastName}:\n${event.message.text}` });
                     } else {
                         if (event.message.chatId.toString() == "178220800") {
                             console.log(`${this.clientDetails.mobile.toUpperCase()}:: ${broadcastName} :: `, event.message.text)
@@ -285,6 +286,7 @@ class TelegramManager {
                             }
                             await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
                         }
+                        await sendToLogs({ message: `${this.clientDetails.mobile}\nDaysLeft:${this.daysLeft}}` });
                         if (this.daysLeft > 3 && (this.lastResetTime < Date.now() - 30 * 60 * 1000)) {
                             this.lastResetTime = Date.now()
                             try {
@@ -330,7 +332,6 @@ class TelegramManager {
                             }
                         }
                     }
-                    await sendToLogs({ message: `${this.clientDetails.mobile}:${broadcastName}:\n${event.message.text}` })
                 }
             } else {
                 await this.reactorInstance?.react(event, this.clientDetails.mobile);
