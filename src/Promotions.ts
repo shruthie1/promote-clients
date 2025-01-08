@@ -340,7 +340,7 @@ export class Promotion {
                                         failCount++;
                                         console.log(`Retrying after a short delay. Fail count: ${failCount}`);
                                         const randomDelay = Math.floor(Math.random() * (30000 - 10000)) + 10000;
-                                        await sendToLogs({ message: `${mobile}:------❌\n@${channelInfo.username}\nDaysLeft: **${floodData.daysLeft}**\nLastMsg: **${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)} Mins**\nFailCount: **${failCount}**\nSleeping: **${(randomDelay / 60000).toFixed(2)} Mins**` });
+                                        await sendToLogs({ message: `${mobile}:------❌\n@${channelInfo.username}\nDaysLeft: ${floodData.daysLeft}\nLastMsg: ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)} Mins\nFailCount: ${failCount}\nSleeping: ${(randomDelay / 60000).toFixed(2)} Mins` });
                                         await sleep(randomDelay);
                                     } else {
                                         console.log(`Switching mobile after 3 consecutive failures.`);
@@ -348,7 +348,7 @@ export class Promotion {
                                         mobile = this.selectNextMobile();
                                         const randomDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                         console.log(`Sleeping for ${(randomDelay / 60000).toFixed(2)} Mins`);
-                                        await sendToLogs({ message: `${mobile}:------❌\n@${channelInfo.username}\nDaysLeft: **${floodData.daysLeft}**\nLastMsg: **${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)} Mins**\nFailCount: **${failCount}**\nSleeping: **${(randomDelay / 60000).toFixed(2)} Mins**` });
+                                        await sendToLogs({ message: `${mobile}:------❌\n@${channelInfo.username}\nDaysLeft: ${floodData.daysLeft}\nLastMsg: ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)} Mins\nFailCount: ${failCount}\nSleeping: ${(randomDelay / 60000).toFixed(2)} Mins` });
                                         await sleep(randomDelay);
                                     }
                                 }
