@@ -286,9 +286,9 @@ class TelegramManager {
                             }
                             await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
                         }
-                        if (this.daysLeft > 0) {
-                            await sendToLogs({ message: `${this.clientDetails.mobile}\nDaysLeft: ${this.daysLeft}` });
-                        }
+                        // if (this.daysLeft > 0) {
+                        //     await sendToLogs({ message: `${this.clientDetails.mobile}\nDaysLeft: ${this.daysLeft}` });
+                        // }
                         if (this.daysLeft > 3 && (this.lastResetTime < Date.now() - 30 * 60 * 1000)) {
                             this.lastResetTime = Date.now()
                             try {
