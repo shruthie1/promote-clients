@@ -222,7 +222,7 @@ export class Reactions {
         } else {
             this.flag = true;
             console.log(`Client is undefined: ${this.currentMobile}`);
-            this.currentMobile = this.selectNextMobile();
+            this.currentMobile = this.selectNextMobile(); //dont change this
             await restartClient(this.currentMobile);
             await sleep(30000)
         }
