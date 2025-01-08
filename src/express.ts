@@ -3,7 +3,7 @@ import cors from 'cors';
 import { fetchWithTimeout } from './fetchWithTimeout';
 import { parseError } from './parseError';
 import { sendPing } from './connection';
-import { ppplbot, sleep } from './utils';
+import { ppplbot, sendToLogs, sleep } from './utils';
 import * as schedule from 'node-schedule-tz';
 import { execSync } from 'child_process';
 import { TelegramService } from './Telegram.service';
@@ -308,6 +308,7 @@ export async function checkHealth() {
     }
   }
   console.log("Average Reaction Delay: ",telegramService.getAverageReactionDelay());
+  sendToLogs({ message: `Average Reaction Delay: ${telegramService.getAverageReactionDelay()}` });
 }
 
 app.listen(port, () => {
