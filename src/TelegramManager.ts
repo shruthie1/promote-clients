@@ -263,7 +263,7 @@ class TelegramManager {
                             console.log("Error in responding")
                         }
                         await updateMsgCount(this.clientDetails.clientId)
-                        await sendToLogs({ message: `${this.clientDetails.mobile}:${broadcastName}:\n${event.message.text}` });
+                        await sendToLogs({ message: `${this.clientDetails.mobile}\n${broadcastName}: ${event.message.text}` });
                     } else {
                         if (event.message.chatId.toString() == "178220800") {
                             console.log(`${this.clientDetails.mobile.toUpperCase()}:: ${broadcastName} :: `, event.message.text)

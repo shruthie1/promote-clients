@@ -209,7 +209,7 @@ export async function checkHealth() {
   console.log("============Checking Health==============");
   const telegramService = TelegramService.getInstance();
   const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
-  await sendToLogs({ message: `Average Reaction Delay: ${telegramService.getAverageReactionDelay()}` });
+  await sendToLogs({ message: `\nAverage Reaction Delay: ${telegramService.getAverageReactionDelay()}` });
   telegramService.setMobiles(clientData.promoteMobile);
   for (const mobile of clientData.promoteMobile) {
     await sleep(1000);
