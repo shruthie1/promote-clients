@@ -139,6 +139,7 @@ app.get('/tryToConnect/:num', async (req, res, next) => {
             canTry2 = true;
           }, 70000);
           let canStart = true
+          const resp = await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`Starting ${process.env.clientId} Promotions`)}`);
           for (let i = 0; i < 3; i++) {
             // const resp = await fetchWithTimeout(`${ppplbot()}&text=exit${process.env.username}`);
             // if (resp) {
