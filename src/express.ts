@@ -136,7 +136,7 @@ app.get('/tryToConnect/:num', async (req, res, next) => {
           canTry2 = false;
           const db = UserDataDtoCrud.getInstance()
           await db.connect()
-          await db.updatePromoteClientStat({ clientId: process.env.clientId }, { lastStarted: new Date() });
+          await db.updatePromoteClientStat({ clientId: process.env.clientId }, { lastStarted: new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }) });
           setTimeout(() => {
             canTry2 = true;
           }, 70000);
