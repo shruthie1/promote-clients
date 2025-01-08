@@ -37,7 +37,7 @@ export class Reactions {
         this.reactQueue = ReactQueue.getInstance();
         this.mobiles = mobiles
         this.getClient = getClient;
-        this.currentMobile = this.selectNextMobile()
+        this.currentMobile = mobiles[0]
         console.log("Reaction Instance created")
     }
 
