@@ -479,7 +479,7 @@ export class Promotion {
     private getHealthyMobiles() {
         return this.mobiles.filter((mobile) => {
             const floodData = this.limitControl.get(mobile)
-            return floodData.daysLeft < 7 && floodData.lastMessageTime < Date.now() - 3 * 60 * 1000 //Change it
+            return floodData.daysLeft < 7 && floodData.lastMessageTime < Date.now() - 12 * 60 * 1000 //Change it
         });
     }
 
