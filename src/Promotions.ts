@@ -197,6 +197,7 @@ export class Promotion {
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     if (result) {
                         const data = this.limitControl.get(mobile);
+                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username}--✅\nLastMsg:  ${((Date.now() - data.lastMessageTime) / 60000).toFixed(2)}mins` });
                         this.limitControl.set(mobile, { ...data, lastMessageTime: Date.now() });
                         await updateSuccessCount(process.env.clientId);
                         return result;
@@ -328,7 +329,6 @@ export class Promotion {
                                         messageIndex: randomIndex,
                                     });
                                     console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username}`);
-                                    await sendToLogs({ message: `${mobile}:\n@${channelInfo.username}--✅` });
                                     const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                     console.log(`Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
                                     await sleep(randomBatchDelay);
