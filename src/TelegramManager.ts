@@ -298,7 +298,7 @@ class TelegramManager {
                                 const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } };
                                 const newPromoteClient = await db.findPromoteClient(query);
                                 if (newPromoteClient) {
-                                    await sendToLogs({ message: `Setting up new client for :  ${this.clientDetails.clientId} "as days :" ${this.daysLeft}` });
+                                    await sendToLogs({ message: `Setting up new client for :  ${this.clientDetails.clientId} as days : ${this.daysLeft}` });
                                     await fetchWithTimeout(`${ppplbot()}&text=@${this.clientDetails.clientId.toUpperCase()}-PROM Changed Number from ${this.clientDetails.mobile} to ${newPromoteClient.mobile}`);
                                     await db.pushPromoteMobile({ clientId: this.clientDetails.clientId }, newPromoteClient.mobile);
                                     await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
@@ -330,8 +330,8 @@ class TelegramManager {
                             }
                         }
                     }
+                    await sendToLogs({ message: `${this.clientDetails.mobile}:${broadcastName}:\n${event.message.text}` })
                 }
-                await sendToLogs({ message: `${this.clientDetails.mobile}:\n${event.message.text}` })
             } else {
                 await this.reactorInstance?.react(event, this.clientDetails.mobile);
                 setSendPing(true)

@@ -118,7 +118,7 @@ export async function startNewUserProcess(error: any, mobile: string) {
     process.exit(1);
   }
   if (error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage == 'SESSION_REVOKED' || error.errorMessage === "USER_DEACTIVATED") {
-    sendToLogs({ message: `${process.env.clientId}-PROM : ${mobile}: ${error.errorMessage}` })
+    sendToLogs({ message: `${mobile}: ${error.errorMessage}` })
     const db = UserDataDtoCrud.getInstance();
     const clientDetails = getClientDetails(mobile);
     console.log(`${(process.env.clientId).toUpperCase()}-${mobile} ${error.errorMessage} : Exitiing`)
@@ -380,7 +380,7 @@ export async function sendToLogs({
   fallbackOnFailure,
 }: SendToLogsOptions): Promise<void> {
   let attempts = 0;
-  const encodedMessage = encodeURIComponent(`@${process.env.clientId}-PROM: ${message}`);
+  const encodedMessage = encodeURIComponent(`@${process.env.clientId.toUpperCase()}:\n${message}`);
 
   while (attempts < maxRetries) {
     const token = tokens[currentTokenIndex];

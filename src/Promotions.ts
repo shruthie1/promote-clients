@@ -330,14 +330,14 @@ export class Promotion {
                                         messageIndex: randomIndex,
                                     });
                                     console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username}`);
-                                    await sendToLogs({ message: `${mobile}:---✅\n@${channelInfo.username}` });
+                                    await sendToLogs({ message: `${mobile}:------✅\n@${channelInfo.username}` });
                                     const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                     console.log(`Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
                                     await sleep(randomBatchDelay);
                                     mobile = this.selectNextMobile();
                                 } else {
                                     console.warn(`Message sending failed for channel: ${channelInfo.username || channelId}`);
-                                    await sendToLogs({ message: `${mobile.toUpperCase()}:---❌\n@${channelInfo.username}: FailCount: ${failCount}` });
+                                    await sendToLogs({ message: `${mobile}:------❌\n@${channelInfo.username}\nFailCount: ${failCount}` });
                                     if (failCount < 2) {
                                         failCount++;
                                         console.log(`Retrying after a short delay. Fail count: ${failCount}`);
