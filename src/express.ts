@@ -373,6 +373,10 @@ export async function restartClient(mobile: string) {
     console.error(`Client details for ${mobile} do not exist`);
     return;
   }
+  if (clientDetails.startTime > Date.now() - 1000 * 60 * 5) {
+    console.log(`Client ${mobile} was started less than 5 minutes ago. Skipping restart.`);
+    return;
+  }
 
   console.log(`===================Restarting service : ${mobile.toUpperCase()}=======================`);
 
