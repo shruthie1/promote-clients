@@ -197,7 +197,7 @@ export class Promotion {
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     if (result) {
                         const data = this.limitControl.get(mobile);
-                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nLastMsg:  ${((Date.now() - data.lastMessageTime) / 60000).toFixed(2)}mins` });
+                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nLastMsg:  ${((Date.now() - data.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${data.daysLeft}` });
                         this.limitControl.set(mobile, { ...data, lastMessageTime: Date.now() });
                         await updateSuccessCount(process.env.clientId);
                         return result;
