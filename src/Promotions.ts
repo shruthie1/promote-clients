@@ -336,7 +336,7 @@ export class Promotion {
                                 } else {
                                     console.warn(`Message sending failed for channel: ${channelInfo.username || channelId}`);
                                     const floodData = this.limitControl.get(mobile)
-                                    if (failCount < 3 && floodData.daysLeft >= 0) {
+                                    if (failCount < 3 && floodData.daysLeft > 0) {
                                         console.log(`Retrying after a short delay. Fail count: ${failCount}`);
                                         const randomDelay = Math.floor(Math.random() * (30000 - 10000)) + 10000;
                                         await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}` });
