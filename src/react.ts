@@ -8,6 +8,7 @@ import { contains, IChannel } from "./utils";
 import { getAllReactions, setReactions } from "./reaction.utils";
 import TelegramManager from "./TelegramManager";
 import { UserDataDtoCrud } from "./dbservice";
+import { restartClient } from "./express";
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=${process.env.notifChannel}`
 
 export class Reactions {
@@ -217,12 +218,14 @@ export class Reactions {
         const tgManager = this.getClient(this.currentMobile);
         if (tgManager?.client) {
             await this.executeReaction(event, tgManager.client, reaction);
+            this.currentMobile = this.selectNextMobile();
         } else {
             this.flag = true;
             console.log(`Client is undefined: ${this.currentMobile}`);
+            this.currentMobile = this.selectNextMobile();
+            await restartClient(this.currentMobile);
             await sleep(30000)
         }
-        this.currentMobile = this.selectNextMobile();
     }
 
     private async executeReaction(event: NewMessageEvent, client: TelegramClient, reaction: Api.ReactionEmoji[]): Promise<void> {
