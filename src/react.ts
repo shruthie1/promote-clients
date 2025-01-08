@@ -45,6 +45,11 @@ export class Reactions {
     public async setMobiles(mobiles: string[]) {
         console.log("Setting Mobiles in Reaction Instance", mobiles.length);
         this.mobiles = mobiles
+        for (const mobile of mobiles) {
+            if (!this.floodControl.has(mobile)) {
+                this.floodControl.set(mobile, { count: 0, releaseTime: 0, triggeredTime: 0 });
+            }
+        }
         const db = UserDataDtoCrud.getInstance()
         await db.increaseReactCount(process.env.clientId, this.successCount);
         this.successCount = 0;
@@ -226,9 +231,10 @@ export class Reactions {
         } else {
             this.flag = true;
             console.log(`Client is undefined: ${this.currentMobile}`);
+            this.mobiles = this.mobiles.filter(mobile => mobile !== this.currentMobile);
+            this.floodControl.delete(this.currentMobile);
             this.currentMobile = this.selectNextMobile(); //dont change this
             await restartClient(this.currentMobile);
-            await sleep(30000)
         }
     }
 
