@@ -233,10 +233,10 @@ export class UserDataDtoCrud {
         }
     }
 
-    async increaseReactCount(clientId: string) {
+    async increaseReactCount(clientId: string, number: number) {
         try {
             const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
-            return await promoteClientStatDb.updateOne({ clientId }, { $inc: { reactCount: 1 } })
+            return await promoteClientStatDb.updateOne({ clientId }, { $inc: { reactCount: number } })
         } catch (error) {
             parseError(error, "Error updating Client")
         }

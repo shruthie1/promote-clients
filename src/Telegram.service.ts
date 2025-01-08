@@ -26,9 +26,9 @@ export class TelegramService {
         return this.promoterInstance?.getDaysLeft(mobile);
     }
 
-    setMobiles(mobiles: string[]) {
+    async setMobiles(mobiles: string[]) {
         this.promoterInstance.setMobiles(mobiles)
-        this.reactorInstance.setMobiles(mobiles)
+        await this.reactorInstance.setMobiles(mobiles)
     }
     public async connectClients() {
         console.log("Connecting....!!");

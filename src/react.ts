@@ -30,6 +30,7 @@ export class Reactions {
     private nextMobileIndex = 0; // Index for round-robin mobile selection
     private currentMobile: string; // Index for round-robin mobile selection
     private mobiles: string[] = [];
+    private successCount = 0;
 
     private getClient: (clientId: string) => TelegramManager | undefined;
 
@@ -41,9 +42,12 @@ export class Reactions {
         console.log("Reaction Instance created")
     }
 
-    public setMobiles(mobiles: string[]) {
+    public async setMobiles(mobiles: string[]) {
         console.log("Setting Mobiles in Reaction Instance", mobiles.length);
         this.mobiles = mobiles
+        const db = UserDataDtoCrud.getInstance()
+        await db.increaseReactCount(process.env.clientId, this.successCount);
+        this.successCount = 0;
     }
 
     public getAverageReactionDelay() {
@@ -272,6 +276,7 @@ export class Reactions {
 
         // Add the new delay to the array
         this.reactionDelays.push(reactionDelay);
+        this.successCount++;
 
         // Ensure we only keep the last 20 delays
         if (this.reactionDelays.length > 20) {
@@ -281,8 +286,6 @@ export class Reactions {
         // Calculate the average of the last 20 delays
         const totalDelay = this.reactionDelays.reduce((sum, delay) => sum + delay, 0);
         this.averageReactionDelay = Math.floor(totalDelay / this.reactionDelays.length);
-        const db = UserDataDtoCrud.getInstance()
-        await db.increaseReactCount(process.env.clientId)
     }
 
     private async handleReactionError(

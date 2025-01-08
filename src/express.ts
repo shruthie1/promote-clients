@@ -210,7 +210,7 @@ export async function checkHealth() {
   const telegramService = TelegramService.getInstance();
   const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
   await sendToLogs({ message: `\nAverage Reaction Delay: ${telegramService.getAverageReactionDelay()}` });
-  telegramService.setMobiles(clientData.promoteMobile);
+  await telegramService.setMobiles(clientData.promoteMobile);
   for (const mobile of clientData.promoteMobile) {
     await sleep(1000);
     try {
