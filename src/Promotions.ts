@@ -21,8 +21,8 @@ export class Promotion {
     private nextMobileIndex = 0; // Index for round-robin mobile selection
     private sleepTime = 0;
     private channels: string[];
-    private minDelay: number = 185000;
-    private maxDelay: number = 240000;
+    private minDelay: number = 170000;
+    private maxDelay: number = 200000;
     private messageQueue: MessageQueueItem[] = []
     private messageCheckDelay: number = 20000;
     private promoteMsgs = {};
@@ -267,7 +267,7 @@ export class Promotion {
                     if (mobile) {
                         try {
 
-                            if (channelIndex > 100) {
+                            if (channelIndex > 200) {
                                 console.log("Refreshing channel list after reaching index 190...");
                                 this.channels = await this.fetchDialogs();
                                 channelIndex = 0;
@@ -331,7 +331,7 @@ export class Promotion {
                                         timestamp: Date.now(),
                                         messageIndex: randomIndex,
                                     });
-                                    console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username}`);
+                                    console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username} || chaneelIndex: ${channelIndex}`);
                                     const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                     console.log(`Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
                                     await sleep(randomBatchDelay);
@@ -349,7 +349,7 @@ export class Promotion {
                                         console.log(`Switching mobile after ${this.failCount} consecutive failures.`);
                                         const randomDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                         console.log(`Sleeping for ${(randomDelay / 60000).toFixed(2)} Mins`);
-                                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}` });
+                                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}\nchannelIndex: ${channelIndex}` });
                                         channelIndex = channelIndex - this.failCount
                                         this.failCount = 0;
                                         mobile = this.selectNextMobile();
