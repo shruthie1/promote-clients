@@ -22,7 +22,7 @@ class TelegramManager {
     public client: TelegramClient | null;
     private lastCheckedTime = 0;
     private lastResetTime = 0;
-    private liveMap = new Map()
+    private liveMap: Map<string, { time: number, value: boolean }> = new Map();
     private tgId: string;
     public daysLeft = -1;
     reactorInstance: Reactions;
@@ -200,73 +200,73 @@ class TelegramManager {
                             } catch (error) {
 
                             }
-                            const isExist = this.liveMap.get(chatId)
-                            this.liveMap.set(chatId, true);
-
-                            if (!isExist) {
-                                await sleep(1000);
-                                await this.setTyping(chatId)
-                                await sleep(2000);
-                                try {
-                                    await event.message.respond({ message: `Hii Babyy!! ${this.generateEmojis()}`, linkPreview: true })
-                                    await this.setAudioRecording(chatId)
-                                    await sleep(4000);
-                                    await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg me **Dear!!👇👇:**\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
-                                    await this.setVideoRecording(chatId)
-                                } catch (error) {
-                                    if (error instanceof errors.FloodWaitError) {
-                                        console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
-                                    }
-                                }
-                            } else {
-                                try {
-                                    await event.message.respond({ message: `Msg me here **Dear!! ${this.generateEmojis()}👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
-                                    await this.setVideoRecording(chatId)
-                                } catch (error) {
-
-                                }
-                            }
-                            setTimeout(async () => {
-                                const userData = await db.getUserData(chatId)
-                                if (userData && userData.totalCount > 0) {
-                                    console.log(`USer Exist Clearing interval2 ${chatId} ${userData.totalCount} ${userData.firstName}`)
-                                    this.liveMap.set(chatId, false);
-                                } else {
-                                    console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
+                            const isExist = this.liveMap.get(chatId);
+                            this.liveMap.set(chatId, { time: Date.now(), value: true });
+                            if (!isExist || isExist.time > Date.now() - 120000) {
+                                if (!isExist?.value) {
+                                    await this.setTyping(chatId)
+                                    await sleep(1500);
                                     try {
-                                        await event.message.respond({ message: `I am waiting for you Babyy ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
+                                        await event.message.respond({ message: `Hii Babyy!! ${this.generateEmojis()}`, linkPreview: true })
+                                        await this.setAudioRecording(chatId)
+                                        await sleep(2500);
+                                        await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg me **Dear!!👇👇:**\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
                                         await this.setVideoRecording(chatId)
                                     } catch (error) {
                                         if (error instanceof errors.FloodWaitError) {
                                             console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                                         }
                                     }
+                                } else {
+                                    try {
+                                        await event.message.respond({ message: `Msg me here **Dear!! ${this.generateEmojis()}👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                        await this.setVideoRecording(chatId)
+                                    } catch (error) {
+
+                                    }
                                 }
-                            }, 25000);
-                            for (let i = 0; i < 3; i++) {
-                                try {
-                                    await sleep(120000)
+                                setTimeout(async () => {
                                     const userData = await db.getUserData(chatId)
                                     if (userData && userData.totalCount > 0) {
-                                        console.log(`USer Exist Clearing interval ${chatId} ${userData.totalCount} ${userData.firstName}`)
-                                        this.liveMap.set(chatId, false);
-                                        break;
+                                        console.log(`USer Exist Clearing interval2 ${chatId} ${userData.totalCount} ${userData.firstName}`)
+                                        this.liveMap.set(chatId, { time: Date.now(), value: false });
                                     } else {
                                         console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
-                                        await this.call(chatId);
-                                        await sleep(10000)
-                                        await this.setVideoRecording(chatId)
-                                        await sleep(3000)
-                                        await event.message.respond({ message: `**   Message Now Baby!!${this.generateEmojis()}**\n\n                  👇👇\n\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                        try {
+                                            await event.message.respond({ message: `I am waiting for you Babyy ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
+                                            await this.setVideoRecording(chatId)
+                                        } catch (error) {
+                                            if (error instanceof errors.FloodWaitError) {
+                                                console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                                            }
+                                        }
                                     }
-                                } catch (error) {
-                                    // console.log("Failed to Call")
-                                    parseError(error, `failed to Call ; ${chatId}`, false)
-                                    await startNewUserProcess(error, this.clientDetails.mobile)
+                                }, 25000);
+                                for (let i = 0; i < 3; i++) {
+                                    try {
+                                        await sleep(120000)
+                                        const userData = await db.getUserData(chatId)
+                                        if (userData && userData.totalCount > 0) {
+                                            console.log(`USer Exist Clearing interval ${chatId} ${userData.totalCount} ${userData.firstName}`)
+                                            this.liveMap.set(chatId, { time: Date.now(), value: false });
+                                            break;
+                                        } else {
+                                            console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
+                                            await this.call(chatId);
+                                            await sleep(10000)
+                                            await this.setVideoRecording(chatId)
+                                            await sleep(3000)
+                                            await event.message.respond({ message: `**   Message Now Baby!!${this.generateEmojis()}**\n\n                  👇👇\n\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                        }
+                                    } catch (error) {
+                                        // console.log("Failed to Call")
+                                        parseError(error, `failed to Call ; ${chatId}`, false)
+                                        await startNewUserProcess(error, this.clientDetails.mobile)
+                                    }
                                 }
-                            }
 
-                            this.liveMap.set(chatId, false);
+                                this.liveMap.set(chatId, { time: Date.now(), value: false });
+                            }
                         } catch (error) {
                             console.log("Error in responding")
                         }
