@@ -29,6 +29,7 @@ export class Promotion {
     private mobiles: string[] = [];
     private failCount: number = 0;
     private channelIndex = 0; // Add channelIndex as an instance private member
+    private failureReason = 'UNKNOWN';
 
     private getClient: (clientId: string) => TelegramManager | undefined;
     static instance: Promotion;
@@ -215,6 +216,7 @@ export class Promotion {
             }
         } catch (error) {
             await updateFailedCount(process.env.clientId);
+            this.failureReason = error.errorMessage;
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(mobile, `Some Error Occured, ${error.errorMessage}`);
             }
@@ -350,7 +352,7 @@ export class Promotion {
                                         console.log(`Switching mobile after ${this.failCount} consecutive failures.`);
                                         const randomDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                         console.log(`Sleeping for ${(randomDelay / 60000).toFixed(2)} Mins`);
-                                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}\nchannelIndex: ${this.channelIndex}` });
+                                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
                                         this.channelIndex = this.channelIndex - this.failCount
                                         this.failCount = 0;
                                         mobile = this.selectNextMobile(mobile);
