@@ -335,7 +335,7 @@ export class Promotion {
                                     const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                     console.log(`Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
                                     await sleep(randomBatchDelay);
-                                    mobile = this.selectNextMobile();
+                                    mobile = this.selectNextMobile(mobile);
                                 } else {
                                     console.warn(`Message sending failed for channel: ${channelInfo.username || channelId}`);
                                     const floodData = this.limitControl.get(mobile)
@@ -352,7 +352,7 @@ export class Promotion {
                                         await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}\nchannelIndex: ${channelIndex}` });
                                         channelIndex = channelIndex - this.failCount
                                         this.failCount = 0;
-                                        mobile = this.selectNextMobile();
+                                        mobile = this.selectNextMobile(mobile);
                                         await sleep(randomDelay);
                                     }
                                 }
@@ -368,7 +368,7 @@ export class Promotion {
                     } else {
                         console.warn(`No mobile available. Retrying after delay.`);
                         await sleep(30000);
-                        mobile = this.selectNextMobile();
+                        mobile = this.selectNextMobile(mobile);
                     }
                 }
             } else {
@@ -484,13 +484,21 @@ export class Promotion {
         });
     }
 
-    private selectNextMobile(): string | null {
+    private selectNextMobile(currentMobile: string | null = null): string | null {
         const healthyMobiles = this.getHealthyMobiles();
         if (!healthyMobiles.length) {
             console.warn("No healthy mobiles available for Promotions");
             return null;
         }
-        const selectedMobile = healthyMobiles[this.nextMobileIndex % healthyMobiles.length];
+        let selectedMobile = healthyMobiles[this.nextMobileIndex % healthyMobiles.length];
+        if (currentMobile && healthyMobiles.length === 1 && selectedMobile === currentMobile) {
+            console.log(`Only one healthy mobile available and it is the current mobile: ${currentMobile}`);
+            return null;
+        }
+        if (currentMobile && healthyMobiles.length > 1 && selectedMobile === currentMobile) {
+            this.nextMobileIndex = (this.nextMobileIndex + 1) % healthyMobiles.length;
+            selectedMobile = healthyMobiles[this.nextMobileIndex % healthyMobiles.length];
+        }
         this.nextMobileIndex = (this.nextMobileIndex + 1) % healthyMobiles.length;
         return selectedMobile;
     }
