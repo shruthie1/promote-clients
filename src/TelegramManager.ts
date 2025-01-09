@@ -195,6 +195,7 @@ class TelegramManager {
                         console.log(`${this.clientDetails.mobile.toUpperCase()}:${broadcastName}-${chatId} :: `, event.message.text);
                         await sendToLogs({ message: `${this.clientDetails.mobile}\n${broadcastName}: ${event.message.text}` });
                         try {
+                            const db = UserDataDtoCrud.getInstance();
                             try {
                                 await event.client.markAsRead(event.chatId);
                             } catch (error) {
@@ -202,7 +203,7 @@ class TelegramManager {
                             }
                             const isExist = this.liveMap.get(chatId);
                             this.liveMap.set(chatId, { time: Date.now(), value: true });
-                            if (!isExist || isExist.time > Date.now() - 120000) {
+                            if (!isExist || (isExist && isExist.time < Date.now() - 120000)) {
                                 if (!isExist?.value) {
                                     await this.setTyping(chatId)
                                     await sleep(1500);
