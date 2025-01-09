@@ -108,8 +108,8 @@ export class Promotion {
     }
 
     async fetchDialogs() {
-        const totalBatches = 3; // Fetch three batches
-        const batchSize = 150;
+        const totalBatches = 1; // Fetch three batches
+        const batchSize = 500;
         const channelDataSet = new Set<string>(); // Use Set to avoid duplicates
         const channelDetails: { channelId: string; participantsCount: number }[] = [];
         console.log(`Fetching dialogs from clients...`);
@@ -126,9 +126,7 @@ export class Promotion {
                 }
 
                 await client.connect();
-
-                let offsetId = 0; // Reset offset for each mobile in this example
-                const dialogs = await client.getDialogs({ limit: batchSize, offsetId });
+                const dialogs = await client.getDialogs({ limit: batchSize });
 
                 if (!dialogs || dialogs.length === 0) {
                     console.warn("No dialogs retrieved from the client.");
@@ -139,7 +137,6 @@ export class Promotion {
                     if (dialog.isChannel || dialog.isGroup) {
                         const chatEntity = dialog.entity as Api.Channel;
 
-                        // Extract channel information
                         if (
                             !chatEntity.broadcast && // Exclude broadcast channels
                             chatEntity.participantsCount > 500 && // Minimum participants
@@ -162,19 +159,19 @@ export class Promotion {
             }
 
             // Sort channels by participantsCount
-            channelDetails.sort((a, b) => b.participantsCount - a.participantsCount);
+            // channelDetails.sort((a, b) => b.participantsCount - a.participantsCount);
             console.log(`Sorted channels by participants count: ${channelDetails.length}`);
 
-            // Fisher-Yates Shuffle on top 250
-            const topChannels = channelDetails.slice(0, 250);
-            for (let i = topChannels.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [topChannels[i], topChannels[j]] = [topChannels[j], topChannels[i]];
-            }
-            console.log(`Shuffled top channels`);
+            // // Fisher-Yates Shuffle on top 250
+            // const topChannels = channelDetails.slice(0, 250);
+            // for (let i = topChannels.length - 1; i > 0; i--) {
+            //     const j = Math.floor(Math.random() * (i + 1));
+            //     [topChannels[i], topChannels[j]] = [topChannels[j], topChannels[i]];
+            // }
+            // console.log(`Shuffled top channels`);
 
             // Return only the shuffled channel IDs
-            return topChannels.map(channel => channel.channelId);
+            return channelDetails.map(channel => channel.channelId);
 
         } catch (error) {
             parseError(error, `Error occurred while fetching dialogs`, true);
@@ -266,15 +263,14 @@ export class Promotion {
                 while (true) {
                     if (mobile) {
                         try {
-
                             if (channelIndex > 200) {
                                 console.log("Refreshing channel list after reaching index 190...");
                                 this.channels = await this.fetchDialogs();
                                 channelIndex = 0;
                                 continue;
                             }
-                            let randomIndex = '0'
 
+                            let randomIndex = '0'
                             const channelId = this.channels[channelIndex];
                             const channelInfo = await this.getChannelInfo(channelId);
 
@@ -293,31 +289,31 @@ export class Promotion {
                             if (!channelInfo.banned) {
 
                                 let sentMessage: Api.Message;
-                                if (channelInfo.wordRestriction === 0) {
-                                    // console.log(`Preparing unrestricted promotional message for channel: ${channelInfo.username}`);
-                                    const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
-                                    const emojis = generateEmojis();
-                                    const randomEmoji = getRandomEmoji();
-                                    const hour = getCurrentHourIST();
-                                    const isMorning = (hour > 9 && hour < 22);
-                                    const offset = Math.floor(Math.random() * 3);
-                                    const endMsg = pickOneMsg(['U bussy👀?', "I'm Aviilble!!😊💦", 'Trry Once!!😊💦', 'Trry Once!!😊💦', 'Waiiting fr ur mssg.....Dr!!💦', 'U Onliine?👀', "I'm Avilble!!😊", 'U Bussy??👀💦', 'U Intrstd??👀💦', 'U Awakke?👀💦', 'U therre???💦💦']);
-                                    const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`;
-                                    const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;
+                                // if (channelInfo.wordRestriction === 0) {
+                                //     // console.log(`Preparing unrestricted promotional message for channel: ${channelInfo.username}`);
+                                //     const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
+                                //     const emojis = generateEmojis();
+                                //     const randomEmoji = getRandomEmoji();
+                                //     const hour = getCurrentHourIST();
+                                //     const isMorning = (hour > 9 && hour < 22);
+                                //     const offset = Math.floor(Math.random() * 3);
+                                //     const endMsg = pickOneMsg(['U bussy👀?', "I'm Aviilble!!😊💦", 'Trry Once!!😊💦', 'Trry Once!!😊💦', 'Waiiting fr ur mssg.....Dr!!💦', 'U Onliine?👀', "I'm Avilble!!😊", 'U Bussy??👀💦', 'U Intrstd??👀💦', 'U Awakke?👀💦', 'U therre???💦💦']);
+                                //     const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`;
+                                //     const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;
 
-                                    // console.log(`Sending message: ${msg}\nAddon: ${addon}`);
-                                    sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: `${msg}\n${addon}` });
-                                } else {
-                                    // console.log(`Channel has word restriction. Selecting random available message.`);
-                                    randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
-                                    console.log(`Selected Msg for ${channelId}, ${channelInfo.title} | ChannelIdex:${channelIndex} | MsgIndex: ${randomIndex}`);
-                                    let randomAvailableMsg = this.promoteMsgs[randomIndex];
-                                    if (!randomAvailableMsg) {
-                                        console.log(`Random Msg Does not EXIST:  ${channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
-                                        randomAvailableMsg = "**Hiiiiii**"
-                                    }
-                                    sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: randomAvailableMsg });
+                                //     // console.log(`Sending message: ${msg}\nAddon: ${addon}`);
+                                //     sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: `${msg}\n${addon}` });
+                                // } else {
+                                // console.log(`Channel has word restriction. Selecting random available message.`);
+                                randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
+                                console.log(`Selected Msg for ${channelId}, ${channelInfo.title} | ChannelIdex:${channelIndex} | MsgIndex: ${randomIndex}`);
+                                let randomAvailableMsg = this.promoteMsgs[randomIndex];
+                                if (!randomAvailableMsg) {
+                                    console.log(`Random Msg Does not EXIST:  ${channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
+                                    randomAvailableMsg = "**Hiiiiii**"
                                 }
+                                sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: randomAvailableMsg });
+                                // }
 
                                 if (sentMessage) {
                                     if (this.failCount > 0) {

@@ -47,7 +47,7 @@ export class Reactions {
         this.mobiles = mobiles
         const db = UserDataDtoCrud.getInstance()
         const result = await db.increaseReactCount(process.env.clientId, this.successCount);
-        console.log("Updated React Success Count", result);
+        console.log("Updated React Success Count", this.successCount);
         this.successCount = 0;
         for (const mobile of mobiles) {
             if (!this.floodControl.has(mobile)) {
