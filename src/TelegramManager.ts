@@ -201,19 +201,25 @@ class TelegramManager {
                             } catch (error) {
 
                             }
-                            await sleep(1000);
-                            await this.setTyping(chatId)
-                            await sleep(2000);
+                            if (!this.liveMap.has(chatId)) {
+                                await sleep(1000);
+                                await this.setTyping(chatId)
+                                await sleep(2000);
+                                try {
+                                    await event.message.respond({ message: `Hii **${senderJson.firstName.toUpperCase()}** Baby!!😚😚`, linkPreview: true })
+                                    await this.setAudioRecording(chatId)
+                                    await sleep(4000);
+                                } catch (error) {
+                                    if (error instanceof errors.FloodWaitError) {
+                                        console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                                    }
+                                }
+                            }
                             try {
-                                await event.message.respond({ message: `Hii **${senderJson.firstName.toUpperCase()}** Baby!!😚😚`, linkPreview: true })
-                                await this.setAudioRecording(chatId)
-                                await sleep(4000);
                                 await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg here **Baby!!👇👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
                                 await this.setVideoRecording(chatId)
                             } catch (error) {
-                                if (error instanceof errors.FloodWaitError) {
-                                    console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
-                                }
+
                             }
                             const isExist = this.liveMap.get(chatId)
                             if (isExist) {
