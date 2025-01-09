@@ -392,7 +392,7 @@ export async function sendToLogs({
         console.error(`HTTP error: ${response.status} ${response.statusText}`);
       }
     } catch (error: any) {
-      if (error.code === 'ECONNABORTED') {
+      if (error.code === 'ECONNABORTED' || error.response?.status === 400) {
         console.error(
           `Timeout error with token ${token}:`,
           error.message,
