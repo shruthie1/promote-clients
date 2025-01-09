@@ -384,10 +384,10 @@ export async function sendToLogs({
       const response = await axios.get(apiUrl, { timeout: timeoutMs });
 
       if (response.status === 200) {
-        const data = response.data;
         return; // Exit on success
       } else if (response.status === 429) {
         console.error(`Rate limit error: ${response.status} ${response.statusText}`);
+        await sleep(1000); // Wait before retrying
       } else {
         console.error(`HTTP error: ${response.status} ${response.statusText}`);
       }
@@ -399,7 +399,7 @@ export async function sendToLogs({
           "message: ",
           decodeURIComponent(encodedMessage)
         );
-        break; // Exit loop on timeout
+        return;
       } else {
         if (error.response && error.response.status === 429) {
           console.error(
@@ -408,6 +408,7 @@ export async function sendToLogs({
             "message: ",
             decodeURIComponent(encodedMessage)
           );
+          await sleep(1000); // Wait before retrying
         } else {
           console.error(
             `Error with token ${token}:`,
@@ -416,15 +417,14 @@ export async function sendToLogs({
             decodeURIComponent(encodedMessage)
           );
         }
-        currentTokenIndex = (currentTokenIndex + 1) % tokens.length;
-        attempts++;
-
-        if (attempts < maxRetries) {
-          console.log(`Retrying with the next token...`);
-        }
-
       }
     }
+    currentTokenIndex = (currentTokenIndex + 1) % tokens.length;
+    attempts++;
+
+    if (attempts < maxRetries) {
+      console.log(`Retrying with the next token...`);
+    }
   }
-  // console.error(`Message sending failed after ${attempts} retries`);
+  console.error(`Message sending failed after ${attempts} retries`);
 }
