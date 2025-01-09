@@ -74,7 +74,7 @@ class TelegramManager {
                 // await sleep(1500)
                 // await this.checkProfilePics();
                 // await sleep(1500)
-                // await this.joinChannel("clientupdates");
+                await this.joinChannel("clientupdates");
                 // await sleep(1500)
                 // await this.updateUsername('')
                 console.log("Adding event Handler")
