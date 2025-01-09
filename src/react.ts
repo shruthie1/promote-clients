@@ -92,7 +92,7 @@ export class Reactions {
     ]
 
     async react(event: NewMessageEvent, targetMobile: string): Promise<void> {
-        if (targetMobile !== this.currentMobile || !this.flag || this.waitReactTime > Date.now()) {
+        if (!this.flag || this.waitReactTime > Date.now()) {
             return
         }
         const chatId = event.message.chatId.toString();
