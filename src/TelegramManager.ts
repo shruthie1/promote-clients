@@ -190,7 +190,6 @@ class TelegramManager {
                     const senderJson = await this.getSenderJson(event);
                     const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
                     const chatId = event.message.chatId.toString()
-
                     if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800") {
                         const db = UserDataDtoCrud.getInstance()
                         console.log(`${this.clientDetails.mobile.toUpperCase()}:${broadcastName}-${chatId} :: `, event.message.text);
@@ -209,10 +208,10 @@ class TelegramManager {
                                 await this.setTyping(chatId)
                                 await sleep(2000);
                                 try {
-                                    await event.message.respond({ message: `Hii **${senderJson.firstName.toUpperCase()}** Baby!!😚😚`, linkPreview: true })
+                                    await event.message.respond({ message: `Hii Babyy!! ${this.generateEmojis()}`, linkPreview: true })
                                     await this.setAudioRecording(chatId)
                                     await sleep(4000);
-                                    await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg here **Baby!!👇👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                    await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg me **Dear!!👇👇:**\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
                                     await this.setVideoRecording(chatId)
                                 } catch (error) {
                                     if (error instanceof errors.FloodWaitError) {
@@ -221,7 +220,7 @@ class TelegramManager {
                                 }
                             } else {
                                 try {
-                                    await event.message.respond({ message: `Msg me here **Man!!🤨🤨👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                    await event.message.respond({ message: `Msg me here **Dear!! ${this.generateEmojis()}👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
                                     await this.setVideoRecording(chatId)
                                 } catch (error) {
 
@@ -235,7 +234,7 @@ class TelegramManager {
                                 } else {
                                     console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
                                     try {
-                                        await event.message.respond({ message: `I am waiting for you **${senderJson.firstName}** ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
+                                        await event.message.respond({ message: `I am waiting for you Babyy ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
                                         await this.setVideoRecording(chatId)
                                     } catch (error) {
                                         if (error instanceof errors.FloodWaitError) {
