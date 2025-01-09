@@ -208,7 +208,7 @@ class TelegramManager {
                                 await event.message.respond({ message: `Hii **${senderJson.firstName.toUpperCase()}** Baby!!😚😚`, linkPreview: true })
                                 await this.setAudioRecording(chatId)
                                 await sleep(4000);
-                                await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg me here **Baby!!👇👇:**\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg here **Baby!!👇👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
                                 await this.setVideoRecording(chatId)
                             } catch (error) {
                                 if (error instanceof errors.FloodWaitError) {
@@ -224,17 +224,14 @@ class TelegramManager {
                                         console.log(`USer Exist Clearing interval2 ${chatId} ${userData.totalCount} ${userData.firstName}`)
                                         this.liveMap.set(chatId, false);
                                     } else {
+                                        console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
                                         try {
-                                            try {
-                                                await event.message.respond({ message: `I am waiting for you **${senderJson.firstName}** ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
-                                                await this.setVideoRecording(chatId)
-                                            } catch (error) {
-                                                if (error instanceof errors.FloodWaitError) {
-                                                    console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
-                                                }
-                                            }
+                                            await event.message.respond({ message: `I am waiting for you **${senderJson.firstName}** ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
+                                            await this.setVideoRecording(chatId)
                                         } catch (error) {
-
+                                            if (error instanceof errors.FloodWaitError) {
+                                                console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                                            }
                                         }
                                     }
                                 }, 25000);
@@ -247,6 +244,7 @@ class TelegramManager {
                                             this.liveMap.set(chatId, false);
                                             break;
                                         } else {
+                                            console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
                                             await this.call(chatId);
                                             await sleep(10000)
                                             await this.setVideoRecording(chatId)
