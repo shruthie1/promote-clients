@@ -45,14 +45,15 @@ export class Reactions {
     public async setMobiles(mobiles: string[]) {
         console.log("Setting Mobiles in Reaction Instance", mobiles.length);
         this.mobiles = mobiles
+        const db = UserDataDtoCrud.getInstance()
+        const result = await db.increaseReactCount(process.env.clientId, this.successCount);
+        console.log("Updated React Success Count", result);
+        this.successCount = 0;
         for (const mobile of mobiles) {
             if (!this.floodControl.has(mobile)) {
                 this.floodControl.set(mobile, { count: 0, releaseTime: 0, triggeredTime: 0 });
             }
         }
-        const db = UserDataDtoCrud.getInstance()
-        await db.increaseReactCount(process.env.clientId, this.successCount);
-        this.successCount = 0;
     }
 
     public getAverageReactionDelay() {
@@ -279,17 +280,11 @@ export class Reactions {
     private async updateReactionStats(): Promise<void> {
         const reactionDelay = Math.min(Date.now() - this.lastReactedtime, 25000); // Calculate current delay
         this.lastReactedtime = Date.now(); // Update last reacted time
-
-        // Add the new delay to the array
         this.reactionDelays.push(reactionDelay);
         this.successCount++;
-
-        // Ensure we only keep the last 20 delays
         if (this.reactionDelays.length > 20) {
             this.reactionDelays.shift();
         }
-
-        // Calculate the average of the last 20 delays
         const totalDelay = this.reactionDelays.reduce((sum, delay) => sum + delay, 0);
         this.averageReactionDelay = Math.floor(totalDelay / this.reactionDelays.length);
     }
