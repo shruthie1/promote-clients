@@ -209,18 +209,22 @@ class TelegramManager {
                                     await event.message.respond({ message: `Hii **${senderJson.firstName.toUpperCase()}** Baby!!😚😚`, linkPreview: true })
                                     await this.setAudioRecording(chatId)
                                     await sleep(4000);
+                                    await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg here **Baby!!👇👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                    await this.setVideoRecording(chatId)
                                 } catch (error) {
                                     if (error instanceof errors.FloodWaitError) {
                                         console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                                     }
                                 }
-                            }
-                            try {
-                                await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg here **Baby!!👇👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
-                                await this.setVideoRecording(chatId)
-                            } catch (error) {
+                            } else {
+                                try {
+                                    await event.message.respond({ message: `Msg me here **Man!!🤨🤨👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                    await this.setVideoRecording(chatId)
+                                } catch (error) {
 
+                                }
                             }
+
                             const isExist = this.liveMap.get(chatId)
                             if (isExist) {
                                 this.liveMap.set(chatId, true);
