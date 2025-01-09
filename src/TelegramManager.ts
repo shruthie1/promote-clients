@@ -470,7 +470,7 @@ class TelegramManager {
                 console.log("updating About")
                 await this.updateProfile(this.clientDetails.name, `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`);
             } else {
-                console.log("About is Good")
+                // console.log("About is Good")
             }
             if (!me.photo) {
                 await this.checkProfilePics();
