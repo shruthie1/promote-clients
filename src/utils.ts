@@ -365,19 +365,13 @@ interface SendToLogsOptions {
   maxRetries?: number;
   initialDelayMs?: number;
   timeoutMs?: number;
-  successCallback?: (response: any) => void;
-  errorCallback?: (error: Error) => void;
-  fallbackOnFailure?: (message: string) => void;
 }
 
 export async function sendToLogs({
   message,
   chatId = process.env.logsChatId,
   maxRetries = tokens.length,
-  timeoutMs = 500,
-  successCallback,
-  errorCallback,
-  fallbackOnFailure,
+  timeoutMs = 500
 }: SendToLogsOptions): Promise<void> {
   let attempts = 0;
   const encodedMessage = encodeURIComponent(`@${process.env.clientId.toUpperCase()}:${message}`);
@@ -391,12 +385,6 @@ export async function sendToLogs({
 
       if (response.status === 200) {
         const data = response.data;
-
-        // Invoke success callback if provided
-        if (successCallback) {
-          successCallback(data);
-        }
-
         return; // Exit on success
       } else if (response.status === 429) {
         console.error(`Rate limit error: ${response.status} ${response.statusText}`);
@@ -411,53 +399,32 @@ export async function sendToLogs({
           "message: ",
           decodeURIComponent(encodedMessage)
         );
-
-        // Invoke error callback if provided
-        if (errorCallback) {
-          errorCallback(error);
-        }
-
         break; // Exit loop on timeout
-      } else if (error.response && error.response.status === 429) {
-        console.error(
-          `Rate limit error with token ${token}:`,
-          error.message,
-          "message: ",
-          decodeURIComponent(encodedMessage)
-        );
-
-        // Invoke error callback if provided
-        if (errorCallback) {
-          errorCallback(error);
-        }
-
-        //break Exit loop on rate limit error
       } else {
-        console.error(
-          `Error with token ${token}:`,
-          error.message,
-          "message: ",
-          decodeURIComponent(encodedMessage)
-        );
-
-        // Invoke error callback if provided
-        if (errorCallback) {
-          errorCallback(error);
+        if (error.response && error.response.status === 429) {
+          console.error(
+            `Rate limit error with token ${token}:`,
+            error.message,
+            "message: ",
+            decodeURIComponent(encodedMessage)
+          );
+        } else {
+          console.error(
+            `Error with token ${token}:`,
+            error.message,
+            "message: ",
+            decodeURIComponent(encodedMessage)
+          );
         }
-
-        // Switch to the next token
         currentTokenIndex = (currentTokenIndex + 1) % tokens.length;
         attempts++;
 
         if (attempts < maxRetries) {
           console.log(`Retrying with the next token...`);
         }
+
       }
     }
   }
-  if (fallbackOnFailure) {
-    fallbackOnFailure(message);
-  }
-
   // console.error(`Message sending failed after ${attempts} retries`);
 }
