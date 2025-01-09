@@ -371,7 +371,7 @@ export async function sendToLogs({
   message,
   chatId = process.env.logsChatId,
   maxRetries = tokens.length,
-  timeoutMs = 500
+  timeoutMs = 800
 }: SendToLogsOptions): Promise<void> {
   let attempts = 0;
   const encodedMessage = encodeURIComponent(`@${process.env.clientId.toUpperCase()}:${message}`);

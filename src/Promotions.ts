@@ -28,6 +28,7 @@ export class Promotion {
     private promoteMsgs = {};
     private mobiles: string[] = [];
     private failCount: number = 0;
+    private channelIndex = 0; // Add channelIndex as an instance private member
 
     private getClient: (clientId: string) => TelegramManager | undefined;
     static instance: Promotion;
@@ -195,7 +196,7 @@ export class Promotion {
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     if (result) {
                         const data = this.limitControl.get(mobile);
-                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - data.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${data.daysLeft}` });
+                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - data.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${data.daysLeft}\nChannelIndex: ${this.channelIndex}` });
                         this.limitControl.set(mobile, { ...data, lastMessageTime: Date.now() });
                         await updateSuccessCount(process.env.clientId);
                         return result;
@@ -255,7 +256,7 @@ export class Promotion {
 
     public async promoteInBatches() {
         this.channels = await this.fetchDialogs();
-        let channelIndex = 0;
+        this.channelIndex = 0; // Initialize channelIndex
         let mobile = this.selectNextMobile();
 
         if (mobile && this.mobiles.length > 0) {
@@ -263,27 +264,27 @@ export class Promotion {
                 while (true) {
                     if (mobile) {
                         try {
-                            if (channelIndex > 200) {
+                            if (this.channelIndex > 200) {
                                 console.log("Refreshing channel list after reaching index 190...");
                                 this.channels = await this.fetchDialogs();
-                                channelIndex = 0;
+                                this.channelIndex = 0;
                                 continue;
                             }
 
                             let randomIndex = '0'
-                            const channelId = this.channels[channelIndex];
+                            const channelId = this.channels[this.channelIndex];
                             const channelInfo = await this.getChannelInfo(channelId);
 
                             if (!channelInfo) {
                                 console.error(`Channel info for ID ${channelId} not found.`);
-                                channelIndex++;
+                                this.channelIndex++;
                                 continue;
                             }
                             const notPattern = new RegExp('online|board|class|PROFIT|wholesale|retail|topper|exam|motivat|medico|shop|follower|insta|traini|cms|cma|subject|currency|color|amity|game|gamin|like|earn|popcorn|TANISHUV|bitcoin|crypto|mall|work|folio|health|civil|win|casino|shop|promot|english|invest|fix|money|book|anim|angime|support|cinema|bet|predic|study|youtube|sub|open|trad|cric|quot|exch|movie|search|film|offer|ott|deal|quiz|boost|dx|academ|insti|talkies|screen|series|webser', "i")
                             //make sure to add the channel title or username is not in the notPattern
                             if (channelInfo.title?.match(notPattern) || channelInfo.username?.match(notPattern)) {
                                 console.log(`Channel ${channelId} is not suitable for promotion. Skipping...`);
-                                channelIndex++;
+                                this.channelIndex++;
                                 continue;
                             }
                             if (!channelInfo.banned) {
@@ -306,7 +307,7 @@ export class Promotion {
                                 // } else {
                                 // console.log(`Channel has word restriction. Selecting random available message.`);
                                 randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
-                                console.log(`Selected Msg for ${channelId}, ${channelInfo.title} | ChannelIdex:${channelIndex} | MsgIndex: ${randomIndex}`);
+                                console.log(`Selected Msg for ${channelId}, ${channelInfo.title} | ChannelIdex:${this.channelIndex} | MsgIndex: ${randomIndex}`);
                                 let randomAvailableMsg = this.promoteMsgs[randomIndex];
                                 if (!randomAvailableMsg) {
                                     console.log(`Random Msg Does not EXIST:  ${channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
@@ -317,7 +318,7 @@ export class Promotion {
 
                                 if (sentMessage) {
                                     if (this.failCount > 0) {
-                                        channelIndex = channelIndex - this.failCount
+                                        this.channelIndex = this.channelIndex - this.failCount
                                         this.failCount = 0;
                                     }
                                     const floodData = this.limitControl.get(mobile)
@@ -331,7 +332,7 @@ export class Promotion {
                                         timestamp: Date.now(),
                                         messageIndex: randomIndex,
                                     });
-                                    console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username} || chaneelIndex: ${channelIndex}`);
+                                    console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username} || chaneelIndex: ${this.channelIndex}`);
                                     const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                     console.log(`Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
                                     await sleep(randomBatchDelay);
@@ -349,8 +350,8 @@ export class Promotion {
                                         console.log(`Switching mobile after ${this.failCount} consecutive failures.`);
                                         const randomDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                         console.log(`Sleeping for ${(randomDelay / 60000).toFixed(2)} Mins`);
-                                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}\nchannelIndex: ${channelIndex}` });
-                                        channelIndex = channelIndex - this.failCount
+                                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}\nchannelIndex: ${this.channelIndex}` });
+                                        this.channelIndex = this.channelIndex - this.failCount
                                         this.failCount = 0;
                                         mobile = this.selectNextMobile(mobile);
                                         await sleep(randomDelay);
@@ -360,7 +361,7 @@ export class Promotion {
                                 console.warn(`Channel is banned: ${channelInfo.username || channelId}`);
                             }
 
-                            channelIndex++;
+                            this.channelIndex++;
                         } catch (error) {
                             console.error(`Error in promoteInBatches for mobile ${mobile}:`, error);
                             await sleep(30000);
