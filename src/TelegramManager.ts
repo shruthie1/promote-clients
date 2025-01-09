@@ -218,6 +218,7 @@ class TelegramManager {
                                             console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                                         }
                                     }
+                                    await updateMsgCount(this.clientDetails.clientId)
                                 } else {
                                     try {
                                         await event.message.respond({ message: `Msg me here **Dear!! ${this.generateEmojis()}👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
@@ -271,7 +272,6 @@ class TelegramManager {
                         } catch (error) {
                             console.log("Error in responding")
                         }
-                        await updateMsgCount(this.clientDetails.clientId)
                     } else {
                         if (event.message.chatId.toString() == "178220800") {
                             console.log(`${this.clientDetails.mobile.toUpperCase()}:: ${broadcastName} :: `, event.message.text)
