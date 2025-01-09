@@ -267,18 +267,23 @@ export async function checkHealth() {
                     Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000),
                     `DaysLeft: ${telegramService.getDaysLeft(mobile)}`
                   );
-                  try {
-                    await telegramManager.client.invoke(new Api.updates.GetState());
-                    await telegramManager.client.markAsRead('myvcacc')
-                    await telegramManager.setTyping('myvcacc')
-                  } catch (e) {
-                    parseError(e, `${mobile} Error at Health Check`);
-                  }
                 }
                 clientsMap.set(mobile, clientDetails);
                 telegramManager.setClientDetails(clientDetails);
                 setTimeout(async () => {
-                  await telegramManager?.checkMe();
+                  try {
+                    await telegramManager?.checkMe();
+                    await telegramManager.client.invoke(new Api.updates.GetState());
+                    await telegramManager.client.markAsRead('myvcacc')
+                    await telegramManager.setTyping('myvcacc')
+                    setTimeout(async () => {
+                      await telegramManager.client.invoke(new Api.updates.GetState());
+                      await telegramManager.client.markAsRead('myvcacc')
+                      await telegramManager.setTyping('myvcacc')
+                    }, 150000);
+                  } catch (e) {
+                    parseError(e, `${mobile} Error at Health Check`);
+                  }
                 }, 30000);
               }
             } catch (e) {
