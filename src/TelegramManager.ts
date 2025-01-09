@@ -201,7 +201,10 @@ class TelegramManager {
                             } catch (error) {
 
                             }
-                            if (!this.liveMap.has(chatId)) {
+                            const isExist = this.liveMap.get(chatId)
+                            this.liveMap.set(chatId, true);
+
+                            if (!isExist) {
                                 await sleep(1000);
                                 await this.setTyping(chatId)
                                 await sleep(2000);
@@ -224,50 +227,46 @@ class TelegramManager {
 
                                 }
                             }
-
-                            const isExist = this.liveMap.get(chatId)
-                            if (isExist) {
-                                this.liveMap.set(chatId, true);
-                                setTimeout(async () => {
-                                    const userData = await db.getUserData(chatId)
-                                    if (userData && userData.totalCount > 0) {
-                                        console.log(`USer Exist Clearing interval2 ${chatId} ${userData.totalCount} ${userData.firstName}`)
-                                        this.liveMap.set(chatId, false);
-                                    } else {
-                                        console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
-                                        try {
-                                            await event.message.respond({ message: `I am waiting for you **${senderJson.firstName}** ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
-                                            await this.setVideoRecording(chatId)
-                                        } catch (error) {
-                                            if (error instanceof errors.FloodWaitError) {
-                                                console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
-                                            }
-                                        }
-                                    }
-                                }, 25000);
-                                for (let i = 0; i < 3; i++) {
+                            setTimeout(async () => {
+                                const userData = await db.getUserData(chatId)
+                                if (userData && userData.totalCount > 0) {
+                                    console.log(`USer Exist Clearing interval2 ${chatId} ${userData.totalCount} ${userData.firstName}`)
+                                    this.liveMap.set(chatId, false);
+                                } else {
+                                    console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
                                     try {
-                                        await sleep(120000)
-                                        const userData = await db.getUserData(chatId)
-                                        if (userData && userData.totalCount > 0) {
-                                            console.log(`USer Exist Clearing interval ${chatId} ${userData.totalCount} ${userData.firstName}`)
-                                            this.liveMap.set(chatId, false);
-                                            break;
-                                        } else {
-                                            console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
-                                            await this.call(chatId);
-                                            await sleep(10000)
-                                            await this.setVideoRecording(chatId)
-                                            await sleep(3000)
-                                            await event.message.respond({ message: `**   Message Now Baby!!${this.generateEmojis()}**\n\n                  👇👇\n\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
-                                        }
+                                        await event.message.respond({ message: `I am waiting for you **${senderJson.firstName}** ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
+                                        await this.setVideoRecording(chatId)
                                     } catch (error) {
-                                        // console.log("Failed to Call")
-                                        parseError(error, `failed to Call ; ${chatId}`, false)
-                                        await startNewUserProcess(error, this.clientDetails.mobile)
+                                        if (error instanceof errors.FloodWaitError) {
+                                            console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                                        }
                                     }
                                 }
+                            }, 25000);
+                            for (let i = 0; i < 3; i++) {
+                                try {
+                                    await sleep(120000)
+                                    const userData = await db.getUserData(chatId)
+                                    if (userData && userData.totalCount > 0) {
+                                        console.log(`USer Exist Clearing interval ${chatId} ${userData.totalCount} ${userData.firstName}`)
+                                        this.liveMap.set(chatId, false);
+                                        break;
+                                    } else {
+                                        console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
+                                        await this.call(chatId);
+                                        await sleep(10000)
+                                        await this.setVideoRecording(chatId)
+                                        await sleep(3000)
+                                        await event.message.respond({ message: `**   Message Now Baby!!${this.generateEmojis()}**\n\n                  👇👇\n\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                                    }
+                                } catch (error) {
+                                    // console.log("Failed to Call")
+                                    parseError(error, `failed to Call ; ${chatId}`, false)
+                                    await startNewUserProcess(error, this.clientDetails.mobile)
+                                }
                             }
+
                             this.liveMap.set(chatId, false);
                         } catch (error) {
                             console.log("Error in responding")
