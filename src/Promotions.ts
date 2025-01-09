@@ -43,7 +43,7 @@ export class Promotion {
             this.promoteMsgs = data;
         });
         for (const mobile of mobiles) {
-            this.limitControl.set(mobile, { daysLeft: -1, lastMessageTime: Date.now() - 5 * 60 * 1000 });
+            this.limitControl.set(mobile, { daysLeft: -1, lastMessageTime: Date.now() - 13 * 60 * 1000 });
         }
     }
 
@@ -52,7 +52,7 @@ export class Promotion {
         this.mobiles = mobiles;
         for (const mobile of mobiles) {
             if (!this.limitControl.has(mobile)) {
-                this.limitControl.set(mobile, { daysLeft: -1, lastMessageTime: Date.now() - 5 * 60 * 1000 });
+                this.limitControl.set(mobile, { daysLeft: -1, lastMessageTime: Date.now() - 13 * 60 * 1000 });
             }
         }
     }

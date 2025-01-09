@@ -431,7 +431,7 @@ export async function sendToLogs({
           errorCallback(error);
         }
 
-        break; // Exit loop on rate limit error
+        //break Exit loop on rate limit error
       } else {
         console.error(
           `Error with token ${token}:`,
