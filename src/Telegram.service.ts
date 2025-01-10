@@ -48,7 +48,7 @@ export class TelegramService {
             TelegramService.promotersMap.set(mobile, promoterInstance);
             setTimeout(() => {
                 promoterInstance.startPromotion();
-            }, 30000);
+            }, 60000);
         }
         console.log("Connected....!!");
     }
