@@ -331,7 +331,9 @@ export class Promotion {
 
                             if (sentMessage) {
                                 if (this.failCount > 0) {
-                                    this.channelIndex = this.channelIndex - this.failCount
+                                    //remove the channel from channel list using channelIndex
+                                    this.channels.splice(this.channelIndex, 1);
+                                    this.channelIndex = this.channelIndex - this.failCount - 1
                                     this.failCount = 0;
                                 }
                                 const floodData = this.limitControl.get(mobile)
@@ -364,7 +366,7 @@ export class Promotion {
                                     const randomDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                     console.log(`Sleeping for ${(randomDelay / 60000).toFixed(2)} Mins`);
                                     await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
-                                    this.channelIndex = this.channelIndex - this.failCount
+                                    this.channelIndex = this.channelIndex - this.failCount - 1
                                     this.failCount = 0;
                                     mobile = this.selectNextMobile(mobile);
                                     await sleep(randomDelay);
