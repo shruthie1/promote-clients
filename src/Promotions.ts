@@ -266,14 +266,14 @@ export class Promotion {
                 while (true) {
                     if (mobile) {
                         try {
-                            if (this.channelIndex > 200) {
+                            if (this.channelIndex > 100) {
                                 console.log("Refreshing channel list after reaching index 190...");
                                 this.channels = await this.fetchDialogs();
                                 this.channelIndex = 0;
                                 continue;
                             }
 
-                            let randomIndex = '0'
+                            let randomIndex = 'id'
                             const channelId = this.channels[this.channelIndex];
                             const channelInfo = await this.getChannelInfo(channelId);
 
@@ -292,31 +292,31 @@ export class Promotion {
                             if (!channelInfo.banned) {
 
                                 let sentMessage: Api.Message;
-                                // if (channelInfo.wordRestriction === 0) {
-                                //     // console.log(`Preparing unrestricted promotional message for channel: ${channelInfo.username}`);
-                                //     const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
-                                //     const emojis = generateEmojis();
-                                //     const randomEmoji = getRandomEmoji();
-                                //     const hour = getCurrentHourIST();
-                                //     const isMorning = (hour > 9 && hour < 22);
-                                //     const offset = Math.floor(Math.random() * 3);
-                                //     const endMsg = pickOneMsg(['U bussy👀?', "I'm Aviilble!!😊💦", 'Trry Once!!😊💦', 'Trry Once!!😊💦', 'Waiiting fr ur mssg.....Dr!!💦', 'U Onliine?👀', "I'm Avilble!!😊", 'U Bussy??👀💦', 'U Intrstd??👀💦', 'U Awakke?👀💦', 'U therre???💦💦']);
-                                //     const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`;
-                                //     const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;
+                                if (channelInfo.wordRestriction === 0) {
+                                    // console.log(`Preparing unrestricted promotional message for channel: ${channelInfo.username}`);
+                                    const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
+                                    const emojis = generateEmojis();
+                                    const randomEmoji = getRandomEmoji();
+                                    const hour = getCurrentHourIST();
+                                    const isMorning = (hour > 9 && hour < 22);
+                                    const offset = Math.floor(Math.random() * 3);
+                                    const endMsg = pickOneMsg(['U bussy👀?', "I'm Aviilble!!😊💦", 'Trry Once!!😊💦', 'Trry Once!!😊💦', 'Waiiting fr ur mssg.....Dr!!💦', 'U Onliine?👀', "I'm Avilble!!😊", 'U Bussy??👀💦', 'U Intrstd??👀💦', 'U Awakke?👀💦', 'U therre???💦💦']);
+                                    const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`;
+                                    const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;
 
-                                //     // console.log(`Sending message: ${msg}\nAddon: ${addon}`);
-                                //     sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: `${msg}\n${addon}` });
-                                // } else {
-                                // console.log(`Channel has word restriction. Selecting random available message.`);
-                                randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
-                                console.log(`Selected Msg for ${channelId}, ${channelInfo.title} | ChannelIdex:${this.channelIndex} | MsgIndex: ${randomIndex}`);
-                                let randomAvailableMsg = this.promoteMsgs[randomIndex];
-                                if (!randomAvailableMsg) {
-                                    console.log(`Random Msg Does not EXIST:  ${channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
-                                    randomAvailableMsg = "**Hiiiiii**"
+                                    // console.log(`Sending message: ${msg}\nAddon: ${addon}`);
+                                    sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: `${msg}\n${addon}` });
+                                } else {
+                                    console.log(`Channel has word restriction. Selecting random available message.`);
+                                    randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
+                                    console.log(`Selected Msg for ${channelId}, ${channelInfo.title} | ChannelIdex:${this.channelIndex} | MsgIndex: ${randomIndex}`);
+                                    let randomAvailableMsg = this.promoteMsgs[randomIndex];
+                                    if (!randomAvailableMsg) {
+                                        console.log(`Random Msg Does not EXIST:  ${channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
+                                        randomAvailableMsg = "**Hiiiiii**"
+                                    }
+                                    sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: randomAvailableMsg });
                                 }
-                                sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: randomAvailableMsg });
-                                // }
 
                                 if (sentMessage) {
                                     if (this.failCount > 0) {
