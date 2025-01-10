@@ -289,6 +289,12 @@ export class Promotion {
                                 this.channelIndex++;
                                 continue;
                             }
+                            if (await this.calculateChannelScore(this.getClient(mobile).client, channelInfo) < 50) {
+                                console.log(`Channel ${channelId} has low score. Skipping...`);
+                                this.channelIndex++;
+                                continue;
+
+                            }
                             if (!channelInfo.banned) {
 
                                 let sentMessage: Api.Message;
@@ -421,6 +427,50 @@ export class Promotion {
             const errorDetails = parseError(error, `${mobile}`, false)
         }
         return undefined;
+    }
+
+    async calculateChannelScore(client: TelegramClient, channelInfo: IChannel): Promise<number> {
+        try {
+            const messages = await client.getMessages(channelInfo.channelId, { limit: 50, });
+            const thirtyMinutesInMs = 30 * 60 * 1000;
+            const currentTime = Date.now();
+            const recentMessages = messages.filter(
+                (msg: any) => msg.senderId && currentTime - msg.date * 1000 < thirtyMinutesInMs
+            );
+
+            console.log('Recent Messages Length:', recentMessages.length);
+
+            const activeUsers = new Set(
+                recentMessages
+                    .filter((msg) => {
+                        return (msg.senderId && msg.senderId.toString() !== '609517172' && Date.now() - msg.date * 1000 < 3600000)
+                    })
+                    .map((msg: any) => msg.senderId),
+            );
+
+            const engagementScore = messages.reduce(
+                (score: number, msg: any) => (msg.reactions?.count || 0) + (msg.replyTo ? 1 : 0),
+                0,
+            );
+
+
+            let baseScore = activeUsers.size + engagementScore * 2;
+            const dynamicThreshold = Math.floor(channelInfo.participantsCount / 2000)
+
+            console.log('Msgs Length:', messages.length)
+            console.log("ActiveUsers: ", activeUsers.size)
+            console.log("Engagement Score: ", engagementScore)
+            console.log("Base Score:", baseScore);
+            console.log("dYnamic threashold :", dynamicThreshold);
+
+            const score = baseScore + dynamicThreshold;
+
+            console.log(`Channel ${channelInfo.username} score: ${score}`);
+            return score;
+        } catch (err) {
+            console.error(`Failed to score ${channelInfo.username}:`, err.message);
+            return 0;
+        }
     }
 
     async handleDeletedMessage(channelId: string, messageIndex: string) {
