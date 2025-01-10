@@ -295,7 +295,8 @@ export class Promotion {
                                 this.channelIndex++;
                                 continue;
                             }
-                            if (await this.calculateChannelScore(this.getClient(mobile).client, channelInfo) < 30) {
+                            const channelScore = await this.calculateChannelScore(this.getClient(mobile).client, channelInfo);
+                            if (channelScore < 30) {
                                 console.log(`Channel ${channelId} has low score. Skipping...`);
                                 await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score. Skipping...` });
                                 this.channelIndex++;
@@ -348,7 +349,7 @@ export class Promotion {
                                     timestamp: Date.now(),
                                     messageIndex: randomIndex,
                                 });
-                                console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username} || chaneelIndex: ${this.channelIndex}`);
+                                console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username} || channelIndex: ${this.channelIndex}`);
                                 const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                 console.log(`Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
                                 await sleep(randomBatchDelay);
@@ -366,7 +367,7 @@ export class Promotion {
                                     console.log(`Switching mobile after ${this.failCount} consecutive failures.`);
                                     const randomDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
                                     console.log(`Sleeping for ${(randomDelay / 60000).toFixed(2)} Mins`);
-                                    await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
+                                    await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}\nchannelScore: ${channelScore}` });
                                     this.channelIndex = this.channelIndex - this.failCount - 1
                                     this.failCount = 0;
                                     mobile = this.selectNextMobile(mobile);
