@@ -434,17 +434,15 @@ export class Promotion {
         return undefined;
     }
 
-    async calculateChannelScore(client: TelegramClient, channelInfo: IChannel): Promise<{ score: number, baseScore: number, dynamicThreshold: number, engagementScore: number }> {
+    async calculateChannelScore(client: TelegramClient, channelInfo: IChannel, forceUsername: boolean = false): Promise<{ score: number, baseScore: number, dynamicThreshold: number, engagementScore: number, activeUsers: number }> {
         try {
-            const messages = await client.getMessages(channelInfo.channelId, { limit: 50, });
+            const entity = forceUsername && channelInfo.username ? channelInfo.username : channelInfo.channelId
+            const messages = await client.getMessages(entity, { limit: 50, });
             const tenMins = 10 * 60 * 1000;
             const currentTime = Date.now();
             const recentMessages = messages.filter(
                 (msg: any) => msg.senderId && currentTime - msg.date * 1000 < tenMins
             );
-
-            console.log('Recent Messages Length:', recentMessages.length);
-
             const activeUsers = new Set(
                 recentMessages
                     .filter((msg) => {
@@ -471,18 +469,19 @@ export class Promotion {
             const score = baseScore + dynamicThreshold;
 
             console.log(`Channel ${channelInfo.username} score: ${score}, baseScore: ${baseScore}, dynamicThreshold: ${dynamicThreshold},participantsCount: ${channelInfo.participantsCount}`);
-            return { score, baseScore, dynamicThreshold, engagementScore };
+            return { score, baseScore, dynamicThreshold, engagementScore, activeUsers: activeUsers.size };
         } catch (err) {
-            parseError(err, `Failed to score ${channelInfo.username}`, false);
-            if (err.message.includes('Could not find the input entity')) {
+            const errorDetails = parseError(err, `Failed to score ${channelInfo.username}`, false);
+            if (errorDetails.message.includes('Could not find the input entity')) {
                 try {
+                    console.error(`trying to join channel ${channelInfo.username}`);
                     await client.invoke(new Api.channels.JoinChannel({ channel: channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId }));
-                    return await this.calculateChannelScore(client, channelInfo);
+                    return await this.calculateChannelScore(client, channelInfo, true);
                 } catch (error) {
                     console.error(`Failed to join channel ${channelInfo.username}:`, error.message);
                 }
             }
-            return { score: 0, baseScore: 0, dynamicThreshold: 0, engagementScore: 0 };
+            return { score: 0, baseScore: 0, dynamicThreshold: 0, engagementScore: 0, activeUsers: 0 };
         }
     }
 
