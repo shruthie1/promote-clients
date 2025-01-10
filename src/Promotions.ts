@@ -295,7 +295,7 @@ export class Promotion {
                                 this.channelIndex++;
                                 continue;
                             }
-                            if (await this.calculateChannelScore(this.getClient(mobile).client, channelInfo) < 50) {
+                            if (await this.calculateChannelScore(this.getClient(mobile).client, channelInfo) < 30) {
                                 console.log(`Channel ${channelId} has low score. Skipping...`);
                                 await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score. Skipping...` });
                                 this.channelIndex++;
@@ -436,10 +436,10 @@ export class Promotion {
     async calculateChannelScore(client: TelegramClient, channelInfo: IChannel): Promise<number> {
         try {
             const messages = await client.getMessages(channelInfo.channelId, { limit: 50, });
-            const thirtyMinutesInMs = 30 * 60 * 1000;
+            const tenMins = 10 * 60 * 1000;
             const currentTime = Date.now();
             const recentMessages = messages.filter(
-                (msg: any) => msg.senderId && currentTime - msg.date * 1000 < thirtyMinutesInMs
+                (msg: any) => msg.senderId && currentTime - msg.date * 1000 < tenMins
             );
 
             console.log('Recent Messages Length:', recentMessages.length);
@@ -472,9 +472,8 @@ export class Promotion {
             console.log(`Channel ${channelInfo.username} score: ${score}, baseScore: ${baseScore}, dynamicThreshold: ${dynamicThreshold},participantsCount: ${channelInfo.participantsCount}`);
             return score;
         } catch (err) {
-            console.log(err)
-            console.error(`Failed to score ${channelInfo.username}:`, err.message);
-            if (err.message.startsWith('Could not find the input entity')) {
+            parseError(err, `Failed to score ${channelInfo.username}`, false);
+            if (err.message.includes('Could not find the input entity')) {
                 try {
                     await client.invoke(new Api.channels.JoinChannel({ channel: channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId }));
                     return await this.calculateChannelScore(client, channelInfo);
