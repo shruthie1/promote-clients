@@ -296,9 +296,9 @@ export class Promotion {
                                 continue;
                             }
                             const channelScore = await this.calculateChannelScore(this.getClient(mobile).client, channelInfo);
-                            if (channelScore.score < 30) {
+                            if (channelScore.score < 30 || channelScore.recentMessages > 70) {
                                 console.log(`Channel ${channelId} has low score of ${channelScore}. Skipping...`);
-                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score.\nscore: ${channelScore.score}\nbaseScore: ${channelScore.baseScore}\nengagement: ${channelScore.engagementScore}\ndynamic: ${channelScore.dynamicThreshold}` });
+                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score.\nscore: ${channelScore.score}\nbaseScore: ${channelScore.baseScore}\nengagement: ${channelScore.engagementScore}\ndynamic: ${channelScore.dynamicThreshold}\nrecentMessages: ${channelScore.recentMessages}` });
                                 this.channelIndex++;
                                 continue;
 
@@ -434,10 +434,10 @@ export class Promotion {
         return undefined;
     }
 
-    async calculateChannelScore(client: TelegramClient, channelInfo: IChannel, forceUsername: boolean = false): Promise<{ score: number, baseScore: number, dynamicThreshold: number, engagementScore: number, activeUsers: number }> {
+    async calculateChannelScore(client: TelegramClient, channelInfo: IChannel, forceUsername: boolean = false): Promise<{ score: number, baseScore: number, dynamicThreshold: number, engagementScore: number, activeUsers: number, recentMessages: number }> {
         try {
             const entity = forceUsername && channelInfo.username ? channelInfo.username : channelInfo.channelId
-            const messages = await client.getMessages(entity, { limit: 50, });
+            const messages = await client.getMessages(entity, { limit: 100, });
             const tenMins = 10 * 60 * 1000;
             const currentTime = Date.now();
             const recentMessages = messages.filter(
@@ -469,7 +469,7 @@ export class Promotion {
             const score = baseScore + dynamicThreshold;
 
             console.log(`Channel ${channelInfo.username} score: ${score}, baseScore: ${baseScore}, dynamicThreshold: ${dynamicThreshold},participantsCount: ${channelInfo.participantsCount}`);
-            return { score, baseScore, dynamicThreshold, engagementScore, activeUsers: activeUsers.size };
+            return { score, baseScore, dynamicThreshold, engagementScore, activeUsers: activeUsers.size, recentMessages: recentMessages.length };
         } catch (err) {
             const errorDetails = parseError(err, `Failed to score ${channelInfo.username}`, false);
             if (errorDetails.message.includes('Could not find the input entity')) {
@@ -481,7 +481,7 @@ export class Promotion {
                     console.error(`Failed to join channel ${channelInfo.username}:`, error.message);
                 }
             }
-            return { score: 0, baseScore: 0, dynamicThreshold: 0, engagementScore: 0, activeUsers: 0 };
+            return { score: 0, baseScore: 0, dynamicThreshold: 0, engagementScore: 0, activeUsers: 0, recentMessages: 0 };
         }
     }
 
