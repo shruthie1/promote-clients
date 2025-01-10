@@ -231,7 +231,7 @@ export class Promotion {
         this.channels = await this.fetchDialogs();
         this.channelIndex = 0; // Initialize channelIndex
         if (this.channels.length > 0) {
-            while (true) {
+            while (this.channelIndex < this.channels.length) {
                 try {
                     if (this.channelIndex > 100) {
                         await this.refreshChannelList();
@@ -246,7 +246,13 @@ export class Promotion {
                         continue;
                     }
 
-                    const channelScore = await this.calculateChannelScore(this.tgManager.client, channelInfo);
+                    const client = this.tgManager?.client;
+                    if (!client) {
+                        console.error(`Client is undefined for mobile ${this.mobile}. Stopping promotion.`);
+                        break;
+                    }
+
+                    const channelScore = await this.calculateChannelScore(client, channelInfo);
                     if (this.isLowScore(channelScore)) {
                         this.channelIndex++;
                         continue;
@@ -371,6 +377,7 @@ export class Promotion {
         await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Issue with Promotions`);
         setTimeout(() => {
             console.log("Issue with Promotions. Restarting client...");
+            this.startPromotion();
         }, 300000);
     }
     async handlePrivateChannel(client: TelegramClient, channelInfo: IChannel, message: SendMessageParams, error: any) {

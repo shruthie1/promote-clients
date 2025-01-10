@@ -43,11 +43,10 @@ export class TelegramService {
         this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this))
         for (const mobile of mobiles) {
             const clientDetails = getClientDetails(mobile)
-            const tgManager = await this.createClient(clientDetails, false, true);
-            const promoterInstance = new Promotion(tgManager);
-            TelegramService.promotersMap.set(mobile, promoterInstance);
+            await this.createClient(clientDetails, false, true);
             setTimeout(() => {
-                promoterInstance.startPromotion();
+                const promoterInstance = TelegramService.promotersMap.get(mobile);
+                promoterInstance?.startPromotion();
             }, 60000);
         }
         console.log("Connected....!!");
@@ -137,6 +136,8 @@ export class TelegramService {
             try {
                 const client = await telegramManager.createClient(handler);
                 TelegramService.clientsMap.set(clientDetails.mobile, telegramManager);
+                const promoterInstance = new Promotion(telegramManager);
+                TelegramService.promotersMap.set(clientDetails.mobile, promoterInstance);
                 if (client) {
                     await client.getMe();
                     if (autoDisconnect) {
