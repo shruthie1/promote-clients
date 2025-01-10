@@ -86,7 +86,7 @@ export class Promotion {
 
     async fetchDialogs() {
         const totalBatches = 1; // Fetch three batches
-        const batchSize = 500;
+        const batchSize = 250;
         const channelDataSet = new Set<string>(); // Use Set to avoid duplicates
         const channelDetails: { channelId: string; participantsCount: number }[] = [];
         console.log(`Fetching dialogs from clients...`);
