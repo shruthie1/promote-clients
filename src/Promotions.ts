@@ -1,7 +1,7 @@
 import { TelegramClient, Api, errors } from "telegram";
 import { UserDataDtoCrud } from "./dbservice";
 import { generateEmojis, getCurrentHourIST, getRandomEmoji, IChannel, ppplbot, selectRandomElements, sendToLogs, sleep } from "./utils";
-import { updateFailedCount, updateSuccessCount } from "./express";
+import { restartClient, updateFailedCount, updateSuccessCount } from "./express";
 import { parseError } from "./parseError";
 import { SendMessageParams } from "telegram/client/messages";
 import { pickOneMsg } from "./messages";
@@ -33,15 +33,19 @@ export class Promotion {
     private mobile: string;
 
     public constructor(tgManager: TelegramManager) {
-        console.log("Promotion Instance created");
-        this.tgManager = tgManager;
-        this.mobile = tgManager.clientDetails.mobile;
-        setInterval(() => this.checkQueuedMessages(), this.messageCheckDelay);
-        const db = UserDataDtoCrud.getInstance();
-        db.getPromoteMsgs().then((data) => {
-            this.promoteMsgs = data;
-        });
-        this.tgManager.on('setDaysLeft', this.setDaysLeft.bind(this));
+        if (tgManager) {
+            console.log("Promotion Instance created tgManager available");
+            this.tgManager = tgManager;
+            this.mobile = tgManager.clientDetails.mobile;
+            setInterval(() => this.checkQueuedMessages(), this.messageCheckDelay);
+            const db = UserDataDtoCrud.getInstance();
+            db.getPromoteMsgs().then((data) => {
+                this.promoteMsgs = data;
+            });
+            this.tgManager.on('setDaysLeft', this.setDaysLeft.bind(this));
+        } else {
+            console.log("Promotion Instance created but TGManager is NOT available");
+        }
     }
 
     async checkQueuedMessages() {
@@ -97,7 +101,8 @@ export class Promotion {
 
                 if (!client) {
                     console.warn(`Client not available for mobile: ${this.mobile}`);
-                    continue;
+                    restartClient(this.mobile);
+                    break;
                 }
 
                 await client.connect();
@@ -249,6 +254,7 @@ export class Promotion {
                     const client = this.tgManager?.client;
                     if (!client) {
                         console.error(`Client is undefined for mobile ${this.mobile}. Stopping promotion.`);
+                        restartClient(this.mobile);
                         break;
                     }
 
@@ -272,7 +278,6 @@ export class Promotion {
             }
         } else {
             console.error(`No channels available for promotion.`);
-            this.channels = await this.fetchDialogs();
         }
 
         await this.sendFailureAlert();

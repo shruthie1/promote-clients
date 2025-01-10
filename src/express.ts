@@ -400,6 +400,7 @@ export async function restartClient(mobile: string) {
 
     if (tgManager) {
       await telegramService.disposeClient(mobile);
+      await sleep(2000);
       await telegramService.createClient(clientDetails, false, true);
     } else {
       console.error(`TelegramManager instance not found for clientId: ${mobile}`);

@@ -89,6 +89,10 @@ export class TelegramService {
             let tgManager = await this.getClient(mobile);
             if (tgManager) {
                 await tgManager.destroy();
+                tgManager = null;
+                let promotorInstance = TelegramService.promotersMap.get(mobile);
+                promotorInstance = null
+                TelegramService.promotersMap.delete(mobile);
                 console.log(`Disconnected and disposed old client for ${mobile}.`)
             }
             return TelegramService.clientsMap.delete(mobile)
