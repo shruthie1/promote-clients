@@ -472,6 +472,7 @@ export class Promotion {
             console.log(`Channel ${channelInfo.username} score: ${score}, baseScore: ${baseScore}, dynamicThreshold: ${dynamicThreshold},participantsCount: ${channelInfo.participantsCount}`);
             return score;
         } catch (err) {
+            console.log(err)
             console.error(`Failed to score ${channelInfo.username}:`, err.message);
             if (err.message.startsWith('Could not find the input entity')) {
                 try {
