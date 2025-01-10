@@ -296,9 +296,9 @@ export class Promotion {
                                 continue;
                             }
                             const channelScore = await this.calculateChannelScore(this.getClient(mobile).client, channelInfo);
-                            if (channelScore < 30) {
-                                console.log(`Channel ${channelId} has low score. Skipping...`);
-                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score. Skipping...` });
+                            if (channelScore.score < 30) {
+                                console.log(`Channel ${channelId} has low score of ${channelScore}. Skipping...`);
+                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score.\nscore: ${channelScore.score}\nbaseScore: ${channelScore.baseScore}\nengagement: ${channelScore.engagementScore}\ndynamic: ${channelScore.dynamicThreshold}` });
                                 this.channelIndex++;
                                 continue;
 
@@ -434,7 +434,7 @@ export class Promotion {
         return undefined;
     }
 
-    async calculateChannelScore(client: TelegramClient, channelInfo: IChannel): Promise<number> {
+    async calculateChannelScore(client: TelegramClient, channelInfo: IChannel): Promise<{ score: number, baseScore: number, dynamicThreshold: number, engagementScore: number }> {
         try {
             const messages = await client.getMessages(channelInfo.channelId, { limit: 50, });
             const tenMins = 10 * 60 * 1000;
@@ -471,7 +471,7 @@ export class Promotion {
             const score = baseScore + dynamicThreshold;
 
             console.log(`Channel ${channelInfo.username} score: ${score}, baseScore: ${baseScore}, dynamicThreshold: ${dynamicThreshold},participantsCount: ${channelInfo.participantsCount}`);
-            return score;
+            return { score, baseScore, dynamicThreshold, engagementScore };
         } catch (err) {
             parseError(err, `Failed to score ${channelInfo.username}`, false);
             if (err.message.includes('Could not find the input entity')) {
@@ -482,7 +482,7 @@ export class Promotion {
                     console.error(`Failed to join channel ${channelInfo.username}:`, error.message);
                 }
             }
-            return 0;
+            return { score: 0, baseScore: 0, dynamicThreshold: 0, engagementScore: 0 };
         }
     }
 
