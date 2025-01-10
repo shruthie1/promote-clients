@@ -296,9 +296,10 @@ export class Promotion {
                                 continue;
                             }
                             const channelScore = await this.calculateChannelScore(this.getClient(mobile).client, channelInfo);
-                            if (channelScore.score < 30 || channelScore.recentMessages > 70) {
+                            const score = channelScore.participantOffset + channelScore.activeUsers
+                            if (score < 30 || channelScore.recentMessages > 70) {
                                 console.log(`Channel ${channelId} has low score of ${channelScore}. Skipping...`);
-                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score.\nscore: ${channelScore.score}\nbaseScore: ${channelScore.baseScore}\nengagement: ${channelScore.engagementScore}\ndynamic: ${channelScore.dynamicThreshold}\nrecentMessages: ${channelScore.recentMessages}\nactiveUSers: ${channelScore.activeUsers}` });
+                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score.\nscore: ${score}\nparticipantOffset: ${channelScore.participantOffset}\nrecentMessages: ${channelScore.recentMessages}\nactiveUSers: ${channelScore.activeUsers}` });
                                 this.channelIndex++;
                                 continue;
 
@@ -434,7 +435,7 @@ export class Promotion {
         return undefined;
     }
 
-    async calculateChannelScore(client: TelegramClient, channelInfo: IChannel, forceUsername: boolean = false): Promise<{ score: number, baseScore: number, dynamicThreshold: number, engagementScore: number, activeUsers: number, recentMessages: number }> {
+    async calculateChannelScore(client: TelegramClient, channelInfo: IChannel, forceUsername: boolean = false): Promise<{ participantOffset: number, activeUsers: number, recentMessages: number }> {
         try {
             const entity = forceUsername && channelInfo.username ? channelInfo.username : channelInfo.channelId
             const messages = await client.getMessages(entity, { limit: 100, });
@@ -451,14 +452,7 @@ export class Promotion {
                     .map((msg: any) => msg.senderId),
             );
 
-            const engagementScore = messages.reduce(
-                (score: number, msg: any) => (msg.reactions?.count || 0) + (msg.replyTo ? 1 : 0),
-                0,
-            );
-
-
-            let baseScore = activeUsers.size + engagementScore * 2;
-            const dynamicThreshold = Math.floor(channelInfo.participantsCount / 2000)
+            const participantOffset = Math.floor(channelInfo.participantsCount / 2000)
 
             // console.log('Msgs Length:', messages.length)
             // console.log("ActiveUsers: ", activeUsers.size)
@@ -466,10 +460,9 @@ export class Promotion {
             // console.log("Base Score:", baseScore);
             // console.log("dYnamic threashold :", dynamicThreshold);
 
-            const score = baseScore + dynamicThreshold;
 
-            console.log(`Channel ${channelInfo.username} score: ${score}, baseScore: ${baseScore}, dynamicThreshold: ${dynamicThreshold},participantsCount: ${channelInfo.participantsCount}`);
-            return { score, baseScore, dynamicThreshold, engagementScore, activeUsers: activeUsers.size, recentMessages: recentMessages.length };
+            console.log(`Channel ${channelInfo.username} dynamicThreshold: ${participantOffset},participantsCount: ${channelInfo.participantsCount}`);
+            return { participantOffset, activeUsers: activeUsers.size, recentMessages: recentMessages.length };
         } catch (err) {
             const errorDetails = parseError(err, `Failed to score ${channelInfo.username}`, false);
             if (errorDetails.message.includes('Could not find the input entity')) {
@@ -481,7 +474,7 @@ export class Promotion {
                     console.error(`Failed to join channel ${channelInfo.username}:`, error.message);
                 }
             }
-            return { score: 0, baseScore: 0, dynamicThreshold: 0, engagementScore: 0, activeUsers: 0, recentMessages: 0 };
+            return { participantOffset: 0, activeUsers: 0, recentMessages: 0 };
         }
     }
 
