@@ -297,6 +297,7 @@ export class Promotion {
                             }
                             if (await this.calculateChannelScore(this.getClient(mobile).client, channelInfo) < 50) {
                                 console.log(`Channel ${channelId} has low score. Skipping...`);
+                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score. Skipping...` });
                                 this.channelIndex++;
                                 continue;
 
