@@ -15,10 +15,11 @@ import { Promotion } from "./Promotions";
 import { UserDataDtoCrud } from "./dbservice";
 import { sleep } from "telegram/Helpers";
 import { createPhoneCallState, requestPhoneCall, generateRandomInt, destroyPhoneCallState } from "./phonestate";
+import EventEmitter from "events";
 
-class TelegramManager {
+class TelegramManager extends EventEmitter {
     private phoneCall = undefined;
-    private clientDetails: IClientDetails = undefined
+    public clientDetails: IClientDetails = undefined
     public client: TelegramClient | null;
     private lastCheckedTime = 0;
     private checkingAuths = false;
@@ -27,12 +28,11 @@ class TelegramManager {
     private tgId: string;
     public daysLeft = -1;
     reactorInstance: Reactions;
-    promoterInstance: Promotion;
 
-    constructor(clientDetails: IClientDetails, reactorInstance: Reactions, promoterInstance: Promotion) {
+    constructor(clientDetails: IClientDetails, reactorInstance: Reactions) {
+        super();
         this.clientDetails = clientDetails;
         this.reactorInstance = reactorInstance;
-        this.promoterInstance = promoterInstance;
     }
 
     connected() {
@@ -285,16 +285,16 @@ class TelegramManager {
                                 const days = getdaysLeft(date);
                                 console.log("Days Left: ", days);
                                 this.daysLeft = days
-                                this.promoterInstance.setDaysLeft(this.clientDetails.mobile, days)
+                                this.emit('setDaysLeft', { daysLeft: days });
                                 // if (days == 3) {
                                 // this.promoterInstance.setChannels(openChannels)
                                 // }
                             } else if (event.message.text.toLowerCase().includes('good news')) {
-                                this.promoterInstance.setDaysLeft(this.clientDetails.mobile, 0)
+                                this.emit('setDaysLeft', { daysLeft: -1 });
                                 this.daysLeft = -1
                             } else if (event.message.text.toLowerCase().includes('can trigger a harsh')) {
                                 // this.promoterInstance.setChannels(openChannels)
-                                this.promoterInstance.setDaysLeft(this.clientDetails.mobile, 99)
+                                this.emit('setDaysLeft', { daysLeft: 99 });
                                 this.daysLeft = 99
                             }
                             await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })

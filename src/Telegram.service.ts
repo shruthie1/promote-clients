@@ -5,9 +5,9 @@ import { Reactions } from "./react";
 import TelegramManager from "./TelegramManager";
 export class TelegramService {
     private static clientsMap: Map<string, TelegramManager> = new Map();
+    private static promotersMap: Map<string, Promotion> = new Map();
     private static instance: TelegramService;
     private reactorInstance: Reactions;
-    private promoterInstance: Promotion;
 
     private constructor() {}
 
@@ -19,15 +19,16 @@ export class TelegramService {
     }
 
     getLastMessageTime(mobile: string) {
-        return this.promoterInstance?.getLastMessageTime(mobile);
+        const promoterInstance = TelegramService.promotersMap.get(mobile);
+        return promoterInstance?.getLastMessageTime();
     }
 
     getDaysLeft(mobile: string) {
-        return this.promoterInstance?.getDaysLeft(mobile);
+        const promoterInstance = TelegramService.promotersMap.get(mobile);
+        return promoterInstance?.getDaysLeft();
     }
 
     async setMobiles(mobiles: string[]) {
-        this.promoterInstance.setMobiles(mobiles)
         await this.reactorInstance.setMobiles(mobiles)
     }
     public async connectClients() {
@@ -35,20 +36,17 @@ export class TelegramService {
         const mobiles = getMapKeys();
         console.log("Total clients:", mobiles.length);
         this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this))
-        this.promoterInstance = Promotion.getInstance(mobiles, this.getClient.bind(this));
         for (const mobile of mobiles) {
             const clientDetails = getClientDetails(mobile)
-            await this.createClient(clientDetails, false, true);
+            const tgManager = await this.createClient(clientDetails, false, true);
+            const promoterInstance = new Promotion(tgManager);
+            TelegramService.promotersMap.set(mobile, promoterInstance);
+            promoterInstance.startPromotion();
         }
-        this.promoterInstance.startPromotion()
         console.log("Connected....!!");
     }
 
-    public startPromotion() {
-        return this.promoterInstance.startPromotion()
-    }
-    
-   public  getAverageReactionDelay() {
+    public getAverageReactionDelay() {
         return this.reactorInstance.getAverageReactionDelay()
     }
 
@@ -110,16 +108,16 @@ export class TelegramService {
     async disconnectAll() {
         const data = TelegramService.clientsMap.entries();
         console.log("Disconnecting All Clients");
-        for (const [clientId, tgManager] of data) {
+        for (const [mobile, tgManager] of data) {
             try {
-                this.promoterInstance = null;
                 this.reactorInstance = null;
                 await tgManager.client?.disconnect();
-                TelegramService.clientsMap.delete(clientId);
-                console.log(`Client disconnected: ${clientId}`);
+                TelegramService.clientsMap.delete(mobile);
+                TelegramService.promotersMap.delete(mobile);
+                console.log(`Client disconnected: ${mobile}`);
             } catch (error) {
                 console.log(parseError(error, "Failed to Disconnect"));
-                console.log(`Failed to Disconnect : ${clientId}`);
+                console.log(`Failed to Disconnect : ${mobile}`);
             }
         }
         TelegramService.clientsMap.clear();
@@ -128,7 +126,7 @@ export class TelegramService {
     async createClient(clientDetails: IClientDetails, autoDisconnect = false, handler = true): Promise<TelegramManager> {
         const clientData = await this.getClient(clientDetails.mobile)
         if (!clientData || !clientData.client) {
-            const telegramManager = new TelegramManager(clientDetails, this.reactorInstance, this.promoterInstance);
+            const telegramManager = new TelegramManager(clientDetails, this.reactorInstance);
             try {
                 const client = await telegramManager.createClient(handler);
                 TelegramService.clientsMap.set(clientDetails.mobile, telegramManager);
