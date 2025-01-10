@@ -60,8 +60,13 @@ process.on('uncaughtException', async (err) => {
   }
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', async (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  try {
+    await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`${process.env.clientId}-Prom : UNHANDLED - ${reason}`)}`);
+  } catch (error) {
+    console.log(error)
+  }
 });
 
 schedule.scheduleJob('test3', '*/5 * * * *', 'Asia/Kolkata', async () => {
