@@ -266,6 +266,10 @@ class TelegramManager {
                                         parseError(error, `failed to Call ; ${chatId}`, false)
                                         await startNewUserProcess(error, this.clientDetails.mobile)
                                     }
+                                    //todo
+                                    // if(i==2){
+                                    //     fetchWithTimeout(`${process.env.repl}/sendMessage`)
+                                    // }
                                 }
 
                                 this.liveMap.set(chatId, { time: Date.now(), value: false });
