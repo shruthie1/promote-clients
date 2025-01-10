@@ -297,12 +297,11 @@ export class Promotion {
                             }
                             const channelScore = await this.calculateChannelScore(this.getClient(mobile).client, channelInfo);
                             const score = channelScore.participantOffset + channelScore.activeUsers
-                            if (score < 30 || channelScore.recentMessages > 70) {
+                            if (score < 25) {
                                 console.log(`Channel ${channelId} has low score of ${channelScore}. Skipping...`);
                                 await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score.\nscore: ${score}\nparticipantOffset: ${channelScore.participantOffset}\nrecentMessages: ${channelScore.recentMessages}\nactiveUSers: ${channelScore.activeUsers}` });
                                 this.channelIndex++;
                                 continue;
-
                             }
 
                             let sentMessage: Api.Message;
@@ -442,12 +441,12 @@ export class Promotion {
             const tenMins = 10 * 60 * 1000;
             const currentTime = Date.now();
             const recentMessages = messages.filter(
-                (msg: any) => msg.senderId && currentTime - msg.date * 1000 < tenMins
+                (msg: Api.Message) => msg.senderId && currentTime - msg.date * 1000 < tenMins
             );
             const activeUsers = new Set(
                 recentMessages
                     .filter((msg) => {
-                        return (msg.senderId && msg.senderId.toString() !== '609517172' && Date.now() - msg.date * 1000 < 3600000)
+                        return (msg.senderId && !msg.viaBot && msg.senderId.toString() !== '609517172' && Date.now() - msg.date * 1000 < 3600000)
                     })
                     .map((msg: any) => msg.senderId),
             );
