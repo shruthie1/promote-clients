@@ -154,7 +154,7 @@ export class Promotion {
         }
     }
 
-    async sendMessageToChannel(mobile: string, channelInfo: IChannel, message: SendMessageParams) {
+    async sendMessageToChannel(channelInfo: IChannel, message: SendMessageParams) {
         try {
             if (this.tgManager?.client) {
                 await this.tgManager.client.invoke(
@@ -168,40 +168,40 @@ export class Promotion {
                     console.log(`Sending Message: ${message.message}`);
                     const result = await this.tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     if (result) {
-                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - this.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${this.daysLeft}\nChannelIndex: ${this.channelIndex}` });
+                        await sendToLogs({ message: `${this.mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - this.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${this.daysLeft}\nChannelIndex: ${this.channelIndex}` });
                         this.lastMessageTime = Date.now()
                         await updateSuccessCount(process.env.clientId);
                         return result;
                     } else {
-                        console.error(`Client ${mobile}: Failed to send message to ${channelInfo.channelId} || @${channelInfo.username}`);
+                        console.error(`Client ${this.mobile}: Failed to send message to ${channelInfo.channelId} || @${channelInfo.username}`);
                         return undefined;
                     }
                 } else {
-                    console.log(`Client ${mobile}: Sleeping for ${this.sleepTime / 1000} seconds due to rate limit.`);
+                    console.log(`Client ${this.mobile}: Sleeping for ${this.sleepTime / 1000} seconds due to rate limit.`);
                     return undefined;
                 }
             } else {
-                console.log("client Destroyed while promotions", mobile);
-                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${mobile}: Client Destroyed.`);
+                console.log("client Destroyed while promotions", this.mobile);
+                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.mobile}: Client Destroyed.`);
                 return undefined;
             }
         } catch (error) {
             await updateFailedCount(process.env.clientId);
             this.failureReason = error.errorMessage;
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
-                console.log(mobile, `Some Error Occured, ${error.errorMessage}`);
+                console.log(this.mobile, `Some Error Occured, ${error.errorMessage}`);
             }
             if (error instanceof errors.FloodWaitError) {
                 console.log(error);
-                console.warn(`Client ${mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                console.warn(`Client ${this.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                 this.sleepTime = Date.now() + (error.seconds * 1000); // Set the sleep time for the specific client
                 return undefined;
             } else {
-                console.error(`Client ${mobile}: Error sending message to ${channelInfo.username}: ${error.errorMessage}`);
+                console.error(`Client ${this.mobile}: Error sending message to ${channelInfo.username}: ${error.errorMessage}`);
                 if (error.errorMessage === "CHANNEL_PRIVATE") {
                     return await this.handlePrivateChannel(this.tgManager.client, channelInfo, message, error);
                 } else {
-                    return await this.handleOtherErrors(mobile, channelInfo, message, error);
+                    return await this.handleOtherErrors(this.mobile, channelInfo, message, error);
                 }
             }
         }
@@ -315,7 +315,7 @@ export class Promotion {
         const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`;
         const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;
 
-        return await this.sendMessageToChannel(this.mobile, channelInfo, { message: `${msg}\n${addon}` });
+        return await this.sendMessageToChannel(channelInfo, { message: `${msg}\n${addon}` });
     }
 
     private async sendRestrictedMessage(channelInfo: IChannel): Promise<Api.Message | undefined> {
@@ -326,7 +326,7 @@ export class Promotion {
             console.log(`Random Msg Does not EXIST:  ${channelInfo.channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
             randomAvailableMsg = "**Hiiiiii**";
         }
-        return await this.sendMessageToChannel(this.mobile, channelInfo, { message: randomAvailableMsg });
+        return await this.sendMessageToChannel(channelInfo, { message: randomAvailableMsg });
     }
 
     private async handleSuccessfulMessage(channelId: string, sentMessage: Api.Message) {
@@ -357,7 +357,7 @@ export class Promotion {
             this.failCount++;
             await sleep(randomDelay);
         } else {
-            console.log(`Switching mobile after ${this.failCount} consecutive failures.`);
+            console.log(`Long sleeping after ${this.failCount} consecutive failures.`);
             const randomDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
             console.log(`Sleeping for ${(randomDelay / 60000).toFixed(2)} Mins`);
             await sendToLogs({ message: `${this.mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - this.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${this.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}\nchannelScore: ${channelScore}` });
