@@ -46,7 +46,9 @@ export class TelegramService {
             const tgManager = await this.createClient(clientDetails, false, true);
             const promoterInstance = new Promotion(tgManager);
             TelegramService.promotersMap.set(mobile, promoterInstance);
-            promoterInstance.startPromotion();
+            setTimeout(() => {
+                promoterInstance.startPromotion();
+            }, 30000);
         }
         console.log("Connected....!!");
     }
