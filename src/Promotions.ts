@@ -41,7 +41,7 @@ export class Promotion {
         db.getPromoteMsgs().then((data) => {
             this.promoteMsgs = data;
         });
-        this.tgManager.on('someEvent', this.setDaysLeft.bind(this));
+        this.tgManager.on('setDaysLeft', this.setDaysLeft.bind(this));
     }
 
     async checkQueuedMessages() {
