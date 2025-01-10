@@ -272,6 +272,7 @@ export class Promotion {
             }
         } else {
             console.error(`No channels available for promotion.`);
+            this.channels = await this.fetchDialogs();
         }
 
         await this.sendFailureAlert();
