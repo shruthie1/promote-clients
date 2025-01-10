@@ -434,7 +434,7 @@ export class Promotion {
 
     async calculateChannelScore(client: TelegramClient, channelInfo: IChannel): Promise<number> {
         try {
-            const messages = await client.getMessages(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, { limit: 50, });
+            const messages = await client.getMessages(channelInfo.channelId, { limit: 50, });
             const thirtyMinutesInMs = 30 * 60 * 1000;
             const currentTime = Date.now();
             const recentMessages = messages.filter(
@@ -472,6 +472,14 @@ export class Promotion {
             return score;
         } catch (err) {
             console.error(`Failed to score ${channelInfo.username}:`, err.message);
+            if (err.message.startsWith('Could not find the input entity')) {
+                try {
+                    await client.invoke(new Api.channels.JoinChannel({ channel: channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId }));
+                    return await this.calculateChannelScore(client, channelInfo);
+                } catch (error) {
+                    console.error(`Failed to join channel ${channelInfo.username}:`, error.message);
+                }
+            }
             return 0;
         }
     }
