@@ -18,6 +18,11 @@ export class TelegramService {
         return TelegramService.instance;
     }
 
+    startPromotion(mobile: string) {
+        const promoterInstance = TelegramService.promotersMap.get(mobile);
+        return promoterInstance?.startPromotion();
+    }
+
     getLastMessageTime(mobile: string) {
         const promoterInstance = TelegramService.promotersMap.get(mobile);
         return promoterInstance?.getLastMessageTime();

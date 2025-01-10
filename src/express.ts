@@ -263,7 +263,7 @@ export async function checkHealth() {
                     );
                     restartClient(mobile);
                   }
-                  telegramService.startPromotion();
+                  telegramService.startPromotion(mobile);
                 } else {
                   console.log(
                     mobile,
