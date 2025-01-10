@@ -434,7 +434,7 @@ export class Promotion {
 
     async calculateChannelScore(client: TelegramClient, channelInfo: IChannel): Promise<number> {
         try {
-            const messages = await client.getMessages(channelInfo.channelId, { limit: 50, });
+            const messages = await client.getMessages(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, { limit: 50, });
             const thirtyMinutesInMs = 30 * 60 * 1000;
             const currentTime = Date.now();
             const recentMessages = messages.filter(
