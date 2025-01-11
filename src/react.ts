@@ -153,7 +153,7 @@ export class Reactions {
     ]
 
     async react(event: NewMessageEvent, targetMobile: string): Promise<void> {
-        if (!this.flag || !this.flag2|| this.waitReactTime > Date.now()) {
+        if (!this.flag || !this.flag2 || this.waitReactTime > Date.now()) {
             return
         }
         try {
@@ -170,6 +170,7 @@ export class Reactions {
                 } else {
                     console.log(`Fetching reactions cache for chatId: ${chatId}`);
                     await this.handleReactionsCache(chatId);
+                    await this.processReaction(event, [new Api.ReactionEmoji({ emoticon: "👍" })]);
                 }
             } else {
                 console.log(`Handling reaction restart for chatId: ${chatId}`);
@@ -251,7 +252,7 @@ export class Reactions {
                 this.flag2 = true;
                 await sleep(3000);
             }
-        }else{
+        } else {
             console.log("Already fetching reactions")
         }
     }
