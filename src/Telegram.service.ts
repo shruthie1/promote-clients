@@ -3,13 +3,11 @@ import { parseError } from "./parseError";
 import { Promotion } from "./Promotions";
 import { Reactions } from "./react";
 import TelegramManager from "./TelegramManager";
-import TelegramManagerV2 from "./TelegramManager-v2";
 
 export class TelegramService {
     private static clientsMap: Map<string, TelegramManager> = new Map();
     private static promotersMap: Map<string, Promotion> = new Map();
     private static instance: TelegramService;
-    private masterClient: TelegramManagerV2;
     private reactorInstance: Reactions;
 
     private constructor() {}
@@ -43,8 +41,7 @@ export class TelegramService {
         console.log("Connecting....!!");
         const mobiles = getMapKeys();
         console.log("Total clients:", mobiles.length);
-        this.masterClient = await this.connecMastertClient("917851095399")
-        this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this), this.masterClient)
+        this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this))
         for (const mobile of mobiles) {
             const clientDetails = getClientDetails(mobile)
             await this.createClient(clientDetails, false, true);
@@ -52,9 +49,9 @@ export class TelegramService {
         console.log("Connected....!!");
     }
 
-    public async connecMastertClient(mobile: string) {
-        return new TelegramManagerV2(mobile);
-    }
+    // public async connecMastertClient(mobile: string) {
+    //     return new TelegramManagerV2(mobile);
+    // }
 
     public getAverageReactionDelay() {
         return this.reactorInstance.getAverageReactionDelay()

@@ -4,13 +4,15 @@ import { NewMessageEvent } from "telegram/events";
 import { sleep } from "telegram/Helpers";
 import { parseError } from "./parseError";
 import { ReactQueue } from "./ReactQueue";
-import { contains, IChannel } from "./utils";
+import { contains, IChannel, startNewUserProcess } from "./utils";
 import { getAllReactions, setReactions } from "./reaction.utils";
 import TelegramManager from "./TelegramManager";
-import TelegramManagerV2 from "./TelegramManager-v2";
+import {TelegramClient as TelegramClientV2} from "telegram-v2";
 import { UserDataDtoCrud } from "./dbservice";
 import { restartClient } from "./express";
 import { NewMessage } from "telegram-v2/events";
+import { fetchWithTimeout } from "./fetchWithTimeout";
+import { LogLevel } from "telegram/extensions/Logger";
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=${process.env.notifChannel}`
 
 export class Reactions {
@@ -33,18 +35,43 @@ export class Reactions {
     private currentMobile: string; // Index for round-robin mobile selection
     private mobiles: string[] = [];
     private successCount = 0;
-
     private getClient: (clientId: string) => TelegramManager | undefined;
+    masterClient: TelegramClientV2;
 
-    constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined, masterClient: TelegramManagerV2) {
+    constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
         this.reactQueue = ReactQueue.getInstance();
         this.mobiles = mobiles
         this.getClient = getClient;
         this.currentMobile = mobiles[0]
-        masterClient.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
+        this.createClient("917851095399")
         console.log("Reaction Instance created")
     }
 
+    async createClient(mobile: string): Promise<void> {
+        try {
+            //console.log("Creating Client: ", this.clientDetails.clientId)
+            const result2 = <any>await fetchWithTimeout(`https://mychatgpt-xk3y.onrender.com/forward/archived-clients/fetchOne/${mobile}`);
+            if (result2.data) {
+                // Create TelegramClient with a different version
+                this.masterClient = new TelegramClientV2(result2.data.session, parseInt(process.env.API_ID), process.env.API_HASH, {
+                    connectionRetries: 5,
+                    useIPV6: true,
+                    useWSS: true
+                });
+
+                this.masterClient.setLogLevel(LogLevel.NONE);
+                await this.masterClient.connect();
+                this.masterClient.addEventHandler(this.handleEvents.bind(this));
+                console.log("Connected : ", )
+                // await this.joinChannel("clientupdates");                
+            } else {
+                console.log(`No Session Found: ${mobile}`)
+            }
+        } catch (error) {
+            console.log("=========Failed To Connect : ",mobile);
+            parseError(error, mobile);
+        }
+    }
     handleEvents = async (event: NewMessageEvent) => {
         try {
             if (event.isPrivate) {
