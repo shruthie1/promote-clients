@@ -95,7 +95,7 @@ export class Reactions {
     ];
 
     async react(event: NewMessageEvent, targetMobile: string): Promise<void> {
-        if (!this.flag || !this.flag2 || this.waitReactTime > Date.now()) {
+        if (!this.flag || this.waitReactTime > Date.now()) {
             return;
         }
 
