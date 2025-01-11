@@ -521,7 +521,7 @@ export class Promotion {
 
             let messageSent = false;
 
-            await Promise.all(healthyMobiles.map(async (mobile) => {
+            for (const mobile of healthyMobiles) {
                 try {
                     if (!messageSent) {
                         const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
@@ -530,6 +530,7 @@ export class Promotion {
                             const stats = this.mobileStats.get(mobile);
                             this.mobileStats.set(mobile, { ...stats, failCount: 0 });
                             messageSent = true;
+                            break;
                         } else {
                             const stats = this.mobileStats.get(mobile);
                             this.mobileStats.set(mobile, { ...stats, failCount: stats.failCount + 1 });
@@ -538,7 +539,7 @@ export class Promotion {
                 } catch (error) {
                     console.error(`Error for mobile ${mobile} on channel ${channelId}:`, error);
                 }
-            }));
+            }
             await sleep(3000);
             this.channelIndex++;
         }
