@@ -29,7 +29,6 @@ interface MobileStats {
 export class Promotion {
     private mobileStats: Map<string, MobileStats> = new Map<string, MobileStats>();
     private nextMobileIndex = 0; // Index for round-robin mobile selection
-    private sleepTime = 0;
     private channels: string[] = [];
     private minDelay: number = 170000;
     private maxDelay: number = 200000;
@@ -243,7 +242,8 @@ export class Promotion {
         const tgManager = this.getClient(mobile);
         try {
             if (tgManager?.client) {
-                if (this.sleepTime < Date.now()) {
+                const stats = this.mobileStats.get(mobile);
+                if (stats.sleepTime < Date.now()) {
                     console.log(`${mobile} Sending Message: to ${channelInfo.channelId} || @${channelInfo.username}`);
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     if (result) {
@@ -257,7 +257,7 @@ export class Promotion {
                         return undefined;
                     }
                 } else {
-                    console.log(`Client ${mobile}: Sleeping for ${this.sleepTime / 1000} seconds due to rate limit.`);
+                    console.log(`Client ${mobile}: Sleeping for ${stats.sleepTime / 1000} seconds due to rate limit.`);
                     return undefined;
                 }
             } else {
@@ -274,7 +274,8 @@ export class Promotion {
             if (error instanceof errors.FloodWaitError) {
                 console.log(error);
                 console.warn(`Client ${mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
-                this.sleepTime = Date.now() + (error.seconds * 1000); // Set the sleep time for the specific client
+                const stats = this.mobileStats.get(mobile);
+                this.mobileStats.set(mobile, { ...stats, sleepTime: Date.now() + (error.seconds * 1000)});
                 return undefined;
             } else {
                 console.error(`Client ${mobile}: Error sending message to ${channelInfo.username}: ${error.errorMessage}`);
