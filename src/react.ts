@@ -38,6 +38,7 @@ export class Reactions {
     private getClient: (clientId: string) => TelegramManager | undefined;
     masterClient: TelegramClientV2;
     lastMessageTimestamp: number;
+    debounceTimeout: NodeJS.Timeout;
 
     constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
         this.createClient(process.env.reactMobile);
@@ -142,26 +143,31 @@ export class Reactions {
     ]
 
     async react(event: NewMessageEvent, targetMobile: string): Promise<void> {
-        if (!this.flag || !this.flag2 || this.waitReactTime > Date.now()) {
+        if (!this.flag || this.waitReactTime > Date.now()) {
             return
         }
-        try {
-            const chatId = event.message.chatId.toString();
-            if (this.shouldReact(chatId)) {
-                const availableReactions = getAllReactions(chatId);
-                if (availableReactions && availableReactions.length > 1) {
-                    const reaction = this.selectReaction(availableReactions);
-                    await this.processReaction(event, reaction);
-                } else {
-                    this.processReaction(event, [new Api.ReactionEmoji({ emoticon: "👍" })]);
-                    await this.handleReactionsCache(chatId);
-                }
-            } else {
-                await this.handleReactionRestart(event, chatId);
-            }
-        } catch (error) {
-            this.handleError(error);
+        if (this.debounceTimeout) {
+            clearTimeout(this.debounceTimeout);
         }
+        this.debounceTimeout = setTimeout(async () => {
+            try {
+                const chatId = event.message.chatId.toString();
+                if (this.shouldReact(chatId)) {
+                    const availableReactions = getAllReactions(chatId);
+                    if (availableReactions && availableReactions.length > 1) {
+                        const reaction = this.selectReaction(availableReactions);
+                        await this.processReaction(event, reaction);
+                    } else {
+                        this.processReaction(event, [new Api.ReactionEmoji({ emoticon: "👍" })]);
+                        await this.handleReactionsCache(chatId);
+                    }
+                } else {
+                    await this.handleReactionRestart(event, chatId);
+                }
+            } catch (error) {
+                this.handleError(error);
+            }
+        }, 800);
     }
 
     private async getReactions(chatId: string) {
@@ -280,6 +286,7 @@ export class Reactions {
 
         try {
             await this.sendReaction(client, chatId, event.message.id, reaction);
+            console.log(`${this.currentMobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
             await this.updateReactionStats();
         } catch (error) {
             await this.handleReactionError(error, reaction, chatId, this.currentMobile);
