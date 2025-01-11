@@ -61,7 +61,7 @@ export class Reactions {
 
                 this.masterClient.setLogLevel(LogLevel.NONE);
                 await this.masterClient.connect();
-                this.masterClient.addEventHandler(this.handleEvents, new NewMessage({ incoming: true }));
+                this.masterClient.addEventHandler(this.handleEvents.bind(this), new NewMessage({ incoming: true }));
                 console.log("Connected : ",)
                 // await this.joinChannel("clientupdates");                
             } else {
@@ -147,7 +147,7 @@ export class Reactions {
                 if (availableReactions && availableReactions.length > 1) {
                     console.log("chatId", chatId, "msgId:", event.message.id.toString());
                     const reaction = this.selectReaction(availableReactions);
-                    // await this.processReaction(event, reaction);
+                    await this.processReaction(event, reaction);
                 } else {
                     await this.handleReactionsCache(chatId);
                 }
