@@ -37,6 +37,7 @@ export class Reactions {
     private successCount = 0;
     private getClient: (clientId: string) => TelegramManager | undefined;
     masterClient: TelegramClientV2;
+    lastMessageTimestamp: number;
 
     constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
         this.reactQueue = ReactQueue.getInstance();
@@ -45,8 +46,18 @@ export class Reactions {
         this.currentMobile = mobiles[0]
         this.createClient(process.env.reactMobile);
         console.log("Reaction Instance created")
+        setInterval(this.checkForNewMessages, 30000);
     }
-
+    
+    private checkForNewMessages = () => {
+        const currentTime = Date.now();
+        if (currentTime - this.lastMessageTimestamp > 30000) {
+            console.log("No new messages received in the last 30 seconds.");
+            // You can add additional notification logic here if needed
+        } else {
+            console.log("Messages have been received within the last 30 seconds.");
+        }
+    }
     async createClient(mobile: string): Promise<void> {
         try {
             //console.log("Creating Client: ", this.clientDetails.clientId)
@@ -75,11 +86,12 @@ export class Reactions {
 
     handleEvents = async (event: NewMessageEvent) => {
         try {
+            this.lastMessageTimestamp = Date.now();
             if (event.isPrivate) {
+                console.log("Master Msg Received", event.message.id.toString(), event.message.text);
             } else {
                 await this.react(event, undefined);
             }
-            console.log("Master Msg Received", event.message.id.toString(), event.message.text);
         } catch (error) {
             parseError(error, "SomeError Parsing MAster Msg")
         }
