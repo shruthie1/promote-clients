@@ -7,8 +7,10 @@ import { ReactQueue } from "./ReactQueue";
 import { contains, IChannel } from "./utils";
 import { getAllReactions, setReactions } from "./reaction.utils";
 import TelegramManager from "./TelegramManager";
+import TelegramManagerV2 from "./TelegramManager-v2";
 import { UserDataDtoCrud } from "./dbservice";
 import { restartClient } from "./express";
+import { NewMessage } from "telegram-v2/events";
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=${process.env.notifChannel}`
 
 export class Reactions {
@@ -34,13 +36,28 @@ export class Reactions {
 
     private getClient: (clientId: string) => TelegramManager | undefined;
 
-    constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
+    constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined, masterClient: TelegramManagerV2) {
         this.reactQueue = ReactQueue.getInstance();
         this.mobiles = mobiles
         this.getClient = getClient;
         this.currentMobile = mobiles[0]
+        masterClient.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
         console.log("Reaction Instance created")
     }
+
+    handleEvents = async (event: NewMessageEvent) => {
+        try {
+            if (event.isPrivate) {
+
+            } else {
+                await this.react(event, undefined);
+            }
+
+        } catch (error) {
+            parseError(error, "SomeError Parsing MAster Msg")
+        }
+    }
+
 
     public async setMobiles(mobiles: string[]) {
         console.log("Setting Mobiles in Reaction Instance", mobiles.length);

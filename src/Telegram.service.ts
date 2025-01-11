@@ -3,10 +3,13 @@ import { parseError } from "./parseError";
 import { Promotion } from "./Promotions";
 import { Reactions } from "./react";
 import TelegramManager from "./TelegramManager";
+import TelegramManagerV2 from "./TelegramManager-v2";
+
 export class TelegramService {
     private static clientsMap: Map<string, TelegramManager> = new Map();
     private static promotersMap: Map<string, Promotion> = new Map();
     private static instance: TelegramService;
+    private masterClient: TelegramManagerV2;
     private reactorInstance: Reactions;
 
     private constructor() {}
@@ -40,16 +43,17 @@ export class TelegramService {
         console.log("Connecting....!!");
         const mobiles = getMapKeys();
         console.log("Total clients:", mobiles.length);
-        this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this))
+        this.masterClient = await this.connecMastertClient("917851095399")
+        this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this), this.masterClient)
         for (const mobile of mobiles) {
             const clientDetails = getClientDetails(mobile)
             await this.createClient(clientDetails, false, true);
-            setTimeout(() => {
-                const promoterInstance = TelegramService.promotersMap.get(mobile);
-                promoterInstance?.startPromotion();
-            }, 60000);
         }
         console.log("Connected....!!");
+    }
+
+    public async connecMastertClient(mobile: string) {
+        return new TelegramManagerV2(mobile);
     }
 
     public getAverageReactionDelay() {
@@ -155,6 +159,10 @@ export class TelegramService {
                             TelegramService.clientsMap.delete(clientDetails.mobile);
                         }, 180000)
                     } else {
+                        setTimeout(() => {
+                            const promoterInstance = TelegramService.promotersMap.get(clientDetails.mobile);
+                            promoterInstance?.startPromotion();
+                        }, 60000);
                         // setInterval(async () => {
                         //     //console.log("destroying loop :", mobile)
                         //     //client._destroyed = true
