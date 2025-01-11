@@ -1,7 +1,7 @@
 import { Api, TelegramClient } from "telegram";
 import { getEntity } from "telegram/client/users";
 import { NewMessageEvent } from "telegram/events";
-import { sleep } from "telegram/Helpers";
+import { sleep } from "./utils";
 import { parseError } from "./parseError";
 import { ReactQueue } from "./ReactQueue";
 import { contains, IChannel, selectRandomElements } from "./utils";

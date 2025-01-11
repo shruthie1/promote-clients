@@ -13,7 +13,7 @@ import { IClientDetails, updatePromoteClient, updateMsgCount, } from "./express"
 import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, ppplbot, startNewUserProcess } from "./utils";
 import { Promotion } from "./Promotions";
 import { UserDataDtoCrud } from "./dbservice";
-import { sleep } from "telegram/Helpers";
+import { sleep } from "./utils"
 import { createPhoneCallState, requestPhoneCall, generateRandomInt, destroyPhoneCallState } from "./phonestate";
 
 class TelegramManager {

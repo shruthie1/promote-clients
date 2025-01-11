@@ -477,40 +477,42 @@ export class Promotion {
     public async promoteInBatchesV2() {
         this.channels = await this.fetchDialogs();
         this.channelIndex = 0;
-
+    
         if (this.mobiles.length > 0) {
             if (this.channels.length > 0) {
-                while (true) {
+                const processNextChannel = async () => {
                     if (this.channelIndex >= 200) {
                         console.log("Refreshing channel list...");
                         this.channels = await this.fetchDialogs();
                         this.channelIndex = 0;
                     }
-
+    
                     const healthyMobiles = this.getHealthyMobiles();
                     if (healthyMobiles.length === 0) {
                         console.warn("No healthy mobiles available. Retrying in 30 seconds...");
-                        await sleep(30000);
-                        continue;
+                        setTimeout(processNextChannel, 30000);
+                        return;
                     } else {
                         console.log(`Healthy Mobiles: ${healthyMobiles}`);
                     }
-
+    
                     const channelId = this.channels[this.channelIndex];
                     const channelInfo = await this.getChannelInfo(channelId);
-
+    
                     if (!channelInfo) {
                         console.error(`Channel info for ID ${channelId} not found.`);
                         this.channelIndex++;
-                        continue;
+                        processNextChannel();
+                        return;
                     }
-
+    
                     if (channelInfo.banned || this.isChannelNotSuitable(channelInfo)) {
                         console.log(`Channel ${channelId} is banned or unsuitable. Skipping...`);
                         this.channelIndex++;
-                        continue;
+                        processNextChannel();
+                        return;
                     }
-
+    
                     for (let mobile of healthyMobiles) {
                         try {
                             const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
@@ -519,10 +521,9 @@ export class Promotion {
                                 this.channelIndex++;
                                 const stats = this.mobileStats.get(mobile);
                                 this.mobileStats.set(mobile, { ...stats, failCount: 0 });
-                                await sleep(3000);
-                                break;
+                                setTimeout(processNextChannel, 3000);
+                                return;
                             } else {
-                                // console.log(`Message not sent to ${channelId}. Retrying...`);
                                 const stats = this.mobileStats.get(mobile);
                                 this.mobileStats.set(mobile, { ...stats, failCount: stats.failCount + 1 });
                                 await sleep(3000);
@@ -534,7 +535,10 @@ export class Promotion {
                     }
                     console.log(`________NEXT CHANNEL________`);
                     this.channelIndex++;
-                }
+                    processNextChannel();
+                };
+    
+                processNextChannel();
             } else {
                 console.error("No channels available for promotion.");
             }
@@ -542,7 +546,6 @@ export class Promotion {
             console.log("No mobiles available for promotion.");
         }
     }
-
 
     async handlePrivateChannel(client: TelegramClient, channelInfo: IChannel, message: SendMessageParams, error: any) {
         const db = UserDataDtoCrud.getInstance();
