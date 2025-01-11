@@ -1,16 +1,16 @@
+import { StringSession as StringSessionV2 } from 'telegram-v2/sessions';
 import { Api, TelegramClient } from "telegram";
 import { getEntity } from "telegram/client/users";
-import { NewMessageEvent } from "telegram/events";
 import { sleep } from "telegram/Helpers";
 import { parseError } from "./parseError";
 import { ReactQueue } from "./ReactQueue";
 import { contains, IChannel, startNewUserProcess } from "./utils";
 import { getAllReactions, setReactions } from "./reaction.utils";
 import TelegramManager from "./TelegramManager";
-import {TelegramClient as TelegramClientV2} from "telegram-v2";
+import { TelegramClient as TelegramClientV2, Api as ApiV2 } from "telegram-v2";
 import { UserDataDtoCrud } from "./dbservice";
 import { restartClient } from "./express";
-import { NewMessage } from "telegram-v2/events";
+import { NewMessageEvent } from "telegram-v2/events";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { LogLevel } from "telegram/extensions/Logger";
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=${process.env.notifChannel}`
@@ -53,7 +53,7 @@ export class Reactions {
             const result2 = <any>await fetchWithTimeout(`https://mychatgpt-xk3y.onrender.com/forward/archived-clients/fetchOne/${mobile}`);
             if (result2.data) {
                 // Create TelegramClient with a different version
-                this.masterClient = new TelegramClientV2(result2.data.session, parseInt(process.env.API_ID), process.env.API_HASH, {
+                this.masterClient = new TelegramClientV2(new StringSessionV2(result2.data.session), parseInt(process.env.API_ID), process.env.API_HASH, {
                     connectionRetries: 5,
                     useIPV6: true,
                     useWSS: true
@@ -62,13 +62,13 @@ export class Reactions {
                 this.masterClient.setLogLevel(LogLevel.NONE);
                 await this.masterClient.connect();
                 this.masterClient.addEventHandler(this.handleEvents.bind(this));
-                console.log("Connected : ", )
+                console.log("Connected : ",)
                 // await this.joinChannel("clientupdates");                
             } else {
                 console.log(`No Session Found: ${mobile}`)
             }
         } catch (error) {
-            console.log("=========Failed To Connect : ",mobile);
+            console.log("=========Failed To Connect : ", mobile);
             parseError(error, mobile);
         }
     }
@@ -158,7 +158,7 @@ export class Reactions {
         }
     }
 
-    private async getReactions(chatId: string, client: TelegramClient) {
+    private async getReactions(chatId: string, client: TelegramClientV2) {
         const channel = undefined//await this.activeChannelsService.findOne(chatId.replace(/^-100/, ""))
         if (channel && channel.reactRestricted) {
             this.reactRestrictedIds.push(chatId);
@@ -229,8 +229,8 @@ export class Reactions {
         }
     }
 
-    private async fetchAvailableReactions(chatId: string, client: TelegramClient): Promise<Api.ReactionEmoji[]> {
-        const result = await client.invoke(new Api.channels.GetFullChannel({ channel: chatId }));
+    private async fetchAvailableReactions(chatId: string, client: TelegramClientV2): Promise<Api.ReactionEmoji[]> {
+        const result = await client.invoke(new ApiV2.channels.GetFullChannel({ channel: chatId }));
         const reactionsJson: any = result?.fullChat?.availableReactions?.toJSON();
         return reactionsJson?.reactions || [];
     }
@@ -313,7 +313,7 @@ export class Reactions {
 
     private async sendReaction(client: TelegramClient, event: NewMessageEvent, reaction: Api.ReactionEmoji[]): Promise<void> {
         const MsgClass = new Api.messages.SendReaction({
-            peer: event.message.chat,
+            peer: event.message.chat.id.toString(),
             msgId: event.message.id,
             reaction,
         });
