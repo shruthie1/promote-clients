@@ -142,16 +142,21 @@ export class Reactions {
         }
         try {
             const chatId = event.message.chatId.toString();
+            console.log(`Processing reaction for chatId: ${chatId}`);
             if (this.shouldReact(chatId)) {
                 const availableReactions = getAllReactions(chatId);
+                console.log(`Available reactions for chatId ${chatId}: ${availableReactions.length}`);
                 if (availableReactions && availableReactions.length > 1) {
                     console.log("chatId", chatId, "msgId:", event.message.id.toString());
                     const reaction = this.selectReaction(availableReactions);
+                    console.log(`Selected reaction: ${reaction[0].emoticon}`);
                     await this.processReaction(event, reaction);
                 } else {
+                    console.log(`Fetching reactions cache for chatId: ${chatId}`);
                     await this.handleReactionsCache(chatId);
                 }
             } else {
+                console.log(`Handling reaction restart for chatId: ${chatId}`);
                 await this.handleReactionRestart(event, chatId);
             }
         } catch (error) {
@@ -160,13 +165,14 @@ export class Reactions {
         }
     }
 
-    private async getReactions(chatId: string, client: TelegramClientV2) {
+    private async getReactions(chatId: string) {
         const channel = undefined//await this.activeChannelsService.findOne(chatId.replace(/^-100/, ""))
         if (channel && channel.reactRestricted) {
             this.reactRestrictedIds.push(chatId);
             return [];
         } else {
-            const reactions = await this.fetchAvailableReactions(chatId, client);
+            const reactions = await this.fetchAvailableReactions(chatId);
+            console.log(`Fetched ${reactions.length} reactions for chatId: ${chatId}`);
             return reactions;
             // if (channel) {
             //     const dbReactions = channel?.reactions?.map(emoticon => new Api.ReactionEmoji({ emoticon }));
@@ -219,9 +225,10 @@ export class Reactions {
     private async handleReactionsCache(chatId: string): Promise<void> {
         if (this.flag2) {
             this.flag2 = false;
-            // console.log("Fetching Reactions for Channel: ", this.masterClient);
             try {
-                const availableReactions = await this.getReactions(chatId, this.masterClient);
+                console.log(`Fetching reactions for chatId: ${chatId}`);
+                const availableReactions = await this.getReactions(chatId);
+                console.log(`Updating reactions cache for chatId: ${chatId}`);
                 await this.updateReactionsCache(chatId, availableReactions);
             } catch (error) {
                 this.handleCacheError(error, chatId);
@@ -232,9 +239,9 @@ export class Reactions {
         }
     }
 
-    private async fetchAvailableReactions(chatId: string, client: TelegramClientV2): Promise<Api.ReactionEmoji[]> {
+    private async fetchAvailableReactions(chatId: string): Promise<Api.ReactionEmoji[]> {
         try {
-            const result = await client.invoke(new ApiV2.channels.GetFullChannel({ channel: chatId }));
+            const result = await this.masterClient.invoke(new ApiV2.channels.GetFullChannel({ channel: chatId }));
             const reactionsJson: any = result?.fullChat?.availableReactions?.toJSON();
             return reactionsJson?.reactions || [];
         } catch (error) {
@@ -277,16 +284,20 @@ export class Reactions {
 
     private async processReaction(event: NewMessageEvent, reaction: Api.ReactionEmoji[]): Promise<void> {
         this.flag = false;
+        console.log(`Processing reaction for event: ${event.message.id}, reaction: ${reaction[0].emoticon}`);
         const tgManager = this.getClient(this.currentMobile);
         if (tgManager?.client) {
+            console.log(`Executing reaction with client: ${this.currentMobile}`);
             await this.executeReaction(event, tgManager.client, reaction);
             this.currentMobile = this.selectNextMobile();
+            console.log(`Next mobile selected: ${this.currentMobile}`);
         } else {
             this.flag = true;
             console.log(`Client is undefined: ${this.currentMobile}`);
             this.mobiles = this.mobiles.filter(mobile => mobile !== this.currentMobile);
             this.floodControl.delete(this.currentMobile);
             this.currentMobile = this.selectNextMobile(); //dont change this
+            console.log(`Restarting client for mobile: ${this.currentMobile}`);
             await restartClient(this.currentMobile);
         }
     }
