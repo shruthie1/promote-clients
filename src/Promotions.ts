@@ -129,7 +129,7 @@ export class Promotion {
     private getHealthyMobiles() {
         return this.mobiles.filter((mobile) => {
             const stats = this.mobileStats.get(mobile);
-            return stats && stats.daysLeft < 7 && stats.lastMessageTime < Date.now() - 12 * 60 * 1000 && stats.failCount < 5;
+            return stats && stats.daysLeft < 7 && stats.lastMessageTime < Date.now() - 12 * 60 * 1000 && stats.failCount < 10;
         });
     }
 
