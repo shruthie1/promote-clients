@@ -498,7 +498,7 @@ export class Promotion {
             const healthyMobiles = this.getHealthyMobiles();
             if (healthyMobiles.length === 0) {
                 console.warn("No healthy mobiles available. Retrying in 30 seconds...");
-                await sleep(30000)
+                await sleep(30000);
                 continue;
             } else {
                 console.log(`Healthy Mobiles: ${healthyMobiles}`);
@@ -521,32 +521,25 @@ export class Promotion {
 
             let messageSent = false;
 
-            for (let mobile of healthyMobiles) {
+            await Promise.all(healthyMobiles.map(async (mobile) => {
                 try {
-                    const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
-                    if (sentMessage) {
-                        this.handleSuccessfulMessage(mobile, channelId, sentMessage);
-                        this.channelIndex++;
-                        const stats = this.mobileStats.get(mobile);
-                        this.mobileStats.set(mobile, { ...stats, failCount: 0 });
-                        messageSent = true;
-                        break;
-                    } else {
-                        const stats = this.mobileStats.get(mobile);
-                        this.mobileStats.set(mobile, { ...stats, failCount: stats.failCount + 1 });
+                    if (!messageSent) {
+                        const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
+                        if (sentMessage) {
+                            this.handleSuccessfulMessage(mobile, channelId, sentMessage);
+                            const stats = this.mobileStats.get(mobile);
+                            this.mobileStats.set(mobile, { ...stats, failCount: 0 });
+                            messageSent = true;
+                        } else {
+                            const stats = this.mobileStats.get(mobile);
+                            this.mobileStats.set(mobile, { ...stats, failCount: stats.failCount + 1 });
+                        }
                     }
                 } catch (error) {
                     console.error(`Error for mobile ${mobile} on channel ${channelId}:`, error);
                 }
-
-                // Add a short delay to prevent excessive CPU usage
-                await sleep(3000);
-            }
-
-            if (!messageSent) {
-                console.log(`________NEXT CHANNEL________`);
-                this.channelIndex++;
-            }
+            }));
+            this.channelIndex++;
         }
     }
 
