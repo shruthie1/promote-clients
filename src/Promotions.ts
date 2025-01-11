@@ -539,6 +539,7 @@ export class Promotion {
                     console.error(`Error for mobile ${mobile} on channel ${channelId}:`, error);
                 }
             }));
+            await sleep(3000);
             this.channelIndex++;
         }
     }
