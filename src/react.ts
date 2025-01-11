@@ -218,7 +218,7 @@ export class Reactions {
     private async handleReactionsCache(chatId: string): Promise<void> {
         if (this.flag2) {
             this.flag2 = false;
-            console.log("Fetching Reactions for Channel: ", this.masterClient);
+            // console.log("Fetching Reactions for Channel: ", this.masterClient);
             try {
                 const availableReactions = await this.getReactions(chatId, this.masterClient);
                 await this.updateReactionsCache(chatId, availableReactions);
