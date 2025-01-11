@@ -89,7 +89,7 @@ class TelegramManager extends EventEmitter {
                 // await sleep(1500)
                 // await this.updateUsername('')
                 console.log("Adding event Handler")
-                this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
+                this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage({incoming: true}));
                 this.client.addEventHandler((event) => this.handleOtherEvents(event));
                 // await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
                 // if (handler && this.client) {

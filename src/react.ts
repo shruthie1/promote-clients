@@ -4,7 +4,7 @@ import { getEntity } from "telegram/client/users";
 import { sleep } from "telegram/Helpers";
 import { parseError } from "./parseError";
 import { ReactQueue } from "./ReactQueue";
-import { contains, IChannel, startNewUserProcess } from "./utils";
+import { contains, IChannel } from "./utils";
 import { getAllReactions, setReactions } from "./reaction.utils";
 import TelegramManager from "./TelegramManager";
 import { TelegramClient as TelegramClientV2, Api as ApiV2 } from "telegram-v2";
@@ -73,12 +73,13 @@ export class Reactions {
         }
     }
 
-    async handleEvents(event: NewMessageEvent) {
+    handleEvents = async (event: NewMessageEvent) => {
         try {
             if (event.isPrivate) {
             } else {
                 await this.react(event, undefined);
             }
+            console.log("Master Msg Received", event.message.id.toString(), event.message.text);
         } catch (error) {
             parseError(error, "SomeError Parsing MAster Msg")
         }
@@ -238,7 +239,7 @@ export class Reactions {
         }
     }
 
-    private async fetchAvailableReactions(chatId: string): Promise<Api.ReactionEmoji[]> {
+    private async fetchAvailableReactions(chatId: string): Promise<ApiV2.ReactionEmoji[]> {
         try {
             const result = await this.masterClient.invoke(new ApiV2.channels.GetFullChannel({ channel: chatId }));
             const reactionsJson: any = result?.fullChat?.availableReactions?.toJSON();
