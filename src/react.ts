@@ -79,7 +79,6 @@ export class Reactions {
             } else {
                 await this.react(event, undefined);
             }
-
         } catch (error) {
             parseError(error, "SomeError Parsing MAster Msg")
         }
