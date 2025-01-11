@@ -241,19 +241,19 @@ export async function checkHealth() {
                 clientsMap.set(mobile, clientDetails);
                 await restartClient(mobile);
               } else {
-                if (telegramService.getLastMessageTime(mobile) < Date.now() - 15 * 60 * 1000) {
+                const lastMessageTime = telegramService.getLastMessageTime(mobile);
+                const timeInMins = ((Date.now() - lastMessageTime) / 60000).toFixed(2)
+                if (lastMessageTime < Date.now() - 15 * 60 * 1000) {
                   console.log(
                     clientDetails.clientId,
                     " : Promotions Seems stopped - ",
-                    `Now: ${Date.now()}`,
-                    `LAstMSg : ${telegramService.getLastMessageTime(mobile)}`,
-                    Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000),
+                    `LastMSg : ${timeInMins} mins ago`,
                     `DaysLeft: ${telegramService.getDaysLeft(mobile)}`
                   );
                   await telegramManager.checktghealth();
                   if (
                     telegramManager.daysLeft == -1 &&
-                    telegramService.getLastMessageTime(mobile) < Date.now() - 25 * 60 * 1000
+                    lastMessageTime < Date.now() - 25 * 60 * 1000
                   ) {
                     console.log(
                       "Promotion stopped",
@@ -269,7 +269,7 @@ export async function checkHealth() {
                     mobile,
                     me.username,
                     " : Promotions Working fine - ",
-                    Math.floor((Date.now() - telegramService.getLastMessageTime(mobile)) / 1000),
+                    `LastMSg : ${timeInMins} mins ago`,
                     `DaysLeft: ${telegramService.getDaysLeft(mobile)}`
                   );
                 }
