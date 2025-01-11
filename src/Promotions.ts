@@ -477,24 +477,24 @@ export class Promotion {
     public async promoteInBatchesV2() {
         this.channels = await this.fetchDialogs();
         this.channelIndex = 0;
-    
+
         if (this.mobiles.length === 0) {
             console.log("No mobiles available for promotion.");
             return;
         }
-    
+
         if (this.channels.length === 0) {
             console.error("No channels available for promotion.");
             return;
         }
-    
+
         while (true) {
             if (this.channelIndex >= 190) {
                 console.log("Refreshing channel list...");
                 this.channels = await this.fetchDialogs();
                 this.channelIndex = 0;
             }
-    
+
             const healthyMobiles = this.getHealthyMobiles();
             if (healthyMobiles.length === 0) {
                 console.warn("No healthy mobiles available. Retrying in 30 seconds...");
@@ -503,24 +503,24 @@ export class Promotion {
             } else {
                 console.log(`Healthy Mobiles: ${healthyMobiles}`);
             }
-    
+
             const channelId = this.channels[this.channelIndex];
             const channelInfo = await this.getChannelInfo(channelId);
-    
+
             if (!channelInfo) {
                 console.error(`Channel info for ID ${channelId} not found.`);
                 this.channelIndex++;
                 continue;
             }
-    
+
             if (channelInfo.banned || this.isChannelNotSuitable(channelInfo)) {
                 console.log(`Channel ${channelId} is banned or unsuitable. Skipping...`);
                 this.channelIndex++;
                 continue;
             }
-    
+
             let messageSent = false;
-    
+
             for (let mobile of healthyMobiles) {
                 try {
                     const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
@@ -538,18 +538,18 @@ export class Promotion {
                 } catch (error) {
                     console.error(`Error for mobile ${mobile} on channel ${channelId}:`, error);
                 }
-    
+
                 // Add a short delay to prevent excessive CPU usage
                 await sleep(3000);
             }
-    
+
             if (!messageSent) {
                 console.log(`________NEXT CHANNEL________`);
                 this.channelIndex++;
             }
         }
     }
-    
+
     async handlePrivateChannel(client: TelegramClient, channelInfo: IChannel, message: SendMessageParams, error: any) {
         const db = UserDataDtoCrud.getInstance();
         if (channelInfo && channelInfo.username) {
