@@ -61,7 +61,7 @@ export class Reactions {
 
                 this.masterClient.setLogLevel(LogLevel.NONE);
                 await this.masterClient.connect();
-                this.masterClient.addEventHandler(this.handleEvents.bind(this), new NewMessage({ incoming: true }));
+                this.masterClient.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true }));
                 console.log("Connected : ",)
                 // await this.joinChannel("clientupdates");                
             } else {
