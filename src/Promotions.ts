@@ -16,14 +16,24 @@ interface MessageQueueItem {
     messageIndex: string;
 }
 
+interface MobileStats {
+    messagesSent: number;
+    failedMessages: number;
+    sleepTime: number;
+    releaseTime: number;
+    lastMessageTime: number;
+    daysLeft: number;
+    failCount: number;
+}
+
 export class Promotion {
-    private limitControl: Map<string, { daysLeft: number; lastMessageTime: number }> = new Map<string, { daysLeft: number, lastMessageTime: number }>();
+    private mobileStats: Map<string, MobileStats> = new Map<string, MobileStats>();
     private nextMobileIndex = 0; // Index for round-robin mobile selection
     private sleepTime = 0;
-    private channels: string[];
+    private channels: string[] = [];
     private minDelay: number = 170000;
     private maxDelay: number = 200000;
-    private messageQueue: MessageQueueItem[] = []
+    private messageQueue: MessageQueueItem[] = [];
     private messageCheckDelay: number = 20000;
     private promoteMsgs = {};
     private mobiles: string[] = [];
@@ -45,7 +55,15 @@ export class Promotion {
             this.promoteMsgs = data;
         });
         for (const mobile of mobiles) {
-            this.limitControl.set(mobile, { daysLeft: -1, lastMessageTime: Date.now() - 13 * 60 * 1000 });
+            this.mobileStats.set(mobile, {
+                messagesSent: 0,
+                failedMessages: 0,
+                sleepTime: 0,
+                releaseTime: 0,
+                lastMessageTime: Date.now() - 13 * 60 * 1000,
+                daysLeft: -1,
+                failCount: 0
+            });
         }
     }
 
@@ -53,16 +71,18 @@ export class Promotion {
         console.log("Setting Mobiles in Promotion instance", mobiles.length);
         this.mobiles = mobiles;
         for (const mobile of mobiles) {
-            if (!this.limitControl.has(mobile)) {
-                this.limitControl.set(mobile, { daysLeft: -1, lastMessageTime: Date.now() - 13 * 60 * 1000 });
+            if (!this.mobileStats.has(mobile)) {
+                this.mobileStats.set(mobile, {
+                    messagesSent: 0,
+                    failedMessages: 0,
+                    sleepTime: 0,
+                    releaseTime: 0,
+                    lastMessageTime: Date.now() - 13 * 60 * 1000,
+                    daysLeft: -1,
+                    failCount: 0
+                });
             }
         }
-    }
-    public static getInstance(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined): Promotion {
-        if (!Promotion.instance) {
-            Promotion.instance = new Promotion(mobiles, getClient);
-        }
-        return Promotion.instance;
     }
 
     async checkQueuedMessages() {
@@ -79,21 +99,59 @@ export class Promotion {
         this.messageQueue = this.messageQueue.filter(item => !readyMessages.includes(item));
     }
 
+    public static getInstance(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined): Promotion {
+        if (!Promotion.instance) {
+            Promotion.instance = new Promotion(mobiles, getClient);
+        }
+        return Promotion.instance;
+    }
+
     setDaysLeft(mobile: string, daysLeft: number) {
         console.log("Setting DaysLeft:", daysLeft)
-        const data = this.limitControl.get(mobile)
-        this.limitControl.set(mobile, { ...data, daysLeft: daysLeft })
+        const data = this.mobileStats.get(mobile)
+        this.mobileStats.set(mobile, { ...data, daysLeft: daysLeft })
+        const stats = this.mobileStats.get(mobile);
+        if (stats) {
+            stats.daysLeft = daysLeft;
+        }
     }
 
     getDaysLeft(mobile: string) {
-        const data = this.limitControl.get(mobile);
+        const data = this.mobileStats.get(mobile);
         return data.daysLeft;
     }
 
     getLastMessageTime(mobile: string) {
-        const data = this.limitControl.get(mobile);
+        const data = this.mobileStats.get(mobile);
         return data.lastMessageTime;
     }
+
+    private getHealthyMobiles() {
+        return this.mobiles.filter((mobile) => {
+            const stats = this.mobileStats.get(mobile);
+            return stats && stats.daysLeft < 7 && stats.lastMessageTime < Date.now() - 12 * 60 * 1000 && stats.failCount < 5;
+        });
+    }
+
+    private selectNextMobile(currentMobile: string | null = null): string | null {
+        const healthyMobiles = this.getHealthyMobiles();
+        if (!healthyMobiles.length) {
+            console.warn("No healthy mobiles available for Promotions");
+            return null;
+        }
+        let selectedMobile = healthyMobiles[this.nextMobileIndex % healthyMobiles.length];
+        if (currentMobile && healthyMobiles.length === 1 && selectedMobile === currentMobile) {
+            console.log(`Only one healthy mobile available and it is the current mobile: ${currentMobile}`);
+            return null;
+        }
+        if (currentMobile && healthyMobiles.length > 1 && selectedMobile === currentMobile) {
+            this.nextMobileIndex = (this.nextMobileIndex + 1) % healthyMobiles.length;
+            selectedMobile = healthyMobiles[this.nextMobileIndex % healthyMobiles.length];
+        }
+        this.nextMobileIndex = (this.nextMobileIndex + 1) % healthyMobiles.length;
+        return selectedMobile;
+    }
+
 
     async checkMessageExist(messageItem: MessageQueueItem) {
         try {
@@ -189,9 +247,9 @@ export class Promotion {
                     console.log(`${mobile} Sending Message: to ${channelInfo.channelId} || @${channelInfo.username}`);
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     if (result) {
-                        const data = this.limitControl.get(mobile);
+                        const data = this.mobileStats.get(mobile);
                         await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - data.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${data.daysLeft}\nChannelIndex: ${this.channelIndex}` });
-                        this.limitControl.set(mobile, { ...data, lastMessageTime: Date.now() });
+                        this.mobileStats.set(mobile, { ...data, lastMessageTime: Date.now() });
                         await updateSuccessCount(process.env.clientId);
                         return result;
                     } else {
@@ -375,9 +433,9 @@ export class Promotion {
 
     private async handleSuccessfulMessage(mobile: string, channelId: string, sentMessage: Api.Message) {
         this.failCount = 0;
-        const floodData = this.limitControl.get(mobile);
+        const floodData = this.mobileStats.get(mobile);
         if (floodData.daysLeft == 0) {
-            this.limitControl.set(mobile, { ...floodData, daysLeft: -1 });
+            this.mobileStats.set(mobile, { ...floodData, daysLeft: -1 });
         }
         this.messageQueue.push({
             mobile,
@@ -395,7 +453,7 @@ export class Promotion {
     private async handleFailedMessage(mobile: string, channelInfo: IChannel, channelScore: { participantOffset: number, activeUsers: number }) {
         console.warn(`Message sending failed for channel: ${channelInfo.username || channelInfo.channelId}`);
         this.failCount++;
-        // const floodData = this.limitControl.get(mobile);
+        // const floodData = this.mobileStats.get(mobile);
         // if (this.failCount < 5 && floodData.daysLeft > -1) {
         //     console.log(`Retrying after a short delay. Fail count: ${this.failCount}`);
         //     const randomDelay = Math.floor(Math.random() * (5000 - 3000)) + 3000;
@@ -454,10 +512,14 @@ export class Promotion {
                             if (sentMessage) {
                                 this.handleSuccessfulMessage(mobile, channelId, sentMessage);
                                 this.channelIndex++;
+                                const stats = this.mobileStats.get(mobile);
+                                this.mobileStats.set(mobile, { ...stats, failCount: 0 });
                                 await sleep(3000);
                                 break;
                             } else {
                                 // console.log(`Message not sent to ${channelId}. Retrying...`);
+                                const stats = this.mobileStats.get(mobile);
+                                this.mobileStats.set(mobile, { ...stats, failCount: stats.failCount + 1 });
                                 await sleep(3000);
                             }
                         } catch (error) {
@@ -611,31 +673,4 @@ export class Promotion {
         }
         return channel;
     }
-
-    private getHealthyMobiles() {
-        return this.mobiles.filter((mobile) => {
-            const floodData = this.limitControl.get(mobile)
-            return floodData.daysLeft < 7 && floodData.lastMessageTime < Date.now() - 12 * 60 * 1000 //Change it
-        });
-    }
-
-    private selectNextMobile(currentMobile: string | null = null): string | null {
-        const healthyMobiles = this.getHealthyMobiles();
-        if (!healthyMobiles.length) {
-            console.warn("No healthy mobiles available for Promotions");
-            return null;
-        }
-        let selectedMobile = healthyMobiles[this.nextMobileIndex % healthyMobiles.length];
-        if (currentMobile && healthyMobiles.length === 1 && selectedMobile === currentMobile) {
-            console.log(`Only one healthy mobile available and it is the current mobile: ${currentMobile}`);
-            return null;
-        }
-        if (currentMobile && healthyMobiles.length > 1 && selectedMobile === currentMobile) {
-            this.nextMobileIndex = (this.nextMobileIndex + 1) % healthyMobiles.length;
-            selectedMobile = healthyMobiles[this.nextMobileIndex % healthyMobiles.length];
-        }
-        this.nextMobileIndex = (this.nextMobileIndex + 1) % healthyMobiles.length;
-        return selectedMobile;
-    }
 }
-
