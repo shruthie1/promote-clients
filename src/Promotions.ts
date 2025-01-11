@@ -544,10 +544,8 @@ export class Promotion {
             }
     
             if (!messageSent) {
-                console.log(`Failed to send a message to any mobile for channel ${channelId}. Moving to the next channel.`);
-                this.channelIndex++;
-            } else {
                 console.log(`________NEXT CHANNEL________`);
+                this.channelIndex++;
             }
         }
     }
