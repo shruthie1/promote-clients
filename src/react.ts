@@ -121,7 +121,7 @@ export class Reactions {
             } catch (error) {
                 this.handleError(error);
             }
-        }, 500); // Adjust the debounce delay as needed
+        }, 300); // Adjust the debounce delay as needed
     }
 
     private async getReactions(chatId: string, client: TelegramClient) {
