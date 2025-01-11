@@ -90,7 +90,7 @@ export class Reactions {
         try {
             this.lastMessageTimestamp = Date.now();
             if (this.lastReactedtime > Date.now() - 30000) {
-                console.log("Master Msg Received", event.message.id.toString(), event.message.text);
+                // console.log("Master Msg Received", event.message.id.toString(), event.message.text);
             }
             if (event.isPrivate) {
             } else {
