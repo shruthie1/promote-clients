@@ -536,7 +536,7 @@ export class Promotion {
         }
     }
 
-    private waitForHealthyMobilesEventDriven(retryInterval = 5000): Promise<string[]> {
+    private waitForHealthyMobilesEventDriven(retryInterval = 30000): Promise<string[]> {
         return new Promise((resolve) => {
             const checkMobiles = async () => {
                 const healthyMobiles = this.getHealthyMobiles();
