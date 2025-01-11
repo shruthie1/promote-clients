@@ -141,10 +141,10 @@ export class Reactions {
         }
         try {
             const chatId = event.message.chatId.toString();
-            console.log("chatId", chatId, "msgId:", event.message.id.toString());
             if (this.shouldReact(chatId)) {
                 const availableReactions = getAllReactions(chatId);
                 if (availableReactions && availableReactions.length > 1) {
+                    console.log("chatId", chatId, "msgId:", event.message.id.toString());
                     const reaction = this.selectReaction(availableReactions);
                     // await this.processReaction(event, reaction);
                 } else {
@@ -218,6 +218,7 @@ export class Reactions {
     private async handleReactionsCache(event: NewMessageEvent, chatId: string): Promise<void> {
         if (this.flag2) {
             this.flag2 = false;
+            console.log("Fetching Reactions for Channel: ", event.client);
             try {
                 const availableReactions = await this.getReactions(chatId, event.client);
                 await this.updateReactionsCache(chatId, availableReactions);
@@ -231,9 +232,13 @@ export class Reactions {
     }
 
     private async fetchAvailableReactions(chatId: string, client: TelegramClientV2): Promise<Api.ReactionEmoji[]> {
-        const result = await client.invoke(new ApiV2.channels.GetFullChannel({ channel: chatId }));
-        const reactionsJson: any = result?.fullChat?.availableReactions?.toJSON();
-        return reactionsJson?.reactions || [];
+        try {
+            const result = await client.invoke(new ApiV2.channels.GetFullChannel({ channel: chatId }));
+            const reactionsJson: any = result?.fullChat?.availableReactions?.toJSON();
+            return reactionsJson?.reactions || [];
+        } catch (error) {
+            console.log("Failed to fetch reactions from tg", chatId);
+        }
     }
 
     private async updateReactionsCache(chatId: string, availableReactions: Api.ReactionEmoji[]): Promise<void> {
