@@ -185,13 +185,6 @@ export class Promotion {
         const tgManager = this.getClient(mobile);
         try {
             if (tgManager?.client) {
-                await tgManager.client.invoke(
-                    new Api.messages.SetTyping({
-                        peer: channelInfo.username,
-                        action: new Api.SendMessageTypingAction(),
-                    })
-                );
-                await sleep(2000);
                 if (this.sleepTime < Date.now()) {
                     console.log(`Sending Message: ${message.message}`);
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
@@ -463,7 +456,7 @@ export class Promotion {
                                 this.channelIndex++;
                                 break;
                             } else {
-                                console.log(`Message not sent to ${channelId}. Retrying...`);
+                                // console.log(`Message not sent to ${channelId}. Retrying...`);
                                 await sleep(10000);
                             }
                         } catch (error) {
