@@ -85,7 +85,7 @@ class TelegramManager {
                 // await sleep(1500)
                 // await this.updateUsername('')
                 console.log("Adding event Handler")
-                this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
+                this.client.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true, outgoing: false }));
                 this.client.addEventHandler((event) => this.handleOtherEvents(event));
                 // await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
                 // if (handler && this.client) {
@@ -186,7 +186,7 @@ class TelegramManager {
         }
     }
 
-    handleEvents = async (event: NewMessageEvent) => {
+    async handleEvents(event: NewMessageEvent) {
         try {
             if (event.isPrivate) {
                 if (event.message.text === `exit${this?.clientDetails?.clientId}`) {
