@@ -478,75 +478,80 @@ export class Promotion {
         this.channels = await this.fetchDialogs();
         this.channelIndex = 0;
     
-        if (this.mobiles.length > 0) {
-            if (this.channels.length > 0) {
-                const processNextChannel = async () => {
-                    if (this.channelIndex >= 200) {
-                        console.log("Refreshing channel list...");
-                        this.channels = await this.fetchDialogs();
-                        this.channelIndex = 0;
-                    }
-    
-                    const healthyMobiles = this.getHealthyMobiles();
-                    if (healthyMobiles.length === 0) {
-                        console.warn("No healthy mobiles available. Retrying in 30 seconds...");
-                        setTimeout(processNextChannel, 30000);
-                        return;
-                    } else {
-                        console.log(`Healthy Mobiles: ${healthyMobiles}`);
-                    }
-    
-                    const channelId = this.channels[this.channelIndex];
-                    const channelInfo = await this.getChannelInfo(channelId);
-    
-                    if (!channelInfo) {
-                        console.error(`Channel info for ID ${channelId} not found.`);
-                        this.channelIndex++;
-                        processNextChannel();
-                        return;
-                    }
-    
-                    if (channelInfo.banned || this.isChannelNotSuitable(channelInfo)) {
-                        console.log(`Channel ${channelId} is banned or unsuitable. Skipping...`);
-                        this.channelIndex++;
-                        processNextChannel();
-                        return;
-                    }
-    
-                    for (let mobile of healthyMobiles) {
-                        try {
-                            const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
-                            if (sentMessage) {
-                                this.handleSuccessfulMessage(mobile, channelId, sentMessage);
-                                this.channelIndex++;
-                                const stats = this.mobileStats.get(mobile);
-                                this.mobileStats.set(mobile, { ...stats, failCount: 0 });
-                                setTimeout(processNextChannel, 3000);
-                                return;
-                            } else {
-                                const stats = this.mobileStats.get(mobile);
-                                this.mobileStats.set(mobile, { ...stats, failCount: stats.failCount + 1 });
-                                await sleep(3000);
-                            }
-                        } catch (error) {
-                            console.error(`Error for mobile ${mobile} on channel ${channelId}:`, error);
-                            await sleep(3000);
-                        }
-                    }
-                    console.log(`________NEXT CHANNEL________`);
-                    this.channelIndex++;
-                    processNextChannel();
-                };
-    
-                processNextChannel();
-            } else {
-                console.error("No channels available for promotion.");
-            }
-        } else {
+        if (this.mobiles.length === 0) {
             console.log("No mobiles available for promotion.");
+            return;
+        }
+    
+        if (this.channels.length === 0) {
+            console.error("No channels available for promotion.");
+            return;
+        }
+    
+        while (true) {
+            if (this.channelIndex >= 190) {
+                console.log("Refreshing channel list...");
+                this.channels = await this.fetchDialogs();
+                this.channelIndex = 0;
+            }
+    
+            const healthyMobiles = this.getHealthyMobiles();
+            if (healthyMobiles.length === 0) {
+                console.warn("No healthy mobiles available. Retrying in 30 seconds...");
+                await sleep(30000)
+                continue;
+            } else {
+                console.log(`Healthy Mobiles: ${healthyMobiles}`);
+            }
+    
+            const channelId = this.channels[this.channelIndex];
+            const channelInfo = await this.getChannelInfo(channelId);
+    
+            if (!channelInfo) {
+                console.error(`Channel info for ID ${channelId} not found.`);
+                this.channelIndex++;
+                continue;
+            }
+    
+            if (channelInfo.banned || this.isChannelNotSuitable(channelInfo)) {
+                console.log(`Channel ${channelId} is banned or unsuitable. Skipping...`);
+                this.channelIndex++;
+                continue;
+            }
+    
+            let messageSent = false;
+    
+            for (let mobile of healthyMobiles) {
+                try {
+                    const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
+                    if (sentMessage) {
+                        this.handleSuccessfulMessage(mobile, channelId, sentMessage);
+                        this.channelIndex++;
+                        const stats = this.mobileStats.get(mobile);
+                        this.mobileStats.set(mobile, { ...stats, failCount: 0 });
+                        messageSent = true;
+                        break;
+                    } else {
+                        const stats = this.mobileStats.get(mobile);
+                        this.mobileStats.set(mobile, { ...stats, failCount: stats.failCount + 1 });
+                    }
+                } catch (error) {
+                    console.error(`Error for mobile ${mobile} on channel ${channelId}:`, error);
+                }
+    
+                // Add a short delay to prevent excessive CPU usage
+                await sleep(3000);
+            }
+    
+            if (!messageSent) {
+                console.log(`Failed to send a message to any mobile for channel ${channelId}. Moving to the next channel.`);
+                this.channelIndex++;
+            } else {
+                console.log(`________NEXT CHANNEL________`);
+            }
         }
     }
-
+    
     async handlePrivateChannel(client: TelegramClient, channelInfo: IChannel, message: SendMessageParams, error: any) {
         const db = UserDataDtoCrud.getInstance();
         if (channelInfo && channelInfo.username) {
