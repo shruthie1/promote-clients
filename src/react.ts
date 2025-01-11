@@ -288,7 +288,7 @@ export class Reactions {
 
         try {
             // console.log(chatId, event.message.id.toString(), reaction[0].emoticon, new Date().toISOString().split('T')[1].split('.')[0])
-            await this.sendReaction(client, event, reaction);
+            await this.sendReaction(client, chatId, event.message.id, reaction);
             // let chatEntity = <Api.Channel>await getEntity(client, event.message.chatId);
             console.log(`${this.currentMobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
             await this.updateReactionStats();
@@ -311,10 +311,10 @@ export class Reactions {
         return [availableReactions[reactionIndex]];
     }
 
-    private async sendReaction(client: TelegramClient, event: NewMessageEvent, reaction: Api.ReactionEmoji[]): Promise<void> {
+    private async sendReaction(client: TelegramClient, chatId: string, msgId: number, reaction: Api.ReactionEmoji[]): Promise<void> {
         const MsgClass = new Api.messages.SendReaction({
-            peer: event.message.chat.id.toString(),
-            msgId: event.message.id,
+            peer: chatId,
+            msgId: msgId,
             reaction,
         });
 
