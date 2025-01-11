@@ -481,7 +481,7 @@ export class Promotion {
         if (this.mobiles.length > 0) {
             if (this.channels.length > 0) {
                 while (true) {
-                    if (this.channelIndex >= this.channels.length) {
+                    if (this.channelIndex >= 200) {
                         console.log("Refreshing channel list...");
                         this.channels = await this.fetchDialogs();
                         this.channelIndex = 0;
