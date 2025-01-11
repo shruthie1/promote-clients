@@ -185,12 +185,16 @@ export class Promotion {
         const tgManager = this.getClient(mobile);
         try {
             if (tgManager?.client) {
-                await tgManager.client.invoke(
-                    new Api.messages.SetTyping({
-                        peer: channelInfo.username,
-                        action: new Api.SendMessageTypingAction(),
-                    })
-                );
+                try {
+                    await tgManager.client.invoke(
+                        new Api.messages.SetTyping({
+                            peer: channelInfo.username,
+                            action: new Api.SendMessageTypingAction(),
+                        })
+                    );
+                } catch (error) {
+                    console.error(`Failed to set typing status for ${channelInfo.username}:`, error.message);
+                }
                 await sleep(2000);
                 if (this.sleepTime < Date.now()) {
                     console.log(`Sending Message: ${message.message}`);
