@@ -300,7 +300,7 @@ export class Promotion {
                                 continue;
                             }
                             const channelScore = await this.calculateChannelScore(this.getClient(mobile).client, channelInfo);
-                            if (channelScore.activeUsers < 5 && channelScore.recentMessages < 20) {
+                            if ((channelScore.activeUsers > 0 && channelScore.recentMessages > 0) && (channelScore.activeUsers < 5 && channelScore.recentMessages < 20)) {
                                 console.log(`Channel ${channelId} high/low score of ${channelScore}. Skipping...`);
                                 await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has high/low score.\nparticipantOffset: ${channelScore.participantOffset}\nrecentMessages: ${channelScore.recentMessages}\nactiveUSers: ${channelScore.activeUsers}` });
                                 this.channelIndex++;
