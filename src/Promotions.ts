@@ -244,7 +244,7 @@ export class Promotion {
         try {
             while (true) {
                 console.log("Starting promoteInBatches...");
-                await this.promoteInBatches();
+                await this.promoteInBatchesV2();
                 console.log("promoteInBatches completed. Retrying in 10 seconds.");
                 await sleep(10000); // Retry mechanism after small delay
             }
@@ -380,9 +380,154 @@ export class Promotion {
                             await sleep(30000);
                         }
                     } else {
-                        console.warn(`No mobile available. Retrying after delay.`);
+                        console.warn(`No mobile available for promotions. Retrying after delay.`);
                         await sleep(30000);
                         mobile = this.selectNextMobile(mobile);
+                    }
+                }
+            } else {
+                console.error(`No channels available for promotion.`);
+            }
+
+            console.log("Sending failure alert...");
+            await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Issue with Promotions`);
+            setTimeout(() => {
+                console.log("Issue with Promotions. Restarting client...");
+                // restartClient(mobile);
+            }, 300000);
+        } else {
+            console.log("Mobile not availables for Starting Promotion");
+        }
+    }
+
+    public async promoteInBatchesV2() {
+        this.channels = await this.fetchDialogs();
+        this.channelIndex = 0; // Initialize channelIndex
+
+        if (this.mobiles.length > 0) {
+            if (this.channels.length > 0) {
+                while (true) {
+                    let healthyMobiles = this.getHealthyMobiles();
+                    if (healthyMobiles.length > 0) {
+                        for (const mobile of healthyMobiles) {
+                            while (true) {
+                                try {
+                                    if (this.channelIndex > 100) {
+                                        console.log("Refreshing channel list after reaching index 190...");
+                                        this.channels = await this.fetchDialogs();
+                                        this.channelIndex = 0;
+                                        continue;
+                                    }
+
+                                    let randomIndex = 'id'
+                                    const channelId = this.channels[this.channelIndex];
+                                    const channelInfo = await this.getChannelInfo(channelId);
+
+                                    if (!channelInfo) {
+                                        console.error(`Channel info for ID ${channelId} not found.`);
+                                        this.channelIndex++;
+                                        continue;
+                                    }
+
+                                    if (channelInfo.banned) {
+                                        console.log(`Channel ${channelId} is banned. Skipping...`);
+                                        this.channelIndex++;
+                                        continue;
+                                    }
+
+                                    const notPattern = new RegExp('online|board|class|PROFIT|wholesale|retail|topper|exam|motivat|medico|shop|follower|insta|traini|cms|cma|subject|currency|color|amity|game|gamin|like|earn|popcorn|TANISHUV|bitcoin|crypto|mall|work|folio|health|civil|win|casino|shop|promot|english|invest|fix|money|book|anim|angime|support|cinema|bet|predic|study|youtube|sub|open|trad|cric|quot|exch|movie|search|film|offer|ott|deal|quiz|boost|dx|academ|insti|talkies|screen|series|webser', "i")
+                                    if (channelInfo.title?.match(notPattern) || channelInfo.username?.match(notPattern)) {
+                                        console.log(`Channel ${channelId} is not suitable for promotion. Skipping...`);
+                                        this.channelIndex++;
+                                        continue;
+                                    }
+
+                                    const channelScore = await this.calculateChannelScore(this.getClient(mobile).client, channelInfo);
+                                    const score = channelScore.participantOffset + channelScore.activeUsers
+                                    if (score > 90) {
+                                        console.log(`Channel ${channelId} high/low score of ${channelScore}. Skipping...`);
+                                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has high/low score.\nscore: ${score}\nparticipantOffset: ${channelScore.participantOffset}\nrecentMessages: ${channelScore.recentMessages}\nactiveUSers: ${channelScore.activeUsers}` });
+                                        this.channelIndex++;
+                                        continue;
+                                    }
+
+                                    let sentMessage: Api.Message;
+                                    if (channelInfo.wordRestriction === 0) {
+                                        // console.log(`Preparing unrestricted promotional message for channel: ${channelInfo.username}`);
+                                        const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
+                                        const emojis = generateEmojis();
+                                        const randomEmoji = getRandomEmoji();
+                                        const hour = getCurrentHourIST();
+                                        const isMorning = (hour > 9 && hour < 22);
+                                        const offset = Math.floor(Math.random() * 3);
+                                        const endMsg = pickOneMsg(['U bussy👀?', "I'm Aviilble!!😊💦", 'Trry Once!!😊💦', 'Trry Once!!😊💦', 'Waiiting fr ur mssg.....Dr!!💦', 'U Onliine?👀', "I'm Avilble!!😊", 'U Bussy??👀💦', 'U Intrstd??👀💦', 'U Awakke?👀💦', 'U therre???💦💦']);
+                                        const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`;
+                                        const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;
+
+                                        // console.log(`Sending message: ${msg}\nAddon: ${addon}`);
+                                        sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: `${msg}\n${addon}` });
+                                    } else {
+                                        console.log(`Channel has word restriction. Selecting random available message.`);
+                                        randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
+                                        console.log(`Selected Msg for ${channelId}, ${channelInfo.title} | ChannelIdex:${this.channelIndex} | MsgIndex: ${randomIndex}`);
+                                        let randomAvailableMsg = this.promoteMsgs[randomIndex];
+                                        if (!randomAvailableMsg) {
+                                            console.log(`Random Msg Does not EXIST:  ${channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
+                                            randomAvailableMsg = "**Hiiiiii**"
+                                        }
+                                        sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: randomAvailableMsg });
+                                    }
+
+                                    if (sentMessage) {
+                                        if (this.failCount > 0) {
+                                            //remove the channel from channel list using channelIndex
+                                            this.channels.splice(this.channelIndex, 1);
+                                            this.channelIndex = this.channelIndex - this.failCount - 1
+                                            this.failCount = 0;
+                                        }
+                                        const floodData = this.limitControl.get(mobile)
+                                        if (floodData.daysLeft == 0) {
+                                            this.limitControl.set(mobile, { ...floodData, daysLeft: -1 });
+                                        }
+                                        this.messageQueue.push({
+                                            mobile,
+                                            channelId,
+                                            messageId: sentMessage.id,
+                                            timestamp: Date.now(),
+                                            messageIndex: randomIndex,
+                                        });
+                                        console.log(`Client ${mobile}: Message SENT to ${channelInfo.channelId} || @${channelInfo.username} || channelIndex: ${this.channelIndex}`);
+                                        // const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
+                                        // console.log(`Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
+                                        await sleep(Math.floor(Math.random() * (5000 - 3000)) + 1000);
+                                        break;
+                                    } else {
+                                        console.warn(`Message sending failed for channel: ${channelInfo.username || channelId}`);
+                                        const floodData = this.limitControl.get(mobile)
+                                        if (this.failCount < 5 && floodData.daysLeft > -1) {
+                                            console.log(`Retrying after a short delay. Fail count: ${this.failCount}`);
+                                            // await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}` });
+                                            this.failCount++;
+                                            await sleep(Math.floor(Math.random() * (5000 - 3000)) + 1000);
+                                        } else {
+                                            console.log(`Switching mobile after ${this.failCount} consecutive failures.`);
+                                            await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${floodData.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}\nchannelScore: ${channelScore}` });
+                                            this.channelIndex = this.channelIndex - this.failCount - 1
+                                            this.failCount = 0;
+                                            await sleep(Math.floor(Math.random() * (5000 - 3000)) + 1000);
+                                            break;
+                                        }
+                                    }
+                                    this.channelIndex++;
+                                } catch (error) {
+                                    console.error(`Error in promoteInBatches for mobile ${mobile}:`, error);
+                                    await sleep(30000);
+                                }
+                            }
+                        }
+                    } else {
+                        console.warn(`No mobile available for promotions. Retrying after delay.`);
+                        await sleep(60000);
                     }
                 }
             } else {

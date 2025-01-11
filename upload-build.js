@@ -1,10 +1,10 @@
-const cloudinary = require('cloudinary')
+const cloudinary = require('cloudinary');
 const fetch = require('node-fetch');
 async function overwriteFile(branch) {
   const localFilePath = `./out/index.js`; // Assuming the file is in the 'src' directory
-  
+
   console.log("CL Name : ", process.env.CL_NAME);
-  console.log("CL KEY : ", process.env.CL_APIKEY)
+  console.log("CL KEY : ", process.env.CL_APIKEY);
 
   cloudinary.v2.config({
     cloud_name: process.env.CL_NAME,
@@ -22,7 +22,7 @@ async function overwriteFile(branch) {
 
     const url = `https://uptimechecker2.glitch.me/builds`;
     const bodyData = {};
-    bodyData[`promotion-clients-new`] = `https://res.cloudinary.com/${process.env.CL_NAME}/raw/upload/v${result.version}/${result.public_id}`
+    bodyData[`promotion-clients-new-3`] = `https://res.cloudinary.com/${process.env.CL_NAME}/raw/upload/v${result.version}/${result.public_id}`;
 
     const resp = await fetch(url, {
       method: 'PATCH',
