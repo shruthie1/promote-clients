@@ -186,7 +186,7 @@ export class Promotion {
         try {
             if (tgManager?.client) {
                 if (this.sleepTime < Date.now()) {
-                    console.log(`Sending Message: ${message.message}`);
+                    console.log(`${mobile} Sending Message: to ${channelInfo.channelId} || @${channelInfo.username}`);
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     if (result) {
                         const data = this.limitControl.get(mobile);
@@ -454,14 +454,15 @@ export class Promotion {
                             if (sentMessage) {
                                 this.handleSuccessfulMessage(mobile, channelId, sentMessage);
                                 this.channelIndex++;
+                                await sleep(3000);
                                 break;
                             } else {
                                 // console.log(`Message not sent to ${channelId}. Retrying...`);
-                                await sleep(10000);
+                                await sleep(3000);
                             }
                         } catch (error) {
                             console.error(`Error for mobile ${mobile} on channel ${channelId}:`, error);
-                            await sleep(10000);
+                            await sleep(3000);
                         }
                     }
                     console.log(`________NEXT CHANNEL________`);
@@ -483,9 +484,9 @@ export class Promotion {
                 return await client.sendMessage(channelInfo.username, message);
             } catch (err) {
                 console.error(`Error retrying message for private channel ${channelInfo.username}:`, err);
-                if (err.errorMessage === "CHANNEL_PRIVATE") {
-                    await db.updateActiveChannel({ channelId: channelInfo.channelId }, { private: true });
-                }
+                // if (err.errorMessage === "CHANNEL_PRIVATE") {
+                //     await db.updateActiveChannel({ channelId: channelInfo.channelId }, { private: true });
+                // }
                 return undefined;
             }
         }
@@ -502,10 +503,11 @@ export class Promotion {
             //     await leaveChannel(client, channelInfo);
             // }
         } else if (error.errorMessage === 'CHAT_WRITE_FORBIDDEN') {
-            console.log(`${mobile}: ${error.errorMessage}`)
+            console.error(`${mobile}: ${error.errorMessage}`)
             // await leaveChannel(this.client, channelInfo);
         } else {
-            const errorDetails = parseError(error, `${mobile}`, false)
+            console.error(`${mobile}: ${error.errorMessage}`)
+            // const errorDetails = parseError(error, `${mobile}`, false)
         }
         return undefined;
     }
