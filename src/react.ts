@@ -95,7 +95,7 @@ export class Reactions {
     ];
 
     async react(event: NewMessageEvent, targetMobile: string): Promise<void> {
-        if (targetMobile !== this.currentMobile || !this.flag || this.waitReactTime > Date.now()) {
+        if (targetMobile !== this.currentMobile || this.waitReactTime > Date.now() || !this.flag) {
             return;
         }
 
@@ -120,7 +120,7 @@ export class Reactions {
             } catch (error) {
                 this.handleError(error);
             }
-        }, 300); // Adjust the debounce delay as needed
+        }, 500); // Adjust the debounce delay as needed
     }
 
     private async getReactions(chatId: string, client: TelegramClient) {

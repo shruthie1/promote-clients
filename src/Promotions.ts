@@ -464,7 +464,7 @@ export class Promotion {
             return { participantOffset, activeUsers: activeUsers.size, recentMessages: recentMessages.length };
         } catch (err) {
             const errorDetails = parseError(err, `Failed to score ${channelInfo.username}`, false);
-            if (errorDetails.message.includes('Could not find the input entity')) {
+            if (errorDetails.message.includes('Could not find the input entity') && !forceUsername) {
                 try {
                     console.error(`trying to join channel ${channelInfo.username}`);
                     await client.invoke(new Api.channels.JoinChannel({ channel: channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId }));
