@@ -28,17 +28,16 @@ class TelegramManager {
     public daysLeft = -1;
     private reactorInstance: Reactions;
     private promoterInstance: Promotion;
-    private last5Minutes = 0;
+    // private last5Minutes = 0;
 
     constructor(clientDetails: IClientDetails, reactorInstance: Reactions, promoterInstance: Promotion) {
         this.clientDetails = clientDetails;
         this.reactorInstance = reactorInstance;
-        this.promoterInstance = promoterInstance;
-
-        setInterval(() => {
-            console.log(`${this.clientDetails.mobile} Msg Count: `, this.last5Minutes)
-            this.last5Minutes = 0;
-        }, 5 * 60 * 1000)
+        this.promoterInstance = promoterInstance
+        // setInterval(() => {
+        //     console.log(`${this.clientDetails.mobile} Msg Count: `, this.last5Minutes)
+        //     this.last5Minutes = 0;
+        // }, 5 * 60 * 1000)
     }
 
     connected() {
@@ -378,7 +377,7 @@ class TelegramManager {
                 }
             } else {
                 await this.reactorInstance?.react(event, this.clientDetails.mobile);
-                this.last5Minutes++;
+                // this.last5Minutes++;
                 setSendPing(true)
             }
         } catch (error) {
