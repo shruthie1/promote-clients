@@ -192,10 +192,10 @@ export class Promotion {
                             action: new Api.SendMessageTypingAction(),
                         })
                     );
+                    await sleep(2000);
                 } catch (error) {
                     console.error(`Failed to set typing status for ${channelInfo.username}:`, error.message);
                 }
-                await sleep(2000);
                 if (this.sleepTime < Date.now()) {
                     console.log(`Sending Message: ${message.message}`);
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
