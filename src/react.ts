@@ -75,7 +75,6 @@ export class Reactions {
     handleEvents = async (event: NewMessageEvent) => {
         try {
             if (event.isPrivate) {
-
             } else {
                 await this.react(event, undefined);
             }
@@ -140,13 +139,14 @@ export class Reactions {
         if (!this.flag || this.waitReactTime > Date.now()) {
             return
         }
-        const chatId = event.message.chatId.toString();
         try {
+            const chatId = event.message.chatId.toString();
+            console.log("chatId", chatId, "msgId:", event.message.id.toString());
             if (this.shouldReact(chatId)) {
                 const availableReactions = getAllReactions(chatId);
                 if (availableReactions && availableReactions.length > 1) {
                     const reaction = this.selectReaction(availableReactions);
-                    await this.processReaction(event, reaction);
+                    // await this.processReaction(event, reaction);
                 } else {
                     await this.handleReactionsCache(event, chatId);
                 }
@@ -154,6 +154,7 @@ export class Reactions {
                 await this.handleReactionRestart(event, chatId);
             }
         } catch (error) {
+            console.log(event);
             this.handleError(error);
         }
     }
