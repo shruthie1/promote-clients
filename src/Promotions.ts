@@ -256,83 +256,83 @@ export class Promotion {
         }
     }
 
-    public async promoteInBatches() {
-        this.channels = await this.fetchDialogs();
-        this.channelIndex = 0; // Initialize channelIndex
-        let mobile = this.selectNextMobile();
+    // public async promoteInBatches() {
+    //     this.channels = await this.fetchDialogs();
+    //     this.channelIndex = 0; // Initialize channelIndex
+    //     let mobile = this.selectNextMobile();
 
-        if (mobile && this.mobiles.length > 0) {
-            if (this.channels.length > 0) {
-                while (true) {
-                    if (mobile) {
-                        try {
-                            if (this.channelIndex > 100) {
-                                console.log("Refreshing channel list after reaching index 190...");
-                                this.channels = await this.fetchDialogs();
-                                this.channelIndex = 0;
-                                continue;
-                            }
+    //     if (mobile && this.mobiles.length > 0) {
+    //         if (this.channels.length > 0) {
+    //             while (true) {
+    //                 if (mobile) {
+    //                     try {
+    //                         if (this.channelIndex > 100) {
+    //                             console.log("Refreshing channel list after reaching index 190...");
+    //                             this.channels = await this.fetchDialogs();
+    //                             this.channelIndex = 0;
+    //                             continue;
+    //                         }
 
-                            const channelId = this.channels[this.channelIndex];
-                            const channelInfo = await this.getChannelInfo(channelId);
+    //                         const channelId = this.channels[this.channelIndex];
+    //                         const channelInfo = await this.getChannelInfo(channelId);
 
-                            if (!channelInfo) {
-                                console.error(`Channel info for ID ${channelId} not found.`);
-                                this.channelIndex++;
-                                continue;
-                            }
+    //                         if (!channelInfo) {
+    //                             console.error(`Channel info for ID ${channelId} not found.`);
+    //                             this.channelIndex++;
+    //                             continue;
+    //                         }
 
-                            if (channelInfo.banned) {
-                                console.log(`Channel ${channelId} is banned. Skipping...`);
-                                this.channelIndex++;
-                                continue;
-                            }
+    //                         if (channelInfo.banned) {
+    //                             console.log(`Channel ${channelId} is banned. Skipping...`);
+    //                             this.channelIndex++;
+    //                             continue;
+    //                         }
 
-                            if (this.isChannelNotSuitable(channelInfo)) {
-                                this.channelIndex++;
-                                continue;
-                            }
+    //                         if (this.isChannelNotSuitable(channelInfo)) {
+    //                             this.channelIndex++;
+    //                             continue;
+    //                         }
 
-                            const channelScore = await this.calculateChannelScore(this.getClient(mobile).client, channelInfo);
-                            if (this.isChannelScoreHigh(channelScore)) {
-                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has high/low score.\nscore: ${channelScore.participantOffset + channelScore.activeUsers}\nparticipantOffset: ${channelScore.participantOffset}\nrecentMessages: ${channelScore.recentMessages}\nactiveUSers: ${channelScore.activeUsers}` });
-                                this.channelIndex++;
-                                continue;
-                            }
+    //                         const channelScore = await this.calculateChannelScore(this.getClient(mobile).client, channelInfo);
+    //                         if (this.isChannelScoreHigh(channelScore)) {
+    //                             await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has high/low score.\nscore: ${channelScore.participantOffset + channelScore.activeUsers}\nparticipantOffset: ${channelScore.participantOffset}\nrecentMessages: ${channelScore.recentMessages}\nactiveUSers: ${channelScore.activeUsers}` });
+    //                             this.channelIndex++;
+    //                             continue;
+    //                         }
 
-                            const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
-                            if (sentMessage) {
-                                this.handleSuccessfulMessage(mobile, channelId, sentMessage);
-                                mobile = this.selectNextMobile(mobile);
-                            } else {
-                                await this.handleFailedMessage(mobile, channelInfo, channelScore);
-                                mobile = this.selectNextMobile(mobile);
-                            }
-                            this.channelIndex++;
-                        } catch (error) {
-                            console.error(`Error in promoteInBatches for mobile ${mobile}:`, error);
-                            await sleep(30000);
-                        }
-                    } else {
-                        console.warn(`No mobile available for promotions. Retrying after delay.`);
-                        await sleep(30000);
-                        mobile = this.selectNextMobile(mobile);
-                    }
-                }
-            } else {
-                console.error(`No channels available for promotion.`);
-            }
+    //                         const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
+    //                         if (sentMessage) {
+    //                             this.handleSuccessfulMessage(mobile, channelId, sentMessage);
+    //                             mobile = this.selectNextMobile(mobile);
+    //                         } else {
+    //                             await this.handleFailedMessage(mobile, channelInfo, channelScore);
+    //                             mobile = this.selectNextMobile(mobile);
+    //                         }
+    //                         this.channelIndex++;
+    //                     } catch (error) {
+    //                         console.error(`Error in promoteInBatches for mobile ${mobile}:`, error);
+    //                         await sleep(30000);
+    //                     }
+    //                 } else {
+    //                     console.warn(`No mobile available for promotions. Retrying after delay.`);
+    //                     await sleep(30000);
+    //                     mobile = this.selectNextMobile(mobile);
+    //                 }
+    //             }
+    //         } else {
+    //             console.error(`No channels available for promotion.`);
+    //         }
 
-            console.log("Sending failure alert...");
-            await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Issue with Promotions`);
-            setTimeout(() => {
-                console.log("Issue with Promotions. Restarting client...");
-                // restartClient(mobile);
-            }, 300000);
-        } else {
-            console.log("Mobile not availables for Starting Promotion");
-        }
-    }
+    //         console.log("Sending failure alert...");
+    //         await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Issue with Promotions`);
+    //         setTimeout(() => {
+    //             console.log("Issue with Promotions. Restarting client...");
+    //             // restartClient(mobile);
+    //         }, 300000);
+    //     } else {
+    //         console.log("Mobile not availables for Starting Promotion");
+    //     }
+    // }
 
     private isChannelNotSuitable(channelInfo: IChannel): boolean {
         const notPattern = new RegExp('online|board|class|PROFIT|wholesale|retail|topper|exam|motivat|medico|shop|follower|insta|traini|cms|cma|subject|currency|color|amity|game|gamin|like|earn|popcorn|TANISHUV|bitcoin|crypto|mall|work|folio|health|civil|win|casino|shop|promot|english|invest|fix|money|book|anim|angime|support|cinema|bet|predic|study|youtube|sub|open|trad|cric|quot|exch|movie|search|film|offer|ott|deal|quiz|boost|dx|academ|insti|talkies|screen|series|webser', "i");
@@ -464,11 +464,11 @@ export class Promotion {
                                 break;
                             } else {
                                 console.log(`Message not sent to ${channelId}. Retrying...`);
-                                await sleep(3000);
+                                await sleep(10000);
                             }
                         } catch (error) {
                             console.error(`Error for mobile ${mobile} on channel ${channelId}:`, error);
-                            await sleep(5000);
+                            await sleep(10000);
                         }
                     }
                     console.log(`________NEXT CHANNEL________`);
