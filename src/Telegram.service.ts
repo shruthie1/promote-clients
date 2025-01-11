@@ -3,6 +3,7 @@ import { parseError } from "./parseError";
 import { Promotion } from "./Promotions";
 import { Reactions } from "./react";
 import TelegramManager from "./TelegramManager";
+import { sleep } from "./utils";
 
 export class TelegramService {
     private static clientsMap: Map<string, TelegramManager> = new Map();
@@ -42,6 +43,7 @@ export class TelegramService {
         const mobiles = getMapKeys();
         console.log("Total clients:", mobiles.length);
         this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this))
+        await sleep(3000)
         for (const mobile of mobiles) {
             const clientDetails = getClientDetails(mobile)
             await this.createClient(clientDetails, false, true);

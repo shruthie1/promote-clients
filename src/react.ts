@@ -40,15 +40,15 @@ export class Reactions {
     lastMessageTimestamp: number;
 
     constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
+        this.createClient(process.env.reactMobile);
         this.reactQueue = ReactQueue.getInstance();
         this.mobiles = mobiles
         this.getClient = getClient;
         this.currentMobile = mobiles[0]
-        this.createClient(process.env.reactMobile);
         console.log("Reaction Instance created")
         setInterval(this.checkForNewMessages, 30000);
     }
-    
+
     private checkForNewMessages = () => {
         const currentTime = Date.now();
         if (currentTime - this.lastMessageTimestamp > 30000) {
@@ -58,6 +58,7 @@ export class Reactions {
             console.log("Messages have been received within the last 30 seconds.");
         }
     }
+    
     async createClient(mobile: string): Promise<void> {
         try {
             //console.log("Creating Client: ", this.clientDetails.clientId)
@@ -72,6 +73,7 @@ export class Reactions {
 
                 this.masterClient.setLogLevel(LogLevel.NONE);
                 await this.masterClient.connect();
+                await sleep(2000)
                 this.masterClient.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true }));
                 console.log("Connected MASTER CLIENT: ", mobile)
                 // await this.joinChannel("clientupdates");                
@@ -84,7 +86,7 @@ export class Reactions {
         }
     }
 
-    handleEvents = async (event: NewMessageEvent) => {
+    async handleEvents(event: NewMessageEvent) {
         try {
             this.lastMessageTimestamp = Date.now();
             if (event.isPrivate) {
