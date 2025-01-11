@@ -148,7 +148,7 @@ export class Reactions {
                     const reaction = this.selectReaction(availableReactions);
                     // await this.processReaction(event, reaction);
                 } else {
-                    await this.handleReactionsCache(event, chatId);
+                    await this.handleReactionsCache(chatId);
                 }
             } else {
                 await this.handleReactionRestart(event, chatId);
@@ -215,12 +215,12 @@ export class Reactions {
     }
 
 
-    private async handleReactionsCache(event: NewMessageEvent, chatId: string): Promise<void> {
+    private async handleReactionsCache(chatId: string): Promise<void> {
         if (this.flag2) {
             this.flag2 = false;
-            console.log("Fetching Reactions for Channel: ", event.client);
+            console.log("Fetching Reactions for Channel: ", this.masterClient);
             try {
-                const availableReactions = await this.getReactions(chatId, event.client);
+                const availableReactions = await this.getReactions(chatId, this.masterClient);
                 await this.updateReactionsCache(chatId, availableReactions);
             } catch (error) {
                 this.handleCacheError(error, chatId);
@@ -239,6 +239,7 @@ export class Reactions {
         } catch (error) {
             console.log("Failed to fetch reactions from tg", chatId);
         }
+        return []
     }
 
     private async updateReactionsCache(chatId: string, availableReactions: Api.ReactionEmoji[]): Promise<void> {
