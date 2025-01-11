@@ -62,7 +62,7 @@ export class Reactions {
                 this.masterClient.setLogLevel(LogLevel.NONE);
                 await this.masterClient.connect();
                 this.masterClient.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true }));
-                console.log("Connected : ",)
+                console.log("Connected MASTER CLIENT: ", mobile)
                 // await this.joinChannel("clientupdates");                
             } else {
                 console.log(`No Session Found: ${mobile}`)
@@ -73,7 +73,7 @@ export class Reactions {
         }
     }
 
-    async handleEvents (event: NewMessageEvent){
+    async handleEvents(event: NewMessageEvent) {
         try {
             if (event.isPrivate) {
             } else {
