@@ -13,7 +13,7 @@ export function getAReaction(chatId: string): string {
 }
 
 export function getAllReactions(chatId: string): Api.ReactionEmoji[] {
-    return chatReactionsCache.get(chatId);
+    return chatReactionsCache.get(chatId) || [];
 }
 
 export function setReactions(chatId: string, reactions: Api.ReactionEmoji[]) {
