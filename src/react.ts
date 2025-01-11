@@ -176,7 +176,6 @@ export class Reactions {
                 await this.handleReactionRestart(event, chatId);
             }
         } catch (error) {
-            console.log(event);
             this.handleError(error);
         }
     }
@@ -272,12 +271,12 @@ export class Reactions {
         }
 
         if (availableReactions.length < 1 && this.defaultReactions.length > 1) {
-            // console.log(`setting DEFAULT reactions for Channel:  ${chatId}, ${this.defaultReactions.length}`)
+            console.log(`setting DEFAULT reactions for Channel:  ${chatId}, ${this.defaultReactions.length}`)
             const availReactions = this.defaultReactions.map(emoticon => emoticon.emoticon)
             // await this.activeChannelsService.addReactions(chatId.replace(/^-100/, ""), availReactions)
             setReactions(chatId, this.defaultReactions);
         } else {
-            // console.log(`setting reactions for Channel:  ${chatId},  ${availableReactions.length}`)
+            console.log(`setting reactions for Channel:  ${chatId},  ${availableReactions.length}`)
             setReactions(chatId, availableReactions);
         }
     }
