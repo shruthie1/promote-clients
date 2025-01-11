@@ -4,7 +4,7 @@ import { NewMessageEvent } from "telegram/events";
 import { sleep } from "telegram/Helpers";
 import { parseError } from "./parseError";
 import { ReactQueue } from "./ReactQueue";
-import { contains, IChannel } from "./utils";
+import { contains, IChannel, selectRandomElements } from "./utils";
 import { getAllReactions, setReactions } from "./reaction.utils";
 import TelegramManager from "./TelegramManager";
 import { UserDataDtoCrud } from "./dbservice";
@@ -112,6 +112,7 @@ export class Reactions {
                         const reaction = this.selectReaction(availableReactions);
                         await this.processReaction(event, reaction);
                     } else {
+                        this.processReaction(event, selectRandomElements(this.standardReactions, 1));
                         await this.handleReactionsCache(event, chatId);
                     }
                 } else {
