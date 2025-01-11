@@ -487,23 +487,13 @@ export class Promotion {
             console.error("No channels available for promotion.");
             return;
         }
-
         while (true) {
             if (this.channelIndex >= 190) {
                 console.log("Refreshing channel list...");
                 this.channels = await this.fetchDialogs();
                 this.channelIndex = 0;
             }
-
-            const healthyMobiles = this.getHealthyMobiles();
-            if (healthyMobiles.length === 0) {
-                console.warn("No healthy mobiles available. Retrying in 30 seconds...");
-                await sleep(30000);
-                continue;
-            } else {
-                console.log(`Healthy Mobiles: ${healthyMobiles}`);
-            }
-
+            const healthyMobiles = await this.waitForHealthyMobilesEventDriven();
             const channelId = this.channels[this.channelIndex];
             const channelInfo = await this.getChannelInfo(channelId);
 
@@ -540,9 +530,27 @@ export class Promotion {
                     console.error(`Error for mobile ${mobile} on channel ${channelId}:`, error);
                 }
             }
-            await sleep(3000);
+
+            await sleep(3000); // Avoid too frequent requests
             this.channelIndex++;
         }
+    }
+
+    private waitForHealthyMobilesEventDriven(retryInterval = 5000): Promise<string[]> {
+        return new Promise((resolve) => {
+            const checkMobiles = async () => {
+                const healthyMobiles = this.getHealthyMobiles();
+                if (healthyMobiles.length > 0) {
+                    console.log(`Healthy mobiles found.`);
+                    resolve(healthyMobiles);
+                } else {
+                    console.warn(`No healthy mobiles available. Retrying in ${retryInterval / 1000} seconds...`);
+                    setTimeout(checkMobiles, retryInterval); // Schedule the next check without blocking
+                }
+            };
+
+            checkMobiles();
+        });
     }
 
     async handlePrivateChannel(client: TelegramClient, channelInfo: IChannel, message: SendMessageParams, error: any) {
