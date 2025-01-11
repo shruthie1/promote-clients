@@ -297,9 +297,9 @@ export class Promotion {
                             }
                             const channelScore = await this.calculateChannelScore(this.getClient(mobile).client, channelInfo);
                             const score = channelScore.participantOffset + channelScore.activeUsers
-                            if (score < 25) {
+                            if (score < 20) {
                                 console.log(`Channel ${channelId} has low score of ${channelScore}. Skipping...`);
-                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score.\nscore: ${score}\nparticipantOffset: ${channelScore.participantOffset}\nrecentMessages: ${channelScore.recentMessages}\nactiveUSers: ${channelScore.activeUsers}` });
+                                // await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} has low score.\nscore: ${score}\nparticipantOffset: ${channelScore.participantOffset}\nrecentMessages: ${channelScore.recentMessages}\nactiveUSers: ${channelScore.activeUsers}` });
                                 this.channelIndex++;
                                 continue;
                             }
@@ -437,7 +437,7 @@ export class Promotion {
     async calculateChannelScore(client: TelegramClient, channelInfo: IChannel, forceUsername: boolean = false): Promise<{ participantOffset: number, activeUsers: number, recentMessages: number }> {
         try {
             const entity = forceUsername && channelInfo.username ? channelInfo.username : channelInfo.channelId
-            const messages = await client.getMessages(entity, { limit: 100, });
+            const messages = await client.getMessages(entity, { limit: 100 });
             const tenMins = 10 * 60 * 1000;
             const currentTime = Date.now();
             const recentMessages = messages.filter(
