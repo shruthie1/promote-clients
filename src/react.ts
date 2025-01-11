@@ -45,7 +45,6 @@ export class Reactions {
         this.mobiles = mobiles
         this.getClient = getClient;
         this.currentMobile = mobiles[0]
-        console.log("Reaction Instance created")
         setInterval(this.checkForNewMessages, 30000);
     }
 
@@ -53,18 +52,13 @@ export class Reactions {
         const currentTime = Date.now();
         if (currentTime - this.lastMessageTimestamp > 30000) {
             console.log("No new messages received in the last 30 seconds.");
-            // You can add additional notification logic here if needed
-        } else {
-            console.log("Messages have been received within the last 30 seconds.");
         }
     }
 
     async createClient(mobile: string): Promise<void> {
         try {
-            //console.log("Creating Client: ", this.clientDetails.clientId)
             const result2 = <any>await fetchWithTimeout(`https://mychatgpt-xk3y.onrender.com/forward/archived-clients/fetchOne/${mobile}`);
             if (result2.data) {
-                // Create TelegramClient with a different version
                 this.masterClient = new TelegramClientV2(new StringSessionV2(result2.data.session), parseInt(process.env.API_ID), process.env.API_HASH, {
                     connectionRetries: 5,
                     useIPV6: true,
@@ -75,8 +69,6 @@ export class Reactions {
                 await this.masterClient.connect();
                 await sleep(2000)
                 this.masterClient.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true }));
-                console.log("Connected MASTER CLIENT: ", mobile)
-                // await this.joinChannel("clientupdates");                
             } else {
                 console.log(`No Session Found: ${mobile}`)
             }
@@ -101,13 +93,10 @@ export class Reactions {
         }
     }
 
-
     public async setMobiles(mobiles: string[]) {
-        console.log("Setting Mobiles in Reaction Instance", mobiles.length);
         this.mobiles = mobiles
         const db = UserDataDtoCrud.getInstance()
         const result = await db.increaseReactCount(process.env.clientId, this.successCount);
-        console.log("Updated React Success Count", this.successCount);
         this.successCount = 0;
         for (const mobile of mobiles) {
             if (!this.floodControl.has(mobile)) {
@@ -158,22 +147,16 @@ export class Reactions {
         }
         try {
             const chatId = event.message.chatId.toString();
-            console.log(`Processing reaction for chatId: ${chatId}`);
             if (this.shouldReact(chatId)) {
                 const availableReactions = getAllReactions(chatId);
-                console.log(`Available reactions for chatId ${chatId}: ${availableReactions?.length}`);
                 if (availableReactions && availableReactions.length > 1) {
-                    console.log("chatId", chatId, "msgId:", event.message.id.toString());
                     const reaction = this.selectReaction(availableReactions);
-                    console.log(`Selected reaction: ${reaction[0].emoticon}`);
                     await this.processReaction(event, reaction);
                 } else {
-                    console.log(`Fetching reactions cache for chatId: ${chatId}`);
                     this.processReaction(event, [new Api.ReactionEmoji({ emoticon: "👍" })]);
                     await this.handleReactionsCache(chatId);
                 }
             } else {
-                console.log(`Handling reaction restart for chatId: ${chatId}`);
                 await this.handleReactionRestart(event, chatId);
             }
         } catch (error) {
@@ -182,28 +165,13 @@ export class Reactions {
     }
 
     private async getReactions(chatId: string) {
-        const channel = undefined//await this.activeChannelsService.findOne(chatId.replace(/^-100/, ""))
+        const channel = undefined
         if (channel && channel.reactRestricted) {
             this.reactRestrictedIds.push(chatId);
             return [];
         } else {
             const reactions = await this.fetchAvailableReactions(chatId);
-            console.log(`Fetched ${reactions.length} reactions for chatId: ${chatId}`);
             return reactions;
-            // if (channel) {
-            //     const dbReactions = channel?.reactions?.map(emoticon => new Api.ReactionEmoji({ emoticon }));
-            //     if (dbReactions && dbReactions.length > 3) {
-            //         console.log(channel.username, channel.channelId, channel.reactions.length);
-            //         return dbReactions
-            //     } else {
-            //         const reactions = await this.fetchAvailableReactions(chatId, client);
-            //         return reactions;
-            //     }
-            // } else {
-            //     const channel = await this.getChannelFromTg(chatId, client);
-            //     // await this.activeChannelsService.create(channel)
-            //     return []
-            // }
         }
     }
 
@@ -237,14 +205,11 @@ export class Reactions {
         }
     }
 
-
     private async handleReactionsCache(chatId: string): Promise<void> {
         if (this.flag2) {
             this.flag2 = false;
             try {
-                console.log(`Fetching reactions for chatId: ${chatId}`);
                 const availableReactions = await this.getReactions(chatId);
-                console.log(`Updating reactions cache for chatId: ${chatId}`);
                 await this.updateReactionsCache(chatId, availableReactions);
             } catch (error) {
                 this.handleCacheError(error, chatId);
@@ -252,8 +217,6 @@ export class Reactions {
                 this.flag2 = true;
                 await sleep(3000);
             }
-        } else {
-            console.log("Already fetching reactions")
         }
     }
 
@@ -274,12 +237,9 @@ export class Reactions {
         }
 
         if (availableReactions.length < 1 && this.defaultReactions.length > 1) {
-            console.log(`setting DEFAULT reactions for Channel:  ${chatId}, ${this.defaultReactions.length}`)
             const availReactions = this.defaultReactions.map(emoticon => emoticon.emoticon)
-            // await this.activeChannelsService.addReactions(chatId.replace(/^-100/, ""), availReactions)
             setReactions(chatId, this.defaultReactions);
         } else {
-            console.log(`setting reactions for Channel:  ${chatId},  ${availableReactions.length}`)
             setReactions(chatId, availableReactions);
         }
     }
@@ -302,20 +262,15 @@ export class Reactions {
 
     private async processReaction(event: NewMessageEvent, reaction: Api.ReactionEmoji[]): Promise<void> {
         this.flag = false;
-        console.log(`Processing reaction for event: ${event.message.id}, reaction: ${reaction[0].emoticon}`);
         const tgManager = this.getClient(this.currentMobile);
         if (tgManager?.client) {
-            console.log(`Executing reaction with client: ${this.currentMobile}`);
             await this.executeReaction(event, tgManager.client, reaction);
             this.currentMobile = this.selectNextMobile();
-            console.log(`Next mobile selected: ${this.currentMobile}`);
         } else {
             this.flag = true;
-            console.log(`Client is undefined: ${this.currentMobile}`);
             this.mobiles = this.mobiles.filter(mobile => mobile !== this.currentMobile);
             this.floodControl.delete(this.currentMobile);
-            this.currentMobile = this.selectNextMobile(); //dont change this
-            console.log(`Restarting client for mobile: ${this.currentMobile}`);
+            this.currentMobile = this.selectNextMobile();
             await restartClient(this.currentMobile);
         }
     }
@@ -324,12 +279,8 @@ export class Reactions {
         const chatId = event.chatId.toString();
 
         try {
-            // console.log(chatId, event.message.id.toString(), reaction[0].emoticon, new Date().toISOString().split('T')[1].split('.')[0])
             await this.sendReaction(client, chatId, event.message.id, reaction);
-            // let chatEntity = <Api.Channel>await getEntity(client, event.message.chatId);
-            console.log(`${this.currentMobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
             await this.updateReactionStats();
-            // await this.activeChannelsService.addReactions(chatId.replace(/^-100/, ""), [reaction[0].emoticon])
         } catch (error) {
             await this.handleReactionError(error, reaction, chatId, this.currentMobile);
         } finally {
@@ -381,20 +332,13 @@ export class Reactions {
         } else if (error.errorMessage === "REACTION_INVALID") {
             let availableReactions = [...getAllReactions(chatId)];
             availableReactions = [...availableReactions.splice(availableReactions.indexOf(reaction[0]), 1)]
-            console.log(`${mobile} Removed Reaction : ${error.errorMessage}: ${chatId} ${reaction[0].emoticon}`, new Date().toISOString().split('T')[1].split('.')[0],);
             setReactions(chatId, availableReactions);
-            // const result = await this.activeChannelsService.removeReaction(chatId.replace(/^-100/, ""), reaction[0].emoticon)
-            // if (result.reactions.length == 0) {
-            // await this.activeChannelsService.update(chatId.replace(/^-100/, ""), { reactRestricted: true })
-            // }
         } else {
-            console.log(`${mobile} Reaction failed: ${error.errorMessage}`, new Date().toISOString().split('T')[1].split('.')[0]);
+            console.log(`${mobile} Reaction failed: ${error.errorMessage}`);
         }
     }
 
     private async handleFloodError(error: any, mobile: string): Promise<void> {
-        console.log(`Handling flood error for mobile: ${mobile} for ${error.seconds} seconds`);
-        console.log(`  floodCount: ${this.floodCount}`);
         const currentFlood = this.floodControl.get(mobile) || { triggeredTime: 0, releaseTime: 0, count: 0 };
 
         const releaseTime = Date.now() + error.seconds * 1000;
@@ -404,8 +348,6 @@ export class Reactions {
             releaseTime,
             count: currentFlood.count + 1,
         });
-        // this.waitReactTime = Date.now() + error.seconds * 1001;
-        // this.minWaitTime += error.seconds * 3;
         this.reactSleepTime = 5000;
         this.targetReactionDelay += 500;
         this.minWaitTime += 500;
@@ -413,10 +355,8 @@ export class Reactions {
         this.floodCount++;
     }
 
-
     private async handleReactionRestart(event: NewMessageEvent, chatId: string): Promise<void> {
         if (this.lastReactedtime < Date.now() - 60000 && this.shouldRestart(chatId)) {
-            console.log("Restarting reaction process...");
             this.resetReactionState();
         }
     }
