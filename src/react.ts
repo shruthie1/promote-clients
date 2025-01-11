@@ -10,7 +10,7 @@ import TelegramManager from "./TelegramManager";
 import { TelegramClient as TelegramClientV2, Api as ApiV2 } from "telegram-v2";
 import { UserDataDtoCrud } from "./dbservice";
 import { restartClient } from "./express";
-import { NewMessageEvent } from "telegram-v2/events";
+import { NewMessage, NewMessageEvent } from "telegram-v2/events";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { LogLevel } from "telegram/extensions/Logger";
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=${process.env.notifChannel}`
@@ -61,7 +61,7 @@ export class Reactions {
 
                 this.masterClient.setLogLevel(LogLevel.NONE);
                 await this.masterClient.connect();
-                this.masterClient.addEventHandler(this.handleEvents.bind(this));
+                this.masterClient.addEventHandler(this.handleEvents, new NewMessage({ incoming: true }));
                 console.log("Connected : ",)
                 // await this.joinChannel("clientupdates");                
             } else {
@@ -72,7 +72,8 @@ export class Reactions {
             parseError(error, mobile);
         }
     }
-    handleEvents = async (event: NewMessageEvent) => {
+
+    async handleEvents (event: NewMessageEvent){
         try {
             if (event.isPrivate) {
             } else {
