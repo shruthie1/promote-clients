@@ -58,7 +58,7 @@ export class Reactions {
             console.log("Messages have been received within the last 30 seconds.");
         }
     }
-    
+
     async createClient(mobile: string): Promise<void> {
         try {
             //console.log("Creating Client: ", this.clientDetails.clientId)
@@ -89,8 +89,10 @@ export class Reactions {
     async handleEvents(event: NewMessageEvent) {
         try {
             this.lastMessageTimestamp = Date.now();
-            if (event.isPrivate) {
+            if (this.lastReactedtime > Date.now() - 30000) {
                 console.log("Master Msg Received", event.message.id.toString(), event.message.text);
+            }
+            if (event.isPrivate) {
             } else {
                 await this.react(event, undefined);
             }
