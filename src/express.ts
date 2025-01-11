@@ -395,17 +395,17 @@ export async function restartClient(mobile: string) {
 
   console.log(`===================Restarting service : ${mobile.toUpperCase()}=======================`);
 
-  try {
-    const tgManager = await telegramService.getClient(mobile);
+  // try {
+  //   const tgManager = await telegramService.getClient(mobile);
 
-    if (tgManager) {
-      await telegramService.disposeClient(mobile);
-      await sleep(2000);
-      await telegramService.createClient(clientDetails, false, true);
-    } else {
-      console.error(`TelegramManager instance not found for clientId: ${mobile}`);
-    }
-  } catch (error) {
-    console.error(`Failed to restart client ${mobile}:`, error);
-  }
+  //   if (tgManager) {
+  //     await telegramService.disposeClient(mobile);
+  //     await sleep(2000);
+  //     await telegramService.createClient(clientDetails, false, true);
+  //   } else {
+  //     console.error(`TelegramManager instance not found for clientId: ${mobile}`);
+  //   }
+  // } catch (error) {
+  //   console.error(`Failed to restart client ${mobile}:`, error);
+  // }
 }
