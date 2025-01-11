@@ -169,8 +169,8 @@ export class Reactions {
                     await this.processReaction(event, reaction);
                 } else {
                     console.log(`Fetching reactions cache for chatId: ${chatId}`);
+                    this.processReaction(event, [new Api.ReactionEmoji({ emoticon: "👍" })]);
                     await this.handleReactionsCache(chatId);
-                    await this.processReaction(event, [new Api.ReactionEmoji({ emoticon: "👍" })]);
                 }
             } else {
                 console.log(`Handling reaction restart for chatId: ${chatId}`);
