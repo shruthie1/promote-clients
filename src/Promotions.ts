@@ -127,8 +127,12 @@ export class Promotion {
 
     private getHealthyMobiles() {
         return this.mobiles.filter((mobile) => {
-            const stats = this.mobileStats.get(mobile);
-            return stats && stats.daysLeft < 7 && stats.lastMessageTime < Date.now() - 12 * 60 * 1000 && stats.failCount < 10;
+            let stats = this.mobileStats.get(mobile);
+            if (stats.failCount > 10) {
+                stats = { ...stats, daysLeft: 0, sleepTime: Date.now() + 10 * 60 * 1000 };
+                this.mobileStats.set(mobile, stats);
+            }
+            return stats && stats.daysLeft < 7 && stats.lastMessageTime < Date.now() - 12 * 60 * 1000 && stats.sleepTime < Date.now();
         });
     }
 
@@ -275,7 +279,7 @@ export class Promotion {
                 console.log(error);
                 console.warn(`Client ${mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                 const stats = this.mobileStats.get(mobile);
-                this.mobileStats.set(mobile, { ...stats, sleepTime: Date.now() + (error.seconds * 1000)});
+                this.mobileStats.set(mobile, { ...stats, sleepTime: Date.now() + (error.seconds * 1000) });
                 return undefined;
             } else {
                 console.error(`Client ${mobile}: Error sending message to ${channelInfo.username}: ${error.errorMessage}`);
