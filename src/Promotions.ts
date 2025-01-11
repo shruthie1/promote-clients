@@ -541,7 +541,7 @@ export class Promotion {
             const checkMobiles = async () => {
                 const healthyMobiles = this.getHealthyMobiles();
                 if (healthyMobiles.length > 0) {
-                    console.log(`Healthy mobiles found.`);
+                    console.log(`Healthy mobiles: `, healthyMobiles);
                     resolve(healthyMobiles);
                 } else {
                     console.warn(`No healthy mobiles available. Retrying in ${retryInterval / 1000} seconds...`);
