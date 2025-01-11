@@ -161,7 +161,7 @@ export class Reactions {
             console.log(`Processing reaction for chatId: ${chatId}`);
             if (this.shouldReact(chatId)) {
                 const availableReactions = getAllReactions(chatId);
-                console.log(`Available reactions for chatId ${chatId}: ${availableReactions.length}`);
+                console.log(`Available reactions for chatId ${chatId}: ${availableReactions?.length}`);
                 if (availableReactions && availableReactions.length > 1) {
                     console.log("chatId", chatId, "msgId:", event.message.id.toString());
                     const reaction = this.selectReaction(availableReactions);
