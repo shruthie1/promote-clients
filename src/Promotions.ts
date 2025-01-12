@@ -636,7 +636,6 @@ export class Promotion {
         const result: Record<string, MobileStats> = {};
         this.mobileStats.forEach((value, key) => {
             result[key] = value;
-            console.log(`${key}:`, value);
         });
         return result;
     }
@@ -646,10 +645,8 @@ export class Promotion {
         const result: Record<string, Record<string, { success: boolean, errorMessage?: string }>> = {};
         this.promotionResults.forEach((innerMap, outerKey) => {
             result[outerKey] = {};
-            console.log(`${outerKey}:`);
             innerMap.forEach((value, innerKey) => {
                 result[outerKey][innerKey] = value;
-                console.log(`  ${innerKey}:`, value);
             });
         });
         return result;
