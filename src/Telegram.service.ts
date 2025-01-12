@@ -56,7 +56,7 @@ export class TelegramService {
         console.log("Total clients:", mobiles.length);
         this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this))
         this.promoterInstance = Promotion.getInstance(mobiles, this.getClient.bind(this));
-        this.promoterInstance.importResultsFromJson();
+        await this.promoterInstance.importResultsFromJson();
         for (const mobile of mobiles) {
             const clientDetails = getClientDetails(mobile)
             await this.createClient(clientDetails, false, true);

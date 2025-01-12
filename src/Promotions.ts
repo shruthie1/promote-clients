@@ -110,11 +110,9 @@ export class Promotion {
 
     setDaysLeft(mobile: string, daysLeft: number) {
         console.log("Setting DaysLeft:", daysLeft)
-        const data = this.mobileStats.get(mobile)
-        this.mobileStats.set(mobile, { ...data, daysLeft: daysLeft })
         const stats = this.mobileStats.get(mobile);
         if (stats) {
-            stats.daysLeft = daysLeft;
+            this.mobileStats.set(mobile, { ...stats, daysLeft: daysLeft })
         }
         if (daysLeft == -1) {
             this.clearPromtionsMap(mobile);
