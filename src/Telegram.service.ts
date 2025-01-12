@@ -34,6 +34,14 @@ export class TelegramService {
         return this.promoterInstance?.getMobileStats();
     }
 
+    saveMobileStats() {
+        return this.promoterInstance?.saveResultsToJson();
+    }
+
+    importMobileStats() {
+        return this.promoterInstance?.saveResultsToJson();
+    }
+
     async setMobiles(mobiles: string[]) {
         this.promoterInstance.setMobiles(mobiles)
         await this.reactorInstance.setMobiles(mobiles)
@@ -44,6 +52,7 @@ export class TelegramService {
         console.log("Total clients:", mobiles.length);
         this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this))
         this.promoterInstance = Promotion.getInstance(mobiles, this.getClient.bind(this));
+        this.promoterInstance.importResultsFromJson();
         for (const mobile of mobiles) {
             const clientDetails = getClientDetails(mobile)
             await this.createClient(clientDetails, false, true);

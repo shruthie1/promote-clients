@@ -231,6 +231,7 @@ async function getALLClients() {
 export async function checkHealth() {
   console.log("============Checking Health==============");
   const telegramService = TelegramService.getInstance();
+  await telegramService.saveMobileStats();
   const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
   const averageReactionDelay = telegramService.getAverageReactionDelay()
   const lastReactedTime = telegramService.getLastReactedTime()

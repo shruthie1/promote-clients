@@ -1,4 +1,5 @@
 import { TelegramClient, Api, errors } from "telegram";
+import * as fs from 'fs/promises';
 import { UserDataDtoCrud } from "./dbservice";
 import { generateEmojis, getCurrentHourIST, getRandomEmoji, IChannel, ppplbot, selectRandomElements, sendToLogs, sleep } from "./utils";
 import { updateFailedCount, updateSuccessCount } from "./express";
@@ -651,5 +652,58 @@ export class Promotion {
             });
         });
         return result;
+    }
+
+    public async saveResultsToJson(): Promise<void> {
+        try {
+            const data = {
+                mobileStats: this.getMobileStats(),
+                promotionResults: this.getPromotionResults(),
+            };
+            await fs.writeFile("./mobileStats.json", JSON.stringify(data, null, 2), 'utf-8');
+            console.log(`Results saved to mobileStats.json`);
+        } catch (error) {
+            console.error(`Failed to save results to ./mobileStats.json:`, error.message);
+        }
+    }
+
+    // Method to import results from a JSON file
+    public async importResultsFromJson(): Promise<void> {
+        try {
+            const rawData = await fs.readFile("./mobileStats.json", 'utf-8');
+            const data = JSON.parse(rawData);
+
+            if (!data.mobileStats || !data.promotionResults) {
+                console.error("Invalid JSON format: Required keys are missing.");
+            }
+
+            // Reconstruct mobileStats
+            this.mobileStats = new Map(
+                Object.entries(data.mobileStats).map(([key, value]) => [key, value as MobileStats])
+            );
+
+            // Reconstruct promotionResults
+            this.promotionResults = new Map(
+                Object.entries(data.promotionResults).map(([outerKey, innerObj]) => [
+                    outerKey,
+                    new Map(
+                        Object.entries(innerObj).map(([innerKey, value]) => [
+                            innerKey,
+                            value as { success: boolean; errorMessage?: string },
+                        ])
+                    ),
+                ])
+            );
+
+            console.log(`Results imported from mobileStats.json`);
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                console.error(`File not found: mobileStats.json`);
+            } else if (error instanceof SyntaxError) {
+                console.error(`Failed to parse JSON from mobileStats.json:`, error.message);
+            } else {
+                console.error(`Failed to import results from mobileStats.json:`, error.message);
+            }
+        }
     }
 }
