@@ -39,6 +39,7 @@ export class Promotion {
     private failCount: number = 0;
     private channelIndex = 0; // Add channelIndex as an instance private member
     private failureReason = 'UNKNOWN';
+    private promotionResults: Map<string, Map<string, { success: boolean, errorMessage?: string }>> = new Map(); // New map to store promotion results
 
     private getClient: (clientId: string) => TelegramManager | undefined;
     static instance: Promotion;
@@ -248,18 +249,23 @@ export class Promotion {
             if (tgManager?.client) {
                 const stats = this.mobileStats.get(mobile);
                 if (stats.sleepTime < Date.now()) {
-                    console.log(`${mobile} Sending Message: to ${channelInfo.channelId} || @${channelInfo.username}`);
+                    // console.log(`${mobile} Sending Message: to ${channelInfo.channelId} || @${channelInfo.username}`);
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     if (result) {
                         const data = this.mobileStats.get(mobile);
                         await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - data.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${data.daysLeft}\nChannelIndex: ${this.channelIndex}` });
                         this.mobileStats.set(mobile, { ...data, lastMessageTime: Date.now() });
                         await updateSuccessCount(process.env.clientId);
+                        if (!this.promotionResults.has(mobile)) {
+                            this.promotionResults.set(mobile, new Map());
+                        }
+                        this.promotionResults.get(mobile)!.set(channelInfo.channelId, { success: true });                
                         return result;
                     } else {
                         console.error(`Client ${mobile}: Failed to send message to ${channelInfo.channelId} || @${channelInfo.username}`);
                         return undefined;
                     }
+                    
                 } else {
                     console.log(`Client ${mobile}: Sleeping for ${stats.sleepTime / 1000} seconds due to rate limit.`);
                     return undefined;
@@ -271,6 +277,11 @@ export class Promotion {
             }
         } catch (error) {
             await updateFailedCount(process.env.clientId);
+            if (!this.promotionResults.has(mobile)) {
+                this.promotionResults.set(mobile, new Map());
+            }
+            this.promotionResults.get(mobile)!.set(channelInfo.channelId, { success: false, errorMessage: error.errorMessage });
+    
             this.failureReason = error.errorMessage;
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(mobile, `Some Error Occured, ${error.errorMessage}`);
@@ -345,9 +356,9 @@ export class Promotion {
 
             sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: `${msg}\n${addon}` });
         } else {
-            console.log(`Channel has word restriction. Selecting random available message.`);
+            // console.log(`Channel has word restriction. Selecting random available message.`);
             const randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
-            console.log(`Selected Msg for ${channelInfo.channelId}, ${channelInfo.title} | ChannelIdex:${this.channelIndex} | MsgIndex: ${randomIndex}`);
+            // console.log(`Selected Msg for ${channelInfo.channelId}, ${channelInfo.title} | ChannelIdex:${this.channelIndex} | MsgIndex: ${randomIndex}`);
             let randomAvailableMsg = this.promoteMsgs[randomIndex];
             if (!randomAvailableMsg) {
                 console.log(`Random Msg Does not EXIST:  ${channelInfo.channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
@@ -435,6 +446,14 @@ export class Promotion {
 
             for (const mobile of healthyMobiles) {
                 try {
+                    if (this.promotionResults.has(mobile) && this.promotionResults.get(mobile)!.has(channelId)) {
+                        const previousResult = this.promotionResults.get(mobile)!.get(channelId);
+                        if (previousResult?.success) {
+                            console.log(`Skipping promotion for mobile ${mobile} and channel ${channelId} based on previous result.`);
+                            continue;
+                        }
+                    }
+    
                     if (!messageSent) {
                         const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
                         if (sentMessage) {
@@ -536,7 +555,7 @@ export class Promotion {
             // console.log("dYnamic threashold :", dynamicThreshold);
 
 
-            console.log(`Channel ${channelInfo.username} dynamicThreshold: ${participantOffset},participantsCount: ${channelInfo.participantsCount}`);
+            // console.log(`Channel ${channelInfo.username} dynamicThreshold: ${participantOffset},participantsCount: ${channelInfo.participantsCount}`);
             return { participantOffset, activeUsers: activeUsers.size, recentMessages: recentMessages.length };
         } catch (err) {
             const errorDetails = parseError(err, `Failed to score ${channelInfo.username}`, false);
