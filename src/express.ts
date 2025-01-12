@@ -267,6 +267,7 @@ export async function checkHealth() {
                       "DaysLeft: ",
                       telegramService.getDaysLeft(mobile)
                     );
+                    await sendToLogs({ message: `Promotion stopped for ${clientDetails.mobile}:\nLastMSg : ${timeInMins} mins ago` });
                     restartClient(mobile);
                   }
                   telegramService.startPromotion();
