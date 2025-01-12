@@ -501,7 +501,6 @@ export class Promotion {
                             console.error("Max retries reached. No healthy mobiles available.");
                             resolve([]);
                         }
-
                         retryCount++;
                         console.warn(`No healthy mobiles available. Retrying in ${retryInterval / 1000} seconds... (Attempt ${retryCount}/${maxRetries})`);
                         setTimeout(checkMobiles, retryInterval);
