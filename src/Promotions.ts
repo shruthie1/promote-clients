@@ -267,7 +267,7 @@ export class Promotion {
                     }
 
                 } else {
-                    await sendToLogs({message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(stats.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${stats.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}`});
+                    await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(stats.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${stats.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
                     console.log(`Client ${mobile}: Sleeping for ${stats.sleepTime / 1000} seconds due to rate limit.`);
                     return undefined;
                 }
@@ -344,7 +344,7 @@ export class Promotion {
 
     private async sendPromotionalMessage(mobile: string, channelInfo: IChannel): Promise<Api.Message | undefined> {
         let sentMessage: Api.Message | undefined;
-        if (channelInfo.wordRestriction === 0) {
+        if (false && channelInfo.wordRestriction === 0) {
             const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
             const emojis = generateEmojis();
             const randomEmoji = getRandomEmoji();
@@ -363,7 +363,7 @@ export class Promotion {
             let randomAvailableMsg = this.promoteMsgs[randomIndex];
             if (!randomAvailableMsg) {
                 console.log(`Random Msg Does not EXIST:  ${channelInfo.channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
-                randomAvailableMsg = "**Hiiiiii**"
+                randomAvailableMsg = "**Hiiiiiiiiiii\nHiiiiiiiiiiiiiiiiiiii\nHiii\nHiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii\nHiiiiiii**"
             }
             sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: randomAvailableMsg });
         }
