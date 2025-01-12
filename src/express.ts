@@ -112,6 +112,24 @@ app.get('/exec/:cmd', async (req, res) => {
   }
 });
 
+app.get('/getPromotionResults', async (req, res) => {
+  try {
+    const telegramService = TelegramService.getInstance();
+    res.json(telegramService.getPromotionResults());
+  } catch (error) {
+    parseError(error, "Error Executing ");
+  }
+});
+
+app.get('/getMobileStats', async (req, res) => {
+  try {
+    const telegramService = TelegramService.getInstance();
+    res.json(telegramService.getMobileStats());
+  } catch (error) {
+    parseError(error, "Error Executing ");
+  }
+});
+
 app.get('/getProcessId', async (req, res) => {
   res.json({ ProcessId: prcessID.toString() });
 });

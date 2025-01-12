@@ -460,12 +460,12 @@ export class Promotion {
                         if (sentMessage) {
                             this.handleSuccessfulMessage(mobile, channelId, sentMessage);
                             const stats = this.mobileStats.get(mobile);
-                            this.mobileStats.set(mobile, { ...stats, failCount: 0 });
+                            this.mobileStats.set(mobile, { ...stats, messagesSent: stats.messagesSent + 1, failCount: 0 });
                             messageSent = true;
                             break;
                         } else {
                             const stats = this.mobileStats.get(mobile);
-                            this.mobileStats.set(mobile, { ...stats, failCount: stats.failCount + 1 });
+                            this.mobileStats.set(mobile, { ...stats, failedMessages: stats.failedMessages + 1, failCount: stats.failCount + 1 });
                         }
                     }
                 } catch (error) {
@@ -628,5 +628,28 @@ export class Promotion {
             wordRestriction: 0
         }
         return channel;
+    }
+
+    public getMobileStats(): Record<string, MobileStats> {
+        const result: Record<string, MobileStats> = {};
+        this.mobileStats.forEach((value, key) => {
+            result[key] = value;
+            console.log(`${key}:`, value);
+        });
+        return result;
+    }
+
+    // Method to return promotionResults as an object
+    public getPromotionResults(): Record<string, Record<string, { success: boolean, errorMessage?: string }>> {
+        const result: Record<string, Record<string, { success: boolean, errorMessage?: string }>> = {};
+        this.promotionResults.forEach((innerMap, outerKey) => {
+            result[outerKey] = {};
+            console.log(`${outerKey}:`);
+            innerMap.forEach((value, innerKey) => {
+                result[outerKey][innerKey] = value;
+                console.log(`  ${innerKey}:`, value);
+            });
+        });
+        return result;
     }
 }

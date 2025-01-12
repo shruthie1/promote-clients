@@ -26,6 +26,14 @@ export class TelegramService {
         return this.promoterInstance?.getDaysLeft(mobile);
     }
 
+    getPromotionResults() {
+        return this.promoterInstance?.getPromotionResults();
+    }
+
+    getMobileStats() {
+        return this.promoterInstance?.getMobileStats();
+    }
+
     async setMobiles(mobiles: string[]) {
         this.promoterInstance.setMobiles(mobiles)
         await this.reactorInstance.setMobiles(mobiles)
