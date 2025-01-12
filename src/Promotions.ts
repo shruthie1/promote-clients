@@ -8,6 +8,7 @@ import { SendMessageParams } from "telegram/client/messages";
 import { pickOneMsg } from "./messages";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import TelegramManager from "./TelegramManager";
+import path from "path";
 
 interface MessageQueueItem {
     mobile: string;
@@ -656,6 +657,8 @@ export class Promotion {
 
     public async saveResultsToJson(): Promise<void> {
         try {
+            const dir = path.dirname("./mobileStats.json");
+            await fs.mkdir(dir, { recursive: true });
             const data = {
                 mobileStats: this.getMobileStats(),
                 promotionResults: this.getPromotionResults(),
