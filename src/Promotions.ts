@@ -72,6 +72,23 @@ export class Promotion {
     public setMobiles(mobiles: string[]) {
         console.log("Setting Mobiles in Promotion instance", mobiles.length);
         this.mobiles = mobiles;
+    
+        const mobileSet = new Set(mobiles);
+    
+        for (const mobile of this.mobileStats.keys()) {
+            if (!mobileSet.has(mobile)) {
+                this.mobileStats.delete(mobile);
+                console.log(`Deleted mobile ${mobile} from mobileStats`);
+            }
+        }
+
+        for (const mobile of this.promotionResults.keys()) {
+            if (!mobileSet.has(mobile)) {
+                this.promotionResults.delete(mobile);
+                console.log(`Deleted mobile ${mobile} from promotion Results`);
+            }
+        }
+    
         for (const mobile of mobiles) {
             if (!this.mobileStats.has(mobile)) {
                 this.mobileStats.set(mobile, {
@@ -86,6 +103,7 @@ export class Promotion {
             }
         }
     }
+    
 
     async checkQueuedMessages() {
         const now = Date.now();

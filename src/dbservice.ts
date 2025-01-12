@@ -193,7 +193,7 @@ export class UserDataDtoCrud {
             const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
             return await promoteClientStatDb.updateOne(filter, { $set: data })
         } catch (error) {
-            parseError(error, "Error updating Client")
+            parseError(error, "Error updating Client stat")
         }
     }
 
@@ -202,7 +202,7 @@ export class UserDataDtoCrud {
             const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
             return await promoteClientStatDb.find({}).sort({ messageCount: -1, successCount: -1, daysLeft: 1 }).toArray();
         } catch (error) {
-            parseError(error, "Error updating Client")
+            parseError(error, "Error getting Client stats")
         }
     }
 
@@ -211,7 +211,7 @@ export class UserDataDtoCrud {
             const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
             return await promoteClientStatDb.updateOne({ clientId }, { $inc: { messageCount: 1 } })
         } catch (error) {
-            parseError(error, "Error updating Client")
+            parseError(error, "Error increasing message count")
         }
     }
 
@@ -220,7 +220,7 @@ export class UserDataDtoCrud {
             const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
             return await promoteClientStatDb.updateOne({ clientId }, { $inc: { successCount: 1 } })
         } catch (error) {
-            parseError(error, "Error updating Client")
+            parseError(error, "Error increasing success count")
         }
     }
 
@@ -229,7 +229,7 @@ export class UserDataDtoCrud {
             const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
             return await promoteClientStatDb.updateOne({ clientId }, { $inc: { failedCount: 1 } })
         } catch (error) {
-            parseError(error, "Error updating Client")
+            parseError(error, "Error increasing failed count")
         }
     }
 
@@ -238,7 +238,7 @@ export class UserDataDtoCrud {
             const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
             return await promoteClientStatDb.updateOne({ clientId }, { $inc: { reactCount: number } })
         } catch (error) {
-            parseError(error, "Error updating Client")
+            parseError(error, "Error increasing react count")
         }
     }
 
@@ -256,7 +256,7 @@ export class UserDataDtoCrud {
                 }
             })
         } catch (error) {
-            parseError(error, "Error updating Client")
+            parseError(error, "Error resetting Client stats")
         }
     }
 
@@ -265,7 +265,7 @@ export class UserDataDtoCrud {
             const clientsDb = this.client.db("tgclients").collection('promoteClients')
             return await clientsDb.findOne(filter)
         } catch (error) {
-            parseError(error, "Error updating Client")
+            parseError(error, "Error getting Client")
         }
     }
 

@@ -278,7 +278,7 @@ export async function checkHealth() {
 
                   if (telegramManager.daysLeft == -1 && lastMessageTime < Date.now() - 25 * 60 * 1000) {
                     console.log("Promotion stopped", clientDetails.mobile, "DaysLeft: ", telegramService.getDaysLeft(mobile));
-                    await sendToLogs({ message: `❌❌ Promotion stopped ❌❌\n${clientDetails.mobile}:\nLastMSg : ${timeInMins} mins ago` });
+                    await sendToLogs({ message: `\n❌❌ Promotion stopped ❌❌\n${clientDetails.mobile}:\nLastMSg : ${timeInMins} mins ago` });
                     restartClient(mobile);
                   }
                   telegramService.startPromotion();
@@ -402,17 +402,17 @@ export async function restartClient(mobile: string) {
   }
 
   console.log(`===================Restarting service : ${mobile.toUpperCase()}=======================`);
+  await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}PROM: Restarting service : ${mobile.toUpperCase()}`);
+  // try {
+  //   const tgManager = await telegramService.getClient(mobile);
 
-  try {
-    const tgManager = await telegramService.getClient(mobile);
-
-    if (tgManager) {
-      await telegramService.disposeClient(mobile);
-      await telegramService.createClient(clientDetails, false, true);
-    } else {
-      console.error(`TelegramManager instance not found for clientId: ${mobile}`);
-    }
-  } catch (error) {
-    console.error(`Failed to restart client ${mobile}:`, error);
-  }
+  //   if (tgManager) {
+  //     await telegramService.disposeClient(mobile);
+  //     await telegramService.createClient(clientDetails, false, true);
+  //   } else {
+  //     console.error(`TelegramManager instance not found for clientId: ${mobile}`);
+  //   }
+  // } catch (error) {
+  //   console.error(`Failed to restart client ${mobile}:`, error);
+  // }
 }
