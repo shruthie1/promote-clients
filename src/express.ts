@@ -278,11 +278,11 @@ export async function checkHealth() {
 
                   if (telegramManager.daysLeft == -1 && lastMessageTime < Date.now() - 25 * 60 * 1000) {
                     console.log("Promotion stopped", clientDetails.mobile, "DaysLeft: ", telegramService.getDaysLeft(mobile));
-                    await sendToLogs({ message: `Promotion stopped for ${clientDetails.mobile}:\nLastMSg : ${timeInMins} mins ago` });
+                    await sendToLogs({ message: `❌❌ Promotion stopped ❌❌\n${clientDetails.mobile}:\nLastMSg : ${timeInMins} mins ago` });
                     restartClient(mobile);
                   }
                   telegramService.startPromotion();
-                  
+
                 } else {
                   console.log(mobile, me.username, " : Promotions Working fine - ", `LastMSg : ${timeInMins} mins ago`, `DaysLeft: ${telegramService.getDaysLeft(mobile)}`);
                 }
