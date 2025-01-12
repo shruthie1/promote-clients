@@ -13,7 +13,7 @@ import { IClientDetails, updatePromoteClient, updateMsgCount, } from "./express"
 import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, ppplbot, startNewUserProcess } from "./utils";
 import { Promotion } from "./Promotions";
 import { UserDataDtoCrud } from "./dbservice";
-import { sleep } from "./utils"
+import { sleep } from "telegram/Helpers";
 import { createPhoneCallState, requestPhoneCall, generateRandomInt, destroyPhoneCallState } from "./phonestate";
 
 class TelegramManager {
@@ -28,16 +28,17 @@ class TelegramManager {
     public daysLeft = -1;
     private reactorInstance: Reactions;
     private promoterInstance: Promotion;
-    // private last5Minutes = 0;
+    private last5Minutes = 0;
 
     constructor(clientDetails: IClientDetails, reactorInstance: Reactions, promoterInstance: Promotion) {
         this.clientDetails = clientDetails;
         this.reactorInstance = reactorInstance;
-        this.promoterInstance = promoterInstance
-        // setInterval(() => {
-        //     console.log(`${this.clientDetails.mobile} Msg Count: `, this.last5Minutes)
-        //     this.last5Minutes = 0;
-        // }, 5 * 60 * 1000)
+        this.promoterInstance = promoterInstance;
+
+        setInterval(() => {
+            console.log(`${this.clientDetails.mobile} Msg Count: `, this.last5Minutes)
+            this.last5Minutes = 0;
+        }, 5 * 60 * 1000)
     }
 
     connected() {
@@ -84,8 +85,8 @@ class TelegramManager {
                 // await sleep(1500)
                 // await this.updateUsername('')
                 console.log("Adding event Handler")
-                // this.client.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true, outgoing: false }));
-                // this.client.addEventHandler((event) => this.handleOtherEvents(event));
+                this.client.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true, outgoing: false }));
+                this.client.addEventHandler((event) => this.handleOtherEvents(event));
                 // await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
                 // if (handler && this.client) {
                 //     //console.log("Adding event Handler")
@@ -376,8 +377,8 @@ class TelegramManager {
                     }
                 }
             } else {
-                // await this.reactorInstance?.react(event, this.clientDetails.mobile);
-                // this.last5Minutes++;
+                await this.reactorInstance?.react(event, this.clientDetails.mobile);
+                this.last5Minutes++;
                 setSendPing(true)
             }
         } catch (error) {
