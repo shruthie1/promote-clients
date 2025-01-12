@@ -484,37 +484,37 @@ export class Promotion {
             this.channelIndex++;
         }
     }
-
     private waitForHealthyMobilesEventDriven(retryInterval = 30000, maxRetries = 10): Promise<string[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             let retryCount = 0;
-
+    
             const checkMobiles = async () => {
                 try {
                     const healthyMobiles = this.getHealthyMobiles();
-
+    
                     if (healthyMobiles.length > 0) {
                         console.log(`Healthy mobiles:`, healthyMobiles);
                         resolve(healthyMobiles);
                     } else {
                         if (retryCount >= maxRetries) {
                             console.error("Max retries reached. No healthy mobiles available.");
-                            resolve([]);
+                            resolve([]); // Resolve with an empty array after max retries
+                        } else {
+                            retryCount++;
+                            console.warn(`No healthy mobiles available. Retrying in ${retryInterval / 1000} seconds... (Attempt ${retryCount}/${maxRetries})`);
+                            setTimeout(checkMobiles, retryInterval);
                         }
-                        retryCount++;
-                        console.warn(`No healthy mobiles available. Retrying in ${retryInterval / 1000} seconds... (Attempt ${retryCount}/${maxRetries})`);
-                        setTimeout(checkMobiles, retryInterval);
                     }
                 } catch (error) {
                     console.error("Error while checking healthy mobiles:", error);
-                    resolve([]);
+                    resolve([]); // Resolve with an empty array if an error occurs
                 }
             };
-
+    
             checkMobiles();
         });
     }
-
+    
     private updateMobileStats(mobile: string, channelId: string) {
         const stats = this.mobileStats.get(mobile) || { messagesSent: 0, failedMessages: 0, sleepTime: 0, releaseTime: 0, lastMessageTime: Date.now(), daysLeft: 0, failCount: 0 };
 
