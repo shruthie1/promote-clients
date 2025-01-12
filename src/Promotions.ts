@@ -116,6 +116,9 @@ export class Promotion {
         if (stats) {
             stats.daysLeft = daysLeft;
         }
+        if (daysLeft == -1) {
+            this.clearPromtionsMap(mobile);
+        }
     }
 
     getDaysLeft(mobile: string) {
@@ -721,5 +724,9 @@ export class Promotion {
         mobilesWithOldMessages.forEach(mobile => console.log(mobile));
 
         return mobilesWithOldMessages.join(",");
+    }
+
+    public clearPromtionsMap(mobile: string) {
+        this.promotionResults.set(mobile, new Map);
     }
 }
