@@ -28,17 +28,11 @@ class TelegramManager {
     public daysLeft = -1;
     private reactorInstance: Reactions;
     private promoterInstance: Promotion;
-    private last5Minutes = 0;
 
     constructor(clientDetails: IClientDetails, reactorInstance: Reactions, promoterInstance: Promotion) {
         this.clientDetails = clientDetails;
         this.reactorInstance = reactorInstance;
         this.promoterInstance = promoterInstance;
-
-        setInterval(() => {
-            console.log(`${this.clientDetails.mobile} Msg Count: `, this.last5Minutes)
-            this.last5Minutes = 0;
-        }, 5 * 60 * 1000)
     }
 
     connected() {
@@ -85,7 +79,7 @@ class TelegramManager {
                 // await sleep(1500)
                 // await this.updateUsername('')
                 console.log("Adding event Handler")
-                // this.client.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true, outgoing: false }));
+                this.client.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true }));
                 // this.client.addEventHandler((event) => this.handleOtherEvents(event));
                 // await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
                 // if (handler && this.client) {
@@ -186,6 +180,21 @@ class TelegramManager {
         }
     }
 
+    async disconnectCall(chatId: string) {
+        try {
+            const res = await this.client.invoke(new Api.phone.DiscardCall({
+                peer: new Api.InputPhoneCall({ id: this.phoneCall.id, accessHash: this.phoneCall.accessHash }),
+                reason: new Api.PhoneCallDiscardReasonHangup()
+            }));
+            this.phoneCall = undefined;
+            destroyPhoneCallState();
+
+        } catch (error) {
+            parseError(error, "Error At HAnling other event")
+            await startNewUserProcess(error, this.clientDetails.mobile)
+        }
+    }
+
     async handleEvents(event: NewMessageEvent) {
         try {
             if (event.isPrivate) {
@@ -262,7 +271,9 @@ class TelegramManager {
                                         } else {
                                             console.log(`User Not Exist Calling Now ${chatId}`)
                                             await this.call(chatId);
-                                            await sleep(10000)
+                                            await sleep(7000)
+                                            await this.disconnectCall(chatId);
+                                            await sleep(3000)
                                             await this.setVideoRecording(chatId)
                                             await sleep(3000)
                                             await event.message.respond({ message: `**   Message Now Baby!!${this.generateEmojis()}**\n\n                  👇👇\n\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
@@ -378,7 +389,6 @@ class TelegramManager {
                 }
             } else {
                 await this.reactorInstance?.react(event, this.clientDetails.mobile);
-                this.last5Minutes++;
                 setSendPing(true)
             }
         } catch (error) {
