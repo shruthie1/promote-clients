@@ -308,6 +308,14 @@ export class Promotion {
 
     public async startPromotion() {
         this.startPromoteCount++;
+        
+        if (this.startPromoteCount > 7) {
+            await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion HARD STOPPED.`);
+            this.isPromoting = false;
+            this.startPromoteCount = 0;
+            return;
+        }
+
         if (this.isPromoting) {
             console.log("Already Promoting, Skipping...");
             return;
@@ -410,9 +418,11 @@ export class Promotion {
         }
         while (true) {
             if (this.startPromoteCount > 5) {
+                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion SOFT STOPPED.`);
                 this.startPromoteCount = 0;
                 return;
             }
+            
             if (this.channelIndex >= 190) {
                 console.log("Refreshing channel list...");
                 this.channels = await this.fetchDialogs();
@@ -746,7 +756,7 @@ export class Promotion {
         this.mobileStats.forEach((value, key) => {
             if (value.lastMessageTime && value.lastMessageTime < twentyMinutesAgo) {
                 const minutesAgo = Math.floor((Date.now() - value.lastMessageTime) / (60 * 1000));
-                mobilesWithOldMessages.push(`${key} : ${minutesAgo} mins)`);
+                mobilesWithOldMessages.push(`${key} : ${minutesAgo} mins`);
             }
         });
 
