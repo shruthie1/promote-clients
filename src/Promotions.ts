@@ -72,9 +72,9 @@ export class Promotion {
     public setMobiles(mobiles: string[]) {
         console.log("Setting Mobiles in Promotion instance", mobiles.length);
         this.mobiles = mobiles;
-    
+
         const mobileSet = new Set(mobiles);
-    
+
         for (const mobile of this.mobileStats.keys()) {
             if (!mobileSet.has(mobile)) {
                 this.mobileStats.delete(mobile);
@@ -88,7 +88,7 @@ export class Promotion {
                 console.log(`Deleted mobile ${mobile} from promotion Results`);
             }
         }
-    
+
         for (const mobile of mobiles) {
             if (!this.mobileStats.has(mobile)) {
                 this.mobileStats.set(mobile, {
@@ -103,7 +103,7 @@ export class Promotion {
             }
         }
     }
-    
+
 
     async checkQueuedMessages() {
         const now = Date.now();
@@ -326,7 +326,6 @@ export class Promotion {
 
     public async startPromotion() {
         this.startPromoteCount++;
-        
         if (this.startPromoteCount > 7) {
             await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion HARD STOPPED.`);
             this.isPromoting = false;
@@ -440,7 +439,7 @@ export class Promotion {
                 this.startPromoteCount = 0;
                 return;
             }
-            
+
             if (this.channelIndex >= 190) {
                 console.log("Refreshing channel list...");
                 this.channels = await this.fetchDialogs();
@@ -502,37 +501,23 @@ export class Promotion {
             this.channelIndex++;
         }
     }
-    private waitForHealthyMobilesEventDriven(retryInterval = 30000, maxRetries = 10): Promise<string[]> {
+    private waitForHealthyMobilesEventDriven(retryInterval = 30000): Promise<string[]> {
         return new Promise((resolve) => {
-            let retryCount = 0;
-    
             const checkMobiles = async () => {
-                try {
-                    const healthyMobiles = this.getHealthyMobiles();
-    
-                    if (healthyMobiles.length > 0) {
-                        console.log(`Healthy mobiles:`, healthyMobiles);
-                        resolve(healthyMobiles);
-                    } else {
-                        if (retryCount >= maxRetries) {
-                            console.error("Max retries reached. No healthy mobiles available.");
-                            resolve([]); // Resolve with an empty array after max retries
-                        } else {
-                            retryCount++;
-                            console.warn(`No healthy mobiles available. Retrying in ${retryInterval / 1000} seconds... (Attempt ${retryCount}/${maxRetries})`);
-                            setTimeout(checkMobiles, retryInterval);
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error while checking healthy mobiles:", error);
-                    resolve([]); // Resolve with an empty array if an error occurs
+                const healthyMobiles = this.getHealthyMobiles();
+                if (healthyMobiles.length > 0) {
+                    console.log(`Healthy mobiles: `, healthyMobiles);
+                    resolve(healthyMobiles);
+                } else {
+                    console.warn(`No healthy mobiles available. Retrying in ${retryInterval / 1000} seconds...`);
+                    setTimeout(checkMobiles, retryInterval); // Schedule the next check without blocking
                 }
             };
-    
+
             checkMobiles();
         });
     }
-    
+
     private updateMobileStats(mobile: string, channelId: string) {
         const stats = this.mobileStats.get(mobile) || { messagesSent: 0, failedMessages: 0, sleepTime: 0, releaseTime: 0, lastMessageTime: Date.now(), daysLeft: 0, failCount: 0 };
 
