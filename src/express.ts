@@ -232,10 +232,11 @@ export async function checkHealth() {
   console.log("============Checking Health==============");
   const telegramService = TelegramService.getInstance();
   await telegramService.saveMobileStats();
+  const bannedMobiles = await telegramService.promotionsBannedMobiles();
   const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
   const averageReactionDelay = telegramService.getAverageReactionDelay()
   const lastReactedTime = telegramService.getLastReactedTime()
-  await sendToLogs({ message: `\nAverage Reaction Delay: ${averageReactionDelay}: last:${((Date.now() - lastReactedTime) / 60000).toFixed(2)}mins` });
+  await sendToLogs({ message: `\nAverage Reaction Delay: ${averageReactionDelay}: last:${((Date.now() - lastReactedTime) / 60000).toFixed(2)}mins\n${bannedMobiles !== '' ? `Banned: ${bannedMobiles}` : ""}` });
   if (lastReactedTime < Date.now() - 5 * 60 * 1000) {
     console.log("Exiting as reactions failed: ", lastReactedTime, " : ", Date.now() - 5 * 60 * 1000)
     process.exit(1);

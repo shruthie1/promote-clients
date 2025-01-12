@@ -709,4 +709,20 @@ export class Promotion {
             }
         }
     }
+
+    public promotionsBannedMobiles(): string {
+        const twentyMinutesAgo = Date.now() - 20 * 60 * 1000;
+        const mobilesWithOldMessages: string[] = [];
+
+        this.mobileStats.forEach((value, key) => {
+            if (value.lastMessageTime && value.lastMessageTime < twentyMinutesAgo) {
+                mobilesWithOldMessages.push(key);
+            }
+        });
+
+        console.log("Mobiles with last message time greater than 20 minutes:");
+        mobilesWithOldMessages.forEach(mobile => console.log(mobile));
+
+        return mobilesWithOldMessages.join(",");
+    }
 }

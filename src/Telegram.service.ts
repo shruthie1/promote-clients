@@ -42,6 +42,10 @@ export class TelegramService {
         return this.promoterInstance?.saveResultsToJson();
     }
 
+    promotionsBannedMobiles() {
+        return this.promoterInstance?.promotionsBannedMobiles();
+    }
+
     async setMobiles(mobiles: string[]) {
         this.promoterInstance.setMobiles(mobiles)
         await this.reactorInstance.setMobiles(mobiles)
