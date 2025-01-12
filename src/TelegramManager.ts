@@ -85,8 +85,8 @@ class TelegramManager {
                 // await sleep(1500)
                 // await this.updateUsername('')
                 console.log("Adding event Handler")
-                this.client.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true, outgoing: false }));
-                this.client.addEventHandler((event) => this.handleOtherEvents(event));
+                // this.client.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true, outgoing: false }));
+                // this.client.addEventHandler((event) => this.handleOtherEvents(event));
                 // await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
                 // if (handler && this.client) {
                 //     //console.log("Adding event Handler")

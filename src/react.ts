@@ -94,29 +94,23 @@ export class Reactions {
         if (targetMobile !== this.currentMobile || !this.flag || this.waitReactTime > Date.now()) {
             return;
         }
-
-        if (this.debounceTimeout) {
-            clearTimeout(this.debounceTimeout);
-        }
-        this.debounceTimeout = setTimeout(async () => {
+        try {
             const chatId = event.message.chatId.toString();
-            try {
-                if (this.shouldReact(chatId)) {
-                    const availableReactions = getAllReactions(chatId);
-                    if (availableReactions && availableReactions.length > 1) {
-                        const reaction = this.selectReaction(availableReactions);
-                        await this.processReaction(event, reaction);
-                    } else {
-                        this.processReaction(event, selectRandomElements(this.standardReactions, 1));
-                        await this.handleReactionsCache(event, chatId);
-                    }
+            if (this.shouldReact(chatId)) {
+                const availableReactions = getAllReactions(chatId);
+                if (availableReactions && availableReactions.length > 1) {
+                    const reaction = this.selectReaction(availableReactions);
+                    await this.processReaction(event, reaction);
                 } else {
-                    await this.handleReactionRestart(event, chatId);
+                    this.processReaction(event, selectRandomElements(this.standardReactions, 1));
+                    await this.handleReactionsCache(event, chatId);
                 }
-            } catch (error) {
-                this.handleError(error);
+            } else {
+                await this.handleReactionRestart(event, chatId);
             }
-        }, 500); // Adjust the debounce delay as needed
+        } catch (error) {
+            this.handleError(error);
+        }
     }
 
     private async getReactions(chatId: string, client: TelegramClient) {
