@@ -40,6 +40,7 @@ export class Promotion {
     private mobiles: string[] = [];
     private channelIndex = 0; // Add channelIndex as an instance private member
     private failureReason = 'UNKNOWN';
+    private startPromoteCount: number = 0;
     private promotionResults: Map<string, Map<string, { success: boolean, errorMessage?: string }>> = new Map(); // New map to store promotion results
 
     private getClient: (clientId: string) => TelegramManager | undefined;
@@ -132,9 +133,11 @@ export class Promotion {
         return this.mobiles.filter((mobile) => {
             let stats = this.mobileStats.get(mobile);
             if (stats.failCount > 10) {
-                stats = { ...stats, daysLeft: 0, sleepTime: Date.now() + 10 * 60 * 1000, failCount: 0 };
-                this.mobileStats.set(mobile, stats);
-            }
+                stats.daysLeft = 0;
+                stats.sleepTime = Date.now() + 10 * 60 * 1000;
+                stats.failCount = 0
+            };
+            this.mobileStats.set(mobile, stats);
             return stats && stats.daysLeft < 7 && stats.lastMessageTime < Date.now() - 12 * 60 * 1000 && stats.sleepTime < Date.now();
         });
     }
@@ -304,7 +307,9 @@ export class Promotion {
     }
 
     public async startPromotion() {
+        this.startPromoteCount++;
         if (this.isPromoting) {
+            console.log("Already Promoting, Skipping...");
             return;
         }
         this.isPromoting = true;
@@ -316,7 +321,8 @@ export class Promotion {
                 await sleep(10000); // Retry mechanism after small delay
             }
         } catch (error) {
-            console.error("Error in promoteInBatches loop:", error);
+            const errorDetails = parseError(error, "Error in promoteInBatches loop:", true);
+            await sendToLogs({ message: errorDetails.message });
         } finally {
             this.isPromoting = false;
             console.log("Promotion stopped unexpectedly.");
@@ -403,12 +409,21 @@ export class Promotion {
             return;
         }
         while (true) {
+            if (this.startPromoteCount > 5) {
+                this.startPromoteCount = 0;
+                return;
+            }
             if (this.channelIndex >= 190) {
                 console.log("Refreshing channel list...");
                 this.channels = await this.fetchDialogs();
                 this.channelIndex = 0;
             }
             const healthyMobiles = await this.waitForHealthyMobilesEventDriven();
+            if (!healthyMobiles || healthyMobiles.length === 0) {
+                console.error(`No Healthy mobiles found.`);
+                await sleep(30000)
+                continue;
+            }
             const channelId = this.channels[this.channelIndex];
             const channelInfo = await this.getChannelInfo(channelId);
 
@@ -460,22 +475,59 @@ export class Promotion {
         }
     }
 
-    private waitForHealthyMobilesEventDriven(retryInterval = 30000): Promise<string[]> {
-        return new Promise((resolve) => {
+    private waitForHealthyMobilesEventDriven(retryInterval = 30000, maxRetries = 10): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            let retryCount = 0;
+
             const checkMobiles = async () => {
-                const healthyMobiles = this.getHealthyMobiles();
-                if (healthyMobiles.length > 0) {
-                    console.log(`Healthy mobiles: `, healthyMobiles);
-                    resolve(healthyMobiles);
-                } else {
-                    console.warn(`No healthy mobiles available. Retrying in ${retryInterval / 1000} seconds...`);
-                    setTimeout(checkMobiles, retryInterval); // Schedule the next check without blocking
+                try {
+                    const healthyMobiles = this.getHealthyMobiles();
+
+                    if (healthyMobiles.length > 0) {
+                        console.log(`Healthy mobiles:`, healthyMobiles);
+                        resolve(healthyMobiles);
+                    } else {
+                        if (retryCount >= maxRetries) {
+                            console.error("Max retries reached. No healthy mobiles available.");
+                            reject(new Error("No healthy mobiles available after max retries."));
+                            resolve([]);
+                        }
+
+                        retryCount++;
+                        console.warn(`No healthy mobiles available. Retrying in ${retryInterval / 1000} seconds... (Attempt ${retryCount}/${maxRetries})`);
+                        setTimeout(checkMobiles, retryInterval);
+                    }
+                } catch (error) {
+                    console.error("Error while checking healthy mobiles:", error);
+                    resolve([]);
                 }
             };
 
             checkMobiles();
         });
     }
+
+    private updateMobileStats(mobile: string, channelId: string) {
+        const stats = this.mobileStats.get(mobile) || { messagesSent: 0, failedMessages: 0, sleepTime: 0, releaseTime: 0, lastMessageTime: Date.now(), daysLeft: 0, failCount: 0 };
+
+        stats.failedMessages += 1;
+        stats.failCount += 1;
+        this.mobileStats.set(mobile, stats);
+
+        if (stats.failCount > 6) {
+            sendToLogs({
+                message: `${mobile}:
+    @${channelId} ❌
+    FailCount: ${stats.failCount}
+    LastMsg: ${(Date.now() - stats.lastMessageTime) / 60000} mins
+    Sleeping: ${(stats.sleepTime - Date.now()) / 60000} mins
+    DaysLeft: ${stats.daysLeft}
+    Reason: ${this.failureReason}
+    channelIndex: ${this.channelIndex}`
+            });
+        }
+    }
+
 
     async handlePrivateChannel(client: TelegramClient, channelInfo: IChannel, message: SendMessageParams, error: any) {
         const db = UserDataDtoCrud.getInstance();

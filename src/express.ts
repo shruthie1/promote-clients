@@ -272,35 +272,19 @@ export async function checkHealth() {
                 const lastMessageTime = telegramService.getLastMessageTime(mobile);
                 const timeInMins = ((Date.now() - lastMessageTime) / 60000).toFixed(2)
                 if (lastMessageTime < Date.now() - 15 * 60 * 1000) {
-                  console.log(
-                    clientDetails.clientId,
-                    " : Promotions Seems stopped - ",
-                    `LastMSg : ${timeInMins} mins ago`,
-                    `DaysLeft: ${telegramService.getDaysLeft(mobile)}`
-                  );
+
+                  console.log(clientDetails.clientId, " : Promotions Seems stopped - ", `LastMSg : ${timeInMins} mins ago`, `DaysLeft: ${telegramService.getDaysLeft(mobile)}`);
                   await telegramManager.checktghealth();
-                  if (
-                    telegramManager.daysLeft == -1 &&
-                    lastMessageTime < Date.now() - 25 * 60 * 1000
-                  ) {
-                    console.log(
-                      "Promotion stopped",
-                      clientDetails.mobile,
-                      "DaysLeft: ",
-                      telegramService.getDaysLeft(mobile)
-                    );
+
+                  if (telegramManager.daysLeft == -1 && lastMessageTime < Date.now() - 25 * 60 * 1000) {
+                    console.log("Promotion stopped", clientDetails.mobile, "DaysLeft: ", telegramService.getDaysLeft(mobile));
                     await sendToLogs({ message: `Promotion stopped for ${clientDetails.mobile}:\nLastMSg : ${timeInMins} mins ago` });
                     restartClient(mobile);
                   }
                   telegramService.startPromotion();
+                  
                 } else {
-                  console.log(
-                    mobile,
-                    me.username,
-                    " : Promotions Working fine - ",
-                    `LastMSg : ${timeInMins} mins ago`,
-                    `DaysLeft: ${telegramService.getDaysLeft(mobile)}`
-                  );
+                  console.log(mobile, me.username, " : Promotions Working fine - ", `LastMSg : ${timeInMins} mins ago`, `DaysLeft: ${telegramService.getDaysLeft(mobile)}`);
                 }
                 clientsMap.set(mobile, clientDetails);
                 telegramManager.setClientDetails(clientDetails);
