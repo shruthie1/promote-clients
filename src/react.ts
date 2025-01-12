@@ -310,7 +310,7 @@ export class Reactions {
     }
 
     private async handleReactionRestart(event: NewMessageEvent, chatId: string): Promise<void> {
-        if (this.lastReactedtime < Date.now() - 60000 || this.shouldRestart(chatId)) {
+        if (this.lastReactedtime < Date.now() - 60000 && this.shouldRestart(chatId)) {
             console.log("Restarting reaction process...");
             this.resetReactionState();
         }
@@ -326,7 +326,6 @@ export class Reactions {
 
     private resetReactionState(): void {
         this.flag = true;
-        this.lastReactedtime = Date.now();
         this.waitReactTime = Date.now();
         this.reactQueue.clear();
         this.reactionsRestarted = Date.now();

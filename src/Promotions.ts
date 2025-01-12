@@ -130,7 +130,7 @@ export class Promotion {
         return this.mobiles.filter((mobile) => {
             let stats = this.mobileStats.get(mobile);
             if (stats.failCount > 10) {
-                stats = { ...stats, daysLeft: 0, sleepTime: Date.now() + 10 * 60 * 1000 };
+                stats = { ...stats, daysLeft: 0, sleepTime: Date.now() + 10 * 60 * 1000, failCount: 0 };
                 this.mobileStats.set(mobile, stats);
             }
             return stats && stats.daysLeft < 7 && stats.lastMessageTime < Date.now() - 12 * 60 * 1000 && stats.sleepTime < Date.now();
@@ -259,14 +259,15 @@ export class Promotion {
                         if (!this.promotionResults.has(mobile)) {
                             this.promotionResults.set(mobile, new Map());
                         }
-                        this.promotionResults.get(mobile)!.set(channelInfo.channelId, { success: true });                
+                        this.promotionResults.get(mobile)!.set(channelInfo.channelId, { success: true });
                         return result;
                     } else {
                         console.error(`Client ${mobile}: Failed to send message to ${channelInfo.channelId} || @${channelInfo.username}`);
                         return undefined;
                     }
-                    
+
                 } else {
+                    await sendToLogs({message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(stats.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${stats.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}`});
                     console.log(`Client ${mobile}: Sleeping for ${stats.sleepTime / 1000} seconds due to rate limit.`);
                     return undefined;
                 }
@@ -281,7 +282,7 @@ export class Promotion {
                 this.promotionResults.set(mobile, new Map());
             }
             this.promotionResults.get(mobile)!.set(channelInfo.channelId, { success: false, errorMessage: error.errorMessage });
-    
+
             this.failureReason = error.errorMessage;
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(mobile, `Some Error Occured, ${error.errorMessage}`);
@@ -453,7 +454,7 @@ export class Promotion {
                             continue;
                         }
                     }
-    
+
                     if (!messageSent) {
                         const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
                         if (sentMessage) {
