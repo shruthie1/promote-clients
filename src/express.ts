@@ -214,7 +214,13 @@ export async function checkHealth() {
   console.log("============Checking Health==============");
   const telegramService = TelegramService.getInstance();
   const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
-  await sendToLogs({ message: `\nAverage Reaction Delay: ${telegramService.getAverageReactionDelay()}` });
+  const averageReactionDelay = telegramService.getAverageReactionDelay()
+  const lastReactedTime = telegramService.getLastReactedTime()
+  await sendToLogs({ message: `\nAverage Reaction Delay: ${averageReactionDelay}: last:${((Date.now() - lastReactedTime) / 60000).toFixed(2)}mins` });
+  if (lastReactedTime < Date.now() - 5 * 60 * 1000) {
+    console.log("Exiting as reactions failed: ", lastReactedTime, " : ", Date.now() - 5 * 60 * 1000)
+    process.exit(1);
+  }
   await telegramService.setMobiles(clientData.promoteMobile);
   for (const mobile of clientData.promoteMobile) {
     await sleep(1000);

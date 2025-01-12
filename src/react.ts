@@ -17,10 +17,10 @@ export class Reactions {
     private flag2 = true;
     private floodControl = new Map<string, { triggeredTime: number; releaseTime: number; count: number }>();
     private waitReactTime = Date.now();
-    private lastReactedtime = Date.now() - 180000;
+    public lastReactedtime = Date.now() - 180000;
     private reactionDelays: number[] = [];
     private reactionsRestarted = Date.now();
-    private averageReactionDelay = 0;
+    public averageReactionDelay = 0;
     private minWaitTime = 1500;
     private maxWaitTime = 21000;
     private reactSleepTime = 5000;
@@ -56,10 +56,6 @@ export class Reactions {
                 this.floodControl.set(mobile, { count: 0, releaseTime: 0, triggeredTime: 0 });
             }
         }
-    }
-
-    public getAverageReactionDelay() {
-        return this.averageReactionDelay;
     }
 
     private standardEmoticons = ['👍', '❤', '🔥', '👏', '🥰', '😁'];
@@ -99,7 +95,6 @@ export class Reactions {
             return;
         }
 
-        // Debounce the react method to avoid excessive triggering
         if (this.debounceTimeout) {
             clearTimeout(this.debounceTimeout);
         }
