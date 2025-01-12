@@ -96,10 +96,12 @@ app.get('/getClients', async (req, res) => {
 })
 
 app.get('/exit', (req, res, next) => {
-  res.send("Exitting");
+  res.send("App Exits in 2 seconds");
   next()
-}, (req, res) => {
-  process.exit(1);
+}, () => {
+  setTimeout(() => {
+    process.exit(1);
+  }, 2000);
 })
 
 app.get('/exec/:cmd', async (req, res) => {
