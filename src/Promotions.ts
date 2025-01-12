@@ -38,7 +38,6 @@ export class Promotion {
     private messageCheckDelay: number = 20000;
     private promoteMsgs = {};
     private mobiles: string[] = [];
-    private failCount: number = 0;
     private channelIndex = 0; // Add channelIndex as an instance private member
     private failureReason = 'UNKNOWN';
     private promotionResults: Map<string, Map<string, { success: boolean, errorMessage?: string }>> = new Map(); // New map to store promotion results
@@ -255,9 +254,8 @@ export class Promotion {
                     // console.log(`${mobile} Sending Message: to ${channelInfo.channelId} || @${channelInfo.username}`);
                     const result = await tgManager.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                     if (result) {
-                        const data = this.mobileStats.get(mobile);
-                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - data.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${data.daysLeft}\nChannelIndex: ${this.channelIndex}` });
-                        this.mobileStats.set(mobile, { ...data, lastMessageTime: Date.now() });
+                        await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${stats.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${stats.daysLeft}\nChannelIndex: ${this.channelIndex}` });
+                        this.mobileStats.set(mobile, { ...stats, lastMessageTime: Date.now() });
                         await updateSuccessCount(process.env.clientId);
                         if (!this.promotionResults.has(mobile)) {
                             this.promotionResults.set(mobile, new Map());
@@ -268,9 +266,8 @@ export class Promotion {
                         console.error(`Client ${mobile}: Failed to send message to ${channelInfo.channelId} || @${channelInfo.username}`);
                         return undefined;
                     }
-
                 } else {
-                    await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(stats.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${stats.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
+                    await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${stats.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(stats.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${stats.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
                     console.log(`Client ${mobile}: Sleeping for ${stats.sleepTime / 1000} seconds due to rate limit.`);
                     return undefined;
                 }
@@ -285,7 +282,6 @@ export class Promotion {
                 this.promotionResults.set(mobile, new Map());
             }
             this.promotionResults.get(mobile)!.set(channelInfo.channelId, { success: false, errorMessage: error.errorMessage });
-
             this.failureReason = error.errorMessage;
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(mobile, `Some Error Occured, ${error.errorMessage}`);
@@ -374,10 +370,11 @@ export class Promotion {
     }
 
     private async handleSuccessfulMessage(mobile: string, channelId: string, sentMessage: Api.Message) {
-        this.failCount = 0;
-        const floodData = this.mobileStats.get(mobile);
-        if (floodData.daysLeft == 0) {
-            this.mobileStats.set(mobile, { ...floodData, daysLeft: -1 });
+        const stats = this.mobileStats.get(mobile);
+        if (stats.daysLeft == 0) {
+            this.mobileStats.set(mobile, { ...stats, daysLeft: -1 });
+        } else {
+            this.mobileStats.set(mobile, { ...stats, messagesSent: stats.messagesSent + 1, failCount: 0 });
         }
         this.messageQueue.push({
             mobile,
@@ -392,25 +389,6 @@ export class Promotion {
         // await sleep(randomBatchDelay);
     }
 
-    private async handleFailedMessage(mobile: string, channelInfo: IChannel, channelScore: { participantOffset: number, activeUsers: number }) {
-        console.warn(`Message sending failed for channel: ${channelInfo.username || channelInfo.channelId}`);
-        this.failCount++;
-        // const floodData = this.mobileStats.get(mobile);
-        // if (this.failCount < 5 && floodData.daysLeft > -1) {
-        //     console.log(`Retrying after a short delay. Fail count: ${this.failCount}`);
-        //     const randomDelay = Math.floor(Math.random() * (5000 - 3000)) + 3000;
-        //     this.failCount++;
-        //     await sleep(randomDelay);
-        // } else {
-        //     console.log(`Switching mobile after ${this.failCount} consecutive failures.`);
-        //     const randomDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
-        //     console.log(`Sleeping for ${(randomDelay / 60000).toFixed(2)} Mins`);
-        //     await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - floodData.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(randomDelay / 60000).toFixed(2)} Mins\nDaysLeft:  ${floodData.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}\nchannelScore: ${channelScore}` });
-        //     this.channelIndex = this.channelIndex - this.failCount - 1;
-        //     this.failCount = 0;
-        //     await sleep(randomDelay);
-        // }
-    }
     public async promoteInBatchesV2() {
         this.channels = await this.fetchDialogs();
         this.channelIndex = 0;
@@ -462,13 +440,14 @@ export class Promotion {
                         const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
                         if (sentMessage) {
                             this.handleSuccessfulMessage(mobile, channelId, sentMessage);
-                            const stats = this.mobileStats.get(mobile);
-                            this.mobileStats.set(mobile, { ...stats, messagesSent: stats.messagesSent + 1, failCount: 0 });
                             messageSent = true;
                             break;
                         } else {
                             const stats = this.mobileStats.get(mobile);
                             this.mobileStats.set(mobile, { ...stats, failedMessages: stats.failedMessages + 1, failCount: stats.failCount + 1 });
+                            if(stats.failCount > 6){
+                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${stats.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(stats.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${stats.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
+                            }
                         }
                     }
                 } catch (error) {
