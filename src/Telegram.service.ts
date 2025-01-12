@@ -61,12 +61,12 @@ export class TelegramService {
             const clientDetails = getClientDetails(mobile)
             await this.createClient(clientDetails, false, true);
         }
-        // this.promoterInstance.startPromotion()
+        this.promoterInstance.startPromotion()
         console.log("Connected....!!");
     }
 
     public startPromotion() {
-        // return this.promoterInstance.startPromotion()
+        return this.promoterInstance.startPromotion()
     }
 
     public getAverageReactionDelay() {
