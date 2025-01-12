@@ -281,7 +281,7 @@ export class Promotion {
             if (!this.promotionResults.has(mobile)) {
                 this.promotionResults.set(mobile, new Map());
             }
-            this.promotionResults.get(mobile)!.set(channelInfo.channelId, { success: false, errorMessage: error.errorMessage });
+            this.promotionResults.get(mobile)!.set(channelInfo.channelId, { success: false, errorMessage: error.errorMessage || "UNKNOWN" });
             this.failureReason = error.errorMessage;
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(mobile, `Some Error Occured, ${error.errorMessage}`);
@@ -445,7 +445,7 @@ export class Promotion {
                         } else {
                             const stats = this.mobileStats.get(mobile);
                             this.mobileStats.set(mobile, { ...stats, failedMessages: stats.failedMessages + 1, failCount: stats.failCount + 1 });
-                            if(stats.failCount > 6){
+                            if (stats.failCount > 6) {
                                 await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${stats.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(stats.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${stats.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
                             }
                         }
