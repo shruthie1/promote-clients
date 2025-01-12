@@ -346,7 +346,6 @@ export async function saveFile(url: string, name: string): Promise<string> {
     throw err;
   }
 }
-
 const tokens = [
   '7769077001:AAGK0UT3pyhuwo81YG288-2_CwfFeQgB_EE',
   '7994900648:AAEnwhn1ZS0Br2BdANBrNC9pZZggUItx5Rk',
@@ -357,7 +356,7 @@ const tokens = [
   '7820411275:AAHEOz0F0aDsJRwq4JLupwTs_LeOKQJgEY8',
   '7707765607:AAGTs0xEhOvnBH5F6BjEBSmbXWdQCrHjk-E'
 ];
-let currentTokenIndex = 0;
+let currentTokenIndex = Math.floor(Math.random() * tokens.length);
 
 interface SendToLogsOptions {
   message: string;
@@ -375,7 +374,7 @@ export async function sendToLogs({
 }: SendToLogsOptions): Promise<void> {
   let attempts = 0;
   const encodedMessage = encodeURIComponent(`@${process.env.clientId.toUpperCase()}:${message}`);
-
+  currentTokenIndex = (currentTokenIndex + 1) % tokens.length;
   while (attempts < maxRetries) {
     const token = tokens[currentTokenIndex];
     const apiUrl = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodedMessage}`;
@@ -419,7 +418,6 @@ export async function sendToLogs({
         }
       }
     }
-    currentTokenIndex = (currentTokenIndex + 1) % tokens.length;
     attempts++;
 
     if (attempts < maxRetries) {
