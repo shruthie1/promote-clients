@@ -499,7 +499,6 @@ export class Promotion {
                     } else {
                         if (retryCount >= maxRetries) {
                             console.error("Max retries reached. No healthy mobiles available.");
-                            reject(new Error("No healthy mobiles available after max retries."));
                             resolve([]);
                         }
 
