@@ -693,15 +693,17 @@ export class Promotion {
 
         this.mobileStats.forEach((value, key) => {
             if (value.lastMessageTime && value.lastMessageTime < twentyMinutesAgo) {
-                mobilesWithOldMessages.push(key);
+                const minutesAgo = Math.floor((Date.now() - value.lastMessageTime) / (60 * 1000));
+                mobilesWithOldMessages.push(`${key} : ${minutesAgo} mins)`);
             }
         });
 
         console.log("Mobiles with last message time greater than 20 minutes:");
         mobilesWithOldMessages.forEach(mobile => console.log(mobile));
 
-        return mobilesWithOldMessages.join(",");
+        return mobilesWithOldMessages.join("\n");
     }
+
 
     public clearPromtionsMap(mobile: string) {
         this.promotionResults.set(mobile, new Map);
