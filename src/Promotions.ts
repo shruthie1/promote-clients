@@ -327,6 +327,7 @@ export class Promotion {
     }
 
     public async startPromotion() {
+        console.log("Starting Promotion...............");
         this.startPromoteCount++;
         if (this.startPromoteCount > 10 && this.lastMessageTime < Date.now() - 25 * 60 * 1000) {
             await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion HARD STOPPED.`);
@@ -343,6 +344,8 @@ export class Promotion {
             console.log("Already Promoting, Skipping...");
             return;
         }
+        console.log(`Starting Promotion...............`);
+
         this.isPromoting = true;
         try {
             while (true) {
