@@ -476,7 +476,7 @@ export class Promotion {
                 continue;
             }
 
-            if (channelInfo.banned || this.isChannelNotSuitable(channelInfo)) {
+            if (channelInfo.banned || this.isChannelNotSuitable(channelInfo) || !channelInfo.username || channelInfo.username === 'undefined'|| channelInfo.username === 'null') {
                 console.log(`Channel ${channelId} is banned or unsuitable. Skipping...`);
                 this.channelIndex++;
                 continue;
