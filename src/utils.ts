@@ -127,7 +127,8 @@ export async function startNewUserProcess(error: any, mobile: string) {
 }
 
 export async function setupNewMobile(mobile: string, saveOld: boolean = true, daysLeft: number = 3) {
-  if (setupTime > Date.now() - 5 * 60 * 1000) {
+  if (setupTime < Date.now() - 5 * 60 * 1000) {
+    setupTime = Date.now();
     try {
       const db = UserDataDtoCrud.getInstance();
       const existingClients = await db.getClients();
