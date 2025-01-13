@@ -233,19 +233,33 @@ class TelegramManager {
     }
 
     async disconnectCall(chatId: string) {
-        try {
-            const res = await this.client.invoke(new Api.phone.DiscardCall({
-                peer: new Api.InputPhoneCall({ id: this.phoneCall.id, accessHash: this.phoneCall.accessHash }),
-                reason: new Api.PhoneCallDiscardReasonHangup()
-            }));
-            this.phoneCall = undefined;
-            destroyPhoneCallState();
-
-        } catch (error) {
-            parseError(error, "Error At HAnling other event")
-            await startNewUserProcess(error, this.clientDetails.mobile)
+        if (this.phoneCall) {
+            let attempts = 0;
+            const maxAttempts = 2;
+    
+            while (attempts <= maxAttempts) {
+                try {
+                    const res = await this.client.invoke(new Api.phone.DiscardCall({
+                        peer: new Api.InputPhoneCall({ id: this.phoneCall.id, accessHash: this.phoneCall.accessHash }),
+                        reason: new Api.PhoneCallDiscardReasonHangup()
+                    }));
+                    this.phoneCall = undefined;
+                    destroyPhoneCallState();
+                    break; // Exit the loop on success
+                } catch (error) {
+                    await sleep(3000)
+                    attempts++;
+                    if (attempts > maxAttempts) {
+                        parseError(error, "Error At Handling other event");
+                        await startNewUserProcess(error, this.clientDetails.mobile);
+                    } else {
+                        console.warn(`Retrying disconnectCall, attempt ${attempts}`);
+                    }
+                }
+            }
         }
     }
+    
 
     async handleEvents(event: NewMessageEvent) {
         try {
