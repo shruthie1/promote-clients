@@ -142,7 +142,7 @@ export async function setupNewMobile(mobile: string, saveOld: boolean = true, da
       const newPromoteClient = await db.findPromoteClient(query);
       if (newPromoteClient) {
         await sendToLogs({ message: `Setting up new client for :  ${process.env.clientId} as days : ${daysLeft}` });
-        await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-PROM Changed Number from ${mobile} to ${newPromoteClient.mobile}`);
+        await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-PROM Changing Number from ${mobile} to ${newPromoteClient.mobile}`);
         await db.pushPromoteMobile({ clientId: process.env.clientId }, newPromoteClient.mobile);
         await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
         const telegramService = TelegramService.getInstance();
@@ -166,7 +166,8 @@ export async function setupNewMobile(mobile: string, saveOld: boolean = true, da
         process.exit(1);
       }
     } catch (error) {
-      parseError(error, "Error Setting up new mobile");
+      const errorDetails = parseError(error, "Error Setting up new mobile");
+      await fetchWithTimeout(`${ppplbot()}&text=Error Setting up new mobile: ${errorDetails.message}`);
     }
   } else {
     console.log("Setup Time is less than 5 minutes")
