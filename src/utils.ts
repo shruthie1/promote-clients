@@ -136,7 +136,7 @@ export async function setupNewMobile(mobile: string, saveOld: boolean = true, da
         promoteMobiles.push(existingClient.promoteMobile);
       }
       const today = (new Date(Date.now())).toISOString().split('T')[0];
-      const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } };
+      const query = { availableDate: { $lte: today }, channels: { $gt: 300 }, mobile: { $nin: promoteMobiles } };
       const newPromoteClient = await db.findPromoteClient(query);
       if (newPromoteClient) {
         await sendToLogs({ message: `Setting up new client for :  ${process.env.clientId} as days : ${daysLeft}` });
