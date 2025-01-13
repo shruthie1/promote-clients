@@ -69,9 +69,9 @@ process.on('unhandledRejection', async (reason, promise) => {
   }
 });
 
-schedule.scheduleJob('test3', '*/5 * * * *', 'Asia/Kolkata', async () => {
-  await checkHealth()
-})
+setInterval(() => {
+  checkHealth()
+}, 5 * 60 * 1000);
 
 schedule.scheduleJob('test3', '25 0 * * *', 'Asia/Kolkata', async () => {
   const db = UserDataDtoCrud.getInstance();
@@ -232,116 +232,122 @@ async function getALLClients() {
 }
 export async function checkHealth() {
   console.log("============Checking Health==============");
-  const telegramService = TelegramService.getInstance();
-  await telegramService.saveMobileStats();
-  const bannedMobiles = await telegramService.promotionsBannedMobiles();
-  const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
-  const averageReactionDelay = telegramService.getAverageReactionDelay()
-  const lastReactedTime = telegramService.getLastReactedTime()
-  await sendToLogs({ message: `\nAverage Reaction Delay: ${averageReactionDelay}: last:${((Date.now() - lastReactedTime) / 60000).toFixed(2)}mins\n${bannedMobiles !== '' ? `\n${bannedMobiles}` : ""}` });
-  if (lastReactedTime < Date.now() - 5 * 60 * 1000) {
-    console.log("Exiting as reactions failed: ", lastReactedTime, " : ", Date.now() - 5 * 60 * 1000)
-    process.exit(1);
-  }
-  await telegramService.setMobiles(clientData.promoteMobile);
-  for (const mobile of clientData.promoteMobile) {
-    await sleep(1000);
-    try {
-      const client = clientsMap.get(mobile);
-      if (client) {
-        const clientDetails = {
-          clientId: client.clientId,
-          mobile: mobile,
-          repl: client.repl,
-          username: client.username,
-          lastMessage: Date.now(),
-          name: client.name,
-          startTime: client?.startTime || Date.now(),
-          daysLeft: client.daysLeft,
-        };
-        try {
-          const telegramManager = telegramService.getClient(mobile);
-          if (telegramManager) {
-            try {
-              const me = await telegramManager.getMe();
-              if (me.phone !== clientDetails.mobile) {
-                console.log(clientDetails.mobile, " : mobile changed", " me : ", me, "clientDetails: ", clientDetails);
-                clientsMap.set(mobile, clientDetails);
-                await restartClient(mobile);
-              } else {
-                const lastMessageTime = telegramService.getLastMessageTime(mobile);
-                const timeInMins = ((Date.now() - lastMessageTime) / 60000).toFixed(2)
-                if (lastMessageTime < Date.now() - 15 * 60 * 1000) {
-                  await telegramService.startPromotion();
-                  console.log(clientDetails.clientId, " : Promotions Seems stopped - ", `LastMSg : ${timeInMins} mins ago`, `DaysLeft: ${telegramService.getDaysLeft(mobile)}`);
-                  await telegramManager.checktghealth();
+  try {
 
-                  if (lastMessageTime < Date.now() - 30 * 60 * 1000) {
-                    console.log("Promotion stopped", clientDetails.mobile, "DaysLeft: ", telegramService.getDaysLeft(mobile));
-                    await sendToLogs({ message: `\n❌❌ Promotion stopped ❌❌\n${clientDetails.mobile}:\nLastMSg : ${timeInMins} mins ago` });
-                    await setupNewMobile(mobile,true, telegramManager.daysLeft);
-                  }
+
+    const telegramService = TelegramService.getInstance();
+    await telegramService.saveMobileStats();
+    const bannedMobiles = await telegramService.promotionsBannedMobiles();
+    const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
+    const averageReactionDelay = telegramService.getAverageReactionDelay()
+    const lastReactedTime = telegramService.getLastReactedTime()
+    await sendToLogs({ message: `\nAverage Reaction Delay: ${averageReactionDelay}: last:${((Date.now() - lastReactedTime) / 60000).toFixed(2)}mins\n${bannedMobiles !== '' ? `\n${bannedMobiles}` : ""}` });
+    if (lastReactedTime < Date.now() - 5 * 60 * 1000) {
+      console.log("Exiting as reactions failed: ", lastReactedTime, " : ", Date.now() - 5 * 60 * 1000)
+      process.exit(1);
+    }
+    await telegramService.setMobiles(clientData.promoteMobile);
+    for (const mobile of clientData.promoteMobile) {
+      await sleep(1000);
+      try {
+        const client = clientsMap.get(mobile);
+        if (client) {
+          const clientDetails = {
+            clientId: client.clientId,
+            mobile: mobile,
+            repl: client.repl,
+            username: client.username,
+            lastMessage: Date.now(),
+            name: client.name,
+            startTime: client?.startTime || Date.now(),
+            daysLeft: client.daysLeft,
+          };
+          try {
+            const telegramManager = telegramService.getClient(mobile);
+            if (telegramManager) {
+              try {
+                const me = await telegramManager.getMe();
+                if (me.phone !== clientDetails.mobile) {
+                  console.log(clientDetails.mobile, " : mobile changed", " me : ", me, "clientDetails: ", clientDetails);
+                  clientsMap.set(mobile, clientDetails);
+                  await restartClient(mobile);
                 } else {
-                  console.log(mobile, me.username, " : Promotions Working fine - ", `LastMSg : ${timeInMins} mins ago`, `DaysLeft: ${telegramService.getDaysLeft(mobile)}`);
-                }
-                clientsMap.set(mobile, clientDetails);
-                telegramManager.setClientDetails(clientDetails);
-                setTimeout(async () => {
-                  try {
-                    await telegramManager?.checkMe();
-                    await telegramManager.client.invoke(new Api.updates.GetState());
-                    await telegramManager.client.markAsRead('myvcacc')
-                    await telegramManager.setTyping('myvcacc')
-                    setTimeout(async () => {
+                  const lastMessageTime = telegramService.getLastMessageTime(mobile);
+                  const timeInMins = ((Date.now() - lastMessageTime) / 60000).toFixed(2)
+                  if (lastMessageTime < Date.now() - 15 * 60 * 1000) {
+                    await telegramService.startPromotion();
+                    console.log(clientDetails.clientId, " : Promotions Seems stopped - ", `LastMSg : ${timeInMins} mins ago`, `DaysLeft: ${telegramService.getDaysLeft(mobile)}`);
+                    await telegramManager.checktghealth();
+
+                    if (lastMessageTime < Date.now() - 30 * 60 * 1000) {
+                      console.log("Promotion stopped", clientDetails.mobile, "DaysLeft: ", telegramService.getDaysLeft(mobile));
+                      await sendToLogs({ message: `\n❌❌ Promotion stopped ❌❌\n${clientDetails.mobile}:\nLastMSg : ${timeInMins} mins ago` });
+                      await setupNewMobile(mobile, true, telegramManager.daysLeft);
+                    }
+                  } else {
+                    console.log(mobile, me.username, " : Promotions Working fine - ", `LastMSg : ${timeInMins} mins ago`, `DaysLeft: ${telegramService.getDaysLeft(mobile)}`);
+                  }
+                  clientsMap.set(mobile, clientDetails);
+                  telegramManager.setClientDetails(clientDetails);
+                  setTimeout(async () => {
+                    try {
+                      await telegramManager?.checkMe();
                       await telegramManager.client.invoke(new Api.updates.GetState());
                       await telegramManager.client.markAsRead('myvcacc')
                       await telegramManager.setTyping('myvcacc')
-                    }, 150000);
-                  } catch (e) {
-                    parseError(e, `${mobile} Error at Health Check`);
-                  }
-                }, 30000);
+                      setTimeout(async () => {
+                        await telegramManager.client.invoke(new Api.updates.GetState());
+                        await telegramManager.client.markAsRead('myvcacc')
+                        await telegramManager.setTyping('myvcacc')
+                      }, 150000);
+                    } catch (e) {
+                      parseError(e, `${mobile} Error at Health Check`);
+                    }
+                  }, 30000);
+                }
+              } catch (e) {
+                parseError(e, clientDetails.mobile);
               }
-            } catch (e) {
-              parseError(e, clientDetails.mobile);
+            } else {
+              console.log("Does not Exist Client 1: ", clientDetails.mobile);
             }
-          } else {
-            console.log("Does not Exist Client 1: ", clientDetails.mobile);
+          } catch (error) {
+            console.log("Does not Exist Client 2: ", clientDetails.mobile);
           }
-        } catch (error) {
-          console.log("Does not Exist Client 2: ", clientDetails.mobile);
+        } else {
+          const clientDetails = {
+            clientId: clientData.clientId,
+            mobile: mobile,
+            repl: clientData.repl,
+            username: clientData.username,
+            lastMessage: Date.now(),
+            name: clientData.name,
+            startTime: Date.now(),
+            daysLeft: -1
+          };
+          clientsMap.set(mobile, clientDetails);
+          await telegramService.createClient(clientDetails, false, true);
         }
-      } else {
-        const clientDetails = {
-          clientId: clientData.clientId,
-          mobile: mobile,
-          repl: clientData.repl,
-          username: clientData.username,
-          lastMessage: Date.now(),
-          name: clientData.name,
-          startTime: Date.now(),
-          daysLeft: -1
-        };
-        clientsMap.set(mobile, clientDetails);
-        await telegramService.createClient(clientDetails, false, true);
+      } catch (e) {
+        parseError(e, "Error at Health Check");
       }
-    } catch (e) {
-      parseError(e, "Error at Health Check");
     }
-  }
-  const promoteMobilesSet = new Set(clientData.promoteMobile);
-  for (const mobile of clientsMap.keys()) {
-    try {
-      if (!promoteMobilesSet.has(mobile)) {
-        console.log(`Removing old client entry from clientsMap: ${mobile}`);
-        await telegramService.disposeClient(mobile);
-        clientsMap.delete(mobile);
+    const promoteMobilesSet = new Set(clientData.promoteMobile);
+    for (const mobile of clientsMap.keys()) {
+      try {
+        if (!promoteMobilesSet.has(mobile)) {
+          console.log(`Removing old client entry from clientsMap: ${mobile}`);
+          await telegramService.disposeClient(mobile);
+          clientsMap.delete(mobile);
+        }
+      } catch (error) {
+        parseError(error, "Error at Removing Old Client Entry");
       }
-    } catch (error) {
-      parseError(error, "Error at Removing Old Client Entry");
     }
+    console.log("Average Reaction Delay: ", telegramService.getAverageReactionDelay());
+  } catch (error) {
+    parseError(error, "Error at Health Check");
   }
-  console.log("Average Reaction Delay: ", telegramService.getAverageReactionDelay());
 }
 
 app.listen(port, () => {
