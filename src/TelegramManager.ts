@@ -508,6 +508,7 @@ class TelegramManager {
     async removeOtherAuths() {
         if (!this.checkingAuths) {
             this.checkingAuths = true;
+            await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}: Inited Checking Auths`)}`);
             let i = 60;
             while (i > 0) {
                 const result = await this.client.invoke(new Api.account.GetAuthorizations());
