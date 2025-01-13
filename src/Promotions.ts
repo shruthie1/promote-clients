@@ -327,13 +327,17 @@ export class Promotion {
     }
 
     public async startPromotion() {
-        // this.startPromoteCount++;
-        // if (this.startPromoteCount > 7) {
-        //     await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion HARD STOPPED.`);
-        //     this.isPromoting = false;
-        //     this.startPromoteCount = 0;
-        //     return;
-        // }
+        this.startPromoteCount++;
+        if (this.startPromoteCount > 10 && this.lastMessageTime < Date.now() - 25 * 60 * 1000) {
+            await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion HARD STOPPED.`);
+            this.isPromoting = false;
+            this.startPromoteCount = 0;
+            this.lastMessageTime = Date.now();
+            if (this.lastMessageTime < Date.now() - 30 * 60 * 1000) {
+                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: EXITTING as PROMOTION STOPPED.`);
+                process.exit(0);
+            }
+        }
 
         if (this.isPromoting || this.lastMessageTime > Date.now() - 15 * 60 * 1000) {
             console.log("Already Promoting, Skipping...");
@@ -436,11 +440,11 @@ export class Promotion {
             return;
         }
         while (true) {
-            // if (this.startPromoteCount > 5) {
-            //     await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion SOFT STOPPED.`);
-            //     this.startPromoteCount = 0;
-            //     return;
-            // }
+            if (this.startPromoteCount > 5 && this.lastMessageTime < Date.now() - 25 * 60 * 1000) {
+                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion SOFT STOPPED.`);
+                this.startPromoteCount = 0;
+                return;
+            }
 
             if (this.channelIndex >= 190) {
                 console.log("Refreshing channel list...");
