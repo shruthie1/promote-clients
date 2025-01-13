@@ -151,6 +151,17 @@ export class Promotion {
     private getHealthyMobiles() {
         return this.mobiles.filter((mobile) => {
             let stats = this.mobileStats.get(mobile);
+            if (!stats) {
+                stats = {
+                    messagesSent: 0,
+                    failedMessages: 0,
+                    sleepTime: 0,
+                    releaseTime: 0,
+                    lastMessageTime: Date.now() - 13 * 60 * 1000,
+                    daysLeft: -1,
+                    failCount: 0
+                };
+            }
             if (stats.failCount > 10) {
                 stats.daysLeft = 0;
                 stats.sleepTime = Date.now() + 10 * 60 * 1000;
