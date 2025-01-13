@@ -57,16 +57,10 @@ class TelegramManager {
     async randomChannelReaction() {
         console.log("Starting random channel reaction...");
         while (true) {
-            // Randomly select a channel from the updated top 50
             const randomChannel = this.channels[Math.floor(Math.random() * this.channels.length)];
             if (randomChannel) {
-                // React to the latest message in the randomly selected channel
                 await this.reactToMessage(randomChannel);
             }
-
-            // Human-like average reaction delay (around 3 seconds, adjustable)
-            const randomDelay = Math.random() * (REACTION_INTERVAL - 1000) + 1000; // Random delay between 1-3 seconds
-            await new Promise((resolve) => setTimeout(resolve, randomDelay));
         }
     }
 
@@ -74,9 +68,7 @@ class TelegramManager {
         try {
             const messages = await this.client.getMessages(channel.id, { limit: 1 }); // Fetch the latest message
             const message = messages[0];
-
             if (message) {
-                console.log(`New message in ${channel.title}: ${message.message}`);
                 this.reactorInstance?.react(message, this.clientDetails.mobile);
                 const reactionDelay = Math.random() * (MAX_REACTION_DELAY - MIN_REACTION_DELAY) + MIN_REACTION_DELAY;
                 await sleep(reactionDelay);
