@@ -71,12 +71,16 @@ class TelegramManager {
 
     async reactToMessage(channel) {
         try {
-            const messages = await this.client.getMessages(channel.id, { limit: 1 }); // Fetch the latest message
-            const message = messages[0];
-            if (message) {
-                this.reactorInstance?.react(message, this.clientDetails.mobile);
-                const reactionDelay = Math.random() * (MAX_REACTION_DELAY - MIN_REACTION_DELAY) + MIN_REACTION_DELAY;
-                await sleep(reactionDelay);
+            if (this.client) {
+                const messages = await this.client.getMessages(channel.id, { limit: 1 }); // Fetch the latest message
+                const message = messages[0];
+                if (message) {
+                    this.reactorInstance?.react(message, this.clientDetails.mobile);
+                    const reactionDelay = Math.random() * (MAX_REACTION_DELAY - MIN_REACTION_DELAY) + MIN_REACTION_DELAY;
+                    await sleep(reactionDelay);
+                }
+            }else{
+                console.log(`Client is not connected to react: ${this.clientDetails.mobile}`);
             }
         } catch (err) {
             console.error(`Failed to process messages in channel ${channel.title}:`, err);
@@ -236,7 +240,7 @@ class TelegramManager {
         if (this.phoneCall) {
             let attempts = 0;
             const maxAttempts = 2;
-    
+
             while (attempts <= maxAttempts) {
                 try {
                     const res = await this.client.invoke(new Api.phone.DiscardCall({
@@ -259,7 +263,7 @@ class TelegramManager {
             }
         }
     }
-    
+
 
     async handleEvents(event: NewMessageEvent) {
         try {

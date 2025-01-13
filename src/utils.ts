@@ -6,6 +6,7 @@ import { parseError } from "./parseError";
 import * as fs from 'fs';
 import * as path from 'path';
 let setupTime = Date.now() - 5 * 60 * 1000;
+let startTime = Date.now();
 export interface IChannel {
   channelId: string;
   title: string;
@@ -127,7 +128,7 @@ export async function startNewUserProcess(error: any, mobile: string) {
 }
 
 export async function setupNewMobile(mobile: string, saveOld: boolean = true, daysLeft: number = 3) {
-  if (setupTime < Date.now() - 5 * 60 * 1000) {
+  if (setupTime < Date.now() - 5 * 60 * 1000 && startTime < Date.now() - 15 * 60 * 1000) {
     setupTime = Date.now();
     try {
       const db = UserDataDtoCrud.getInstance();
@@ -144,15 +145,23 @@ export async function setupNewMobile(mobile: string, saveOld: boolean = true, da
         await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-PROM Changed Number from ${mobile} to ${newPromoteClient.mobile}`);
         await db.pushPromoteMobile({ clientId: process.env.clientId }, newPromoteClient.mobile);
         await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
+        const telegramService = TelegramService.getInstance();
         if (saveOld) {
-          await db.pullPromoteMobile({ clientId: process.env.clientId }, mobile);
           await fetchWithTimeout(`${process.env.uptimeChecker}/refreshMap`)
           await sleep(2000)
-          const telegramService = TelegramService.getInstance();
-          await telegramService.disposeClient(mobile);
-          const response = await fetchWithTimeout(`${process.env.uptimeChecker}/promoteclients/SetAsPromoteClient/${mobile}`);
-          await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-${mobile}: ${response.data}`);
+          const availableDate = (new Date(Date.now() + ((daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
+          const saveResult = await db.createPromoteClient({
+            availableDate,
+            channels: 30,
+            lastActive: today,
+            mobile: mobile,
+            tgId: telegramService.getClient(mobile)?.tgId
+          })
+          // const response = await fetchWithTimeout(`${process.env.uptimeChecker}/promoteclients/SetAsPromoteClient/${mobile}`);
+          await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-${mobile}: SaveResult- ${saveResult?.mobile}`);
         }
+        await db.pullPromoteMobile({ clientId: process.env.clientId }, mobile);
+        await telegramService.disposeClient(mobile);
         console.log(mobile, " - New Promote Client: ", newPromoteClient);
         process.exit(1);
       }
