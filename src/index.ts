@@ -113,7 +113,7 @@ export async function getDataAndSetEnvVariables(url: string) {
 }
 
 async function setEnv() {
-    // await getDataAndSetEnvVariables(`https://checker-production-c3c0.up.railway.app/forward/clients/${process.env.clientId}`);
+    await getDataAndSetEnvVariables(`https://checker-production-c3c0.up.railway.app/forward/clients/${process.env.clientId}`);
     await getDataAndSetEnvVariables(`https://mychatgpt-xk3y.onrender.com/forward/configuration`);
     console.log("Env Mobile : ", process.env.mobile)
     require('./express')
