@@ -147,6 +147,15 @@ export async function setupNewMobile(mobile: string, saveOld: boolean = true, da
         await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
         const telegramService = TelegramService.getInstance();
         if (saveOld) {
+          const tgManager = telegramService.getClient(mobile);
+          await tgManager.deleteProfilePhotos();
+          await sleep(1000);
+          await tgManager.updatePrivacyforDeletedAccount();
+          await sleep(1000);
+          await tgManager.updateUsername('');
+          await sleep(1000);
+          await tgManager.updateProfile('Deleted Account', '');
+          await sleep(1000);
           await fetchWithTimeout(`${process.env.uptimeChecker}/refreshMap`)
           await sleep(2000)
           const availableDate = (new Date(Date.now() + ((daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
