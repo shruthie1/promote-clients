@@ -145,29 +145,14 @@ export async function setupNewMobile(mobile: string, saveOld: boolean = true, da
         await db.pushPromoteMobile({ clientId: process.env.clientId }, newPromoteClient.mobile);
         await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
         if (saveOld) {
+          await fetchWithTimeout(`${process.env.uptimeChecker}/refreshMap`)
           const telegramService = TelegramService.getInstance();
-          const tgManager = telegramService.getClient(mobile);
-          await tgManager.deleteProfilePhotos();
-          await sleep(1500);
-          await tgManager.updatePrivacyforDeletedAccount();
-          await sleep(1500);
-          await tgManager.updateUsername('');
-          await sleep(1500);
-          await tgManager.updateProfile('Deleted Account', '');
-          await sleep(1500);
-          const availableDate = (new Date(Date.now() + ((daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
-          console.log("Today: ", today, "Available Date: ", availableDate);
-          await db.createPromoteClient({
-            availableDate,
-            channels: 30,
-            lastActive: today,
-            mobile: mobile,
-            tgId: tgManager.tgId
-          })
+          await telegramService.disposeClient(mobile);
+          await sleep(2000)
+          const response = await fetchWithTimeout(`${process.env.uptimeChecker}/promoteclients/SetAsPromoteClient/${mobile}`);
+          await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-${mobile}: ${response.data}`);
         }
         await db.pullPromoteMobile({ clientId: process.env.clientId }, mobile);
-        await fetchWithTimeout(`${process.env.tgcms}/refreshMap`)
-        await fetchWithTimeout(`${process.env.uptimeChecker}/refreshMap`)
         console.log(mobile, " - New Promote Client: ", newPromoteClient);
         process.exit(1);
       }
