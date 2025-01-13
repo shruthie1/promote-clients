@@ -10,7 +10,7 @@ import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
 import { IClientDetails, updatePromoteClient, updateMsgCount, } from "./express";
-import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, ppplbot, startNewUserProcess } from "./utils";
+import { getdaysLeft, saveFile, sendToLogs, ppplbot, startNewUserProcess } from "./utils";
 import { Promotion } from "./Promotions";
 import { UserDataDtoCrud } from "./dbservice";
 import { sleep } from "telegram/Helpers";
@@ -34,15 +34,15 @@ class TelegramManager {
     public daysLeft = -1;
     private reactorInstance: Reactions;
     private promoterInstance: Promotion;
-
     private channels = []; // Array to store the top channels
+    private updateChannelsInterval: NodeJS.Timeout;
 
 
     constructor(clientDetails: IClientDetails, reactorInstance: Reactions, promoterInstance: Promotion) {
         this.clientDetails = clientDetails;
         this.reactorInstance = reactorInstance;
         this.promoterInstance = promoterInstance;
-        setInterval(this.updateChannels.bind(this), CHANNEL_UPDATE_INTERVAL);
+        this.updateChannelsInterval =setInterval(this.updateChannels.bind(this), CHANNEL_UPDATE_INTERVAL);
     }
     // Function to update the list of top channels (every 5 minutes)
     async updateChannels() {
@@ -97,7 +97,15 @@ class TelegramManager {
 
     async destroy() {
         try {
-            // await this.client?.destroy();
+            console.log("Disposing TelegramManager instance...");
+            clearInterval(this.updateChannelsInterval);
+            this.liveMap.clear();
+            this.phoneCall = undefined;
+            this.clientDetails = undefined;
+            this.client = null;
+            this.tgId = '';
+            this.daysLeft = -1;
+            await this.client?.destroy();
             await this.client?.disconnect();
             this.client = null;
             console.log("Client successfully destroyed.");
