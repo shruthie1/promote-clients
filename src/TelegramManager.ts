@@ -47,11 +47,16 @@ class TelegramManager {
     // Function to update the list of top channels (every 5 minutes)
     async updateChannels() {
         console.log("Updating top channels...");
-        const dialogs = await this.client.getDialogs({ limit: CHANNELS_LIMIT, offsetId: -100 });
-        this.channels = dialogs
-            .filter((dialog) => dialog.isChannel || dialog.isGroup)
-            .map((dialog) => dialog.entity);
-        console.log(`Found ${this.channels.length} channels to monitor.`);
+        try {
+            const dialogs = await this.client.getDialogs({ limit: CHANNELS_LIMIT, offsetId: -100 });
+            this.channels = dialogs
+                .filter((dialog) => dialog.isChannel || dialog.isGroup)
+                .map((dialog) => dialog.entity);
+            console.log(`Found ${this.channels.length} channels to monitor.`);
+        } catch (error) {
+            console.error(`${this.clientDetails.mobile} Failed to update top channels: `, error);
+
+        }
     }
 
     async randomChannelReaction() {
