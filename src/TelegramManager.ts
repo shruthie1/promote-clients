@@ -145,20 +145,20 @@ class TelegramManager {
             await this.client.connect();
             //console.log("Connected : ", this.clientDetails.clientId)
             const me = await this.checkMe();
-            await sleep(1500)
+            await sleep(1000)
             console.log("Connected: ", this.clientDetails.clientId, this.clientDetails.mobile, me.username);
-            await this.updatePrivacy();
-            await sleep(1500)
-            await this.checkProfilePics();
-            await sleep(1500)
-            await this.joinChannel("clientupdates");
-            await sleep(1500)
-            await this.updateUsername('')//`${this.clientDetails.name.split(' ').join("_")}_0${process.env.clientNumber}`)
-            await sleep(1500)
+            // await this.updatePrivacy();
+            // await sleep(1500)
+            // await this.checkProfilePics();
+            // await sleep(1500)
+            // await this.joinChannel("clientupdates");
+            // await sleep(1500)
+            // await this.updateUsername('')//`${this.clientDetails.name.split(' ').join("_")}_0${process.env.clientNumber}`)
+            // await sleep(1500)
             await this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
             this.promoterInstance = new Promotion(this.client, this.clientDetails);
             await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
-            await this.updateChannels()
+            this.updateChannels()
             // if (handler && this.client) {
             //     //console.log("Adding event Handler")
             // }
