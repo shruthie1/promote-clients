@@ -19,13 +19,14 @@ export class TelegramService {
 
     setMobiles(mobiles: string[]) {
         this.mobiles = mobiles;
+        this.reactorInstance?.setMobiles(mobiles);
     }
     
     public async connectClients() {
         console.log("Connecting....!!");
         const clients = getMapValues();
         console.log("Total clients:", clients.length);
-        this.reactorInstance = new Reactions(this.mobiles, this.getClient.bind(this));
+        this.reactorInstance = new Reactions(this.getMapKeys(), this.getClient.bind(this));
         for (const client of clients) {
             await this.createClient(client, false, true);
         }
