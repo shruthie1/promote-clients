@@ -111,7 +111,7 @@ export class Promotion {
 
             // Proceed with unread dialogs and other actions
         } catch (error) {
-            parseError(error, `${this.clientDetails.clientId}|${this.clientDetails.mobile} - Failed to fetch channels while promoting`, true);
+            parseError(error, `${this.clientDetails.mobile}|${this.clientDetails.mobile} - Failed to fetch channels while promoting`, true);
         }
         return channelIds;
     }
@@ -121,32 +121,32 @@ export class Promotion {
             if (this.client) {
                 if (this.sleepTime < Date.now()) {
                     const result = await this.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
-                    console.log(`Client ${this.clientDetails.clientId}: Message sent to ${channelInfo.channelId} || @${channelInfo.username}`);
-                    await sendToLogs({ message: `${this.clientDetails.clientId.toUpperCase()}: ${this.daysLeft}---✅\n@${channelInfo.username}` })
+                    console.log(`Client ${this.clientDetails.mobile}: Message sent to ${channelInfo.channelId} || @${channelInfo.username}`);
+                    await sendToLogs({ message: `${this.clientDetails.mobile.toUpperCase()}: ${this.daysLeft}---✅\n@${channelInfo.username}` })
                     this.lastMessageTime = Date.now()
                     await updateSuccessCount(this.clientDetails.clientId);
                     return result
                 } else {
-                    console.log(`Client ${this.clientDetails.clientId}: Sleeping for ${this.sleepTime / 1000} seconds due to rate limit.`);
+                    console.log(`Client ${this.clientDetails.mobile}: Sleeping for ${this.sleepTime / 1000} seconds due to rate limit.`);
                     return undefined
                 }
             } else {
-                console.log("client Destroyed while promotions", this.clientDetails.clientId)
-                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Client Destroyed.`);
+                console.log("client Destroyed while promotions", this.clientDetails.mobile)
+                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.mobile}: Client Destroyed.`);
             }
         } catch (error) {
-            await sendToLogs({ message: `${this.clientDetails.clientId.toUpperCase()}: ${this.daysLeft}---❌\n@${channelInfo.username}` })
+            await sendToLogs({ message: `${this.clientDetails.mobile.toUpperCase()}: ${this.daysLeft}---❌\n@${channelInfo.username}` })
             await updateFailedCount(this.clientDetails.clientId);
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
-                console.log(this.clientDetails.clientId, `Some Error Occured, ${error.errorMessage}`)
+                console.log(this.clientDetails.mobile, `Some Error Occured, ${error.errorMessage}`)
             }
             if (error instanceof errors.FloodWaitError) {
                 console.log(error)
-                console.warn(`Client ${this.clientDetails.clientId}: Rate limited. Sleeping for ${error.seconds} seconds.`);
+                console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                 this.sleepTime = Date.now() + (error.seconds * 1000); // Set the sleep time for the specific client
                 return undefined
             } else {
-                console.error(`Client ${this.clientDetails.clientId}: Error sending message to ${channelInfo.username}: ${error.errorMessage} | DaysLeft: ${this.daysLeft}`);
+                console.error(`Client ${this.clientDetails.mobile}: Error sending message to ${channelInfo.username}: ${error.errorMessage} | DaysLeft: ${this.daysLeft}`);
                 if (error.errorMessage === "CHANNEL_PRIVATE") {
                     return await this.handlePrivateChannel(channelInfo, message, error);
                 } else {
@@ -160,7 +160,7 @@ export class Promotion {
     public async promoteInBatches() {
         this.channels = await this.fetchDialogs();
         let channelIndex = 0;
-        const batchLength = 2;
+        const batchLength = 4;
 
         if (this.channels.length > 0) {
             while (true) {
@@ -172,7 +172,7 @@ export class Promotion {
                        continue;
                     }
 
-                    console.log(`${this.clientDetails.clientId} :: Started Batch: ${channelsBatch.length}-${channelsBatch}`);
+                    console.log(`${this.clientDetails.mobile} :: Started Batch: ${channelsBatch.length}-${channelsBatch}`);
                     let sentCount = 0;
                     for (const channelId of channelsBatch) {
                         const channelInfo = await this.getChannelInfo(channelId);
@@ -215,17 +215,17 @@ export class Promotion {
                             const randomSmallDelay = Math.floor(Math.random() * (this.maxSmallDelay - this.smallDelay + 1)) + this.smallDelay;
                             await sleep(randomSmallDelay);
                         } else {
-                            console.log(`${this.clientDetails.clientId} - Banned Channel - @${channelInfo.username}`);
+                            console.log(`${this.clientDetails.mobile} - Banned Channel - @${channelInfo.username}`);
                             this.channels = this.channels.filter(id => id !== channelId);
                         }
                     }
 
-                    console.log(`${this.clientDetails.clientId} Sent: ${sentCount}`);
+                    console.log(`${this.clientDetails.mobile} Sent: ${sentCount}`);
                     channelIndex = (channelIndex + batchLength) % this.channels.length;
 
                     if (channelIndex !== 0) {
                         const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
-                        console.log(`${this.clientDetails.clientId} :: Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
+                        console.log(`${this.clientDetails.mobile} :: Sleeping for ${(randomBatchDelay / 60000).toFixed(2)} minutes`);
                         await sleep(randomBatchDelay);
                     }
                 } else {
@@ -234,10 +234,10 @@ export class Promotion {
             }
         }
 
-        await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.clientId}: Issue with Promotions`);
+        await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${this.clientDetails.mobile}: Issue with Promotions`);
         setTimeout(() => {
-            console.log("Issue with Promotions", this.clientDetails.clientId);
-            restartClient(this.clientDetails.clientId);
+            console.log("Issue with Promotions", this.clientDetails.mobile);
+            restartClient(this.clientDetails.mobile);
         }, 300000);
     }
 
@@ -266,10 +266,10 @@ export class Promotion {
             //     await leaveChannel(client, channelInfo);
             // }
         } else if (error.errorMessage === 'CHAT_WRITE_FORBIDDEN') {
-            console.log(`${this.clientDetails.clientId}: ${error.errorMessage}`)
+            console.log(`${this.clientDetails.mobile}: ${error.errorMessage}`)
             // await leaveChannel(this.client, channelInfo);
         } else {
-            const errorDetails = parseError(error, `${this.clientDetails.clientId}`, false)
+            const errorDetails = parseError(error, `${this.clientDetails.mobile}`, false)
         }
         return undefined;
     }
@@ -284,7 +284,7 @@ export class Promotion {
                     //console.log("instanse not exist")
                 }
             } catch (error) {
-                parseError(error, `${this.clientDetails.clientId}, CheckHealth in Promote`)
+                parseError(error, `${this.clientDetails.mobile}, CheckHealth in Promote`)
                 try {
                     await this.client.invoke(
                         new Api.contacts.Unblock({
