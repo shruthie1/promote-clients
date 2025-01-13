@@ -36,6 +36,7 @@ class TelegramManager {
     private promoterInstance: Promotion;
     private channels = []; // Array to store the top channels
     private updateChannelsInterval: NodeJS.Timeout;
+    private isReacting: boolean = false;
 
 
     constructor(clientDetails: IClientDetails, reactorInstance: Reactions, promoterInstance: Promotion) {
@@ -53,6 +54,7 @@ class TelegramManager {
                 .filter((dialog) => dialog.isChannel || dialog.isGroup)
                 .map((dialog) => dialog.entity);
             console.log(`Found ${this.channels.length} channels to monitor.`);
+            this.randomChannelReaction()
         } catch (error) {
             console.error(`${this.clientDetails.mobile} Failed to update top channels: `, error);
 
@@ -60,14 +62,23 @@ class TelegramManager {
     }
 
     async randomChannelReaction() {
+        if (this.isReacting) {
+            console.log("Already Reacting, ignoring trigger ", this.clientDetails.mobile);
+            return;
+        }
         console.log("Starting random channel reaction...");
         while (true) {
             const randomChannel = this.channels[Math.floor(Math.random() * this.channels.length)];
             if (randomChannel) {
                 await this.reactToMessage(randomChannel);
                 await sleep(REACTION_INTERVAL);
+                if (!this.client) {
+                    console.log("Breaking reaction loop: ", this.clientDetails.mobile);
+                    break;
+                }
             }
         }
+        this.isReacting = false;
     }
 
     async reactToMessage(channel) {
