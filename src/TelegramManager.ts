@@ -42,7 +42,7 @@ class TelegramManager {
         this.clientDetails = clientDetails;
         this.reactorInstance = reactorInstance;
         this.promoterInstance = promoterInstance;
-        setInterval(this.updateChannels, CHANNEL_UPDATE_INTERVAL);
+        setInterval(this.updateChannels.bind(this), CHANNEL_UPDATE_INTERVAL);
     }
     // Function to update the list of top channels (every 5 minutes)
     async updateChannels() {
