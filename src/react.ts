@@ -213,10 +213,10 @@ export class Reactions {
         } else {
             this.flag = true;
             console.log(`Client is undefined: ${this.currentMobile}`);
-            this.mobiles = this.mobiles.filter(mobile => mobile !== this.currentMobile);
-            this.floodControl.delete(this.currentMobile);
+            // this.mobiles = this.mobiles.filter(mobile => mobile !== this.currentMobile);
+            // this.floodControl.delete(this.currentMobile);
             this.currentMobile = this.selectNextMobile();
-            await restartClient(this.currentMobile);
+            // await restartClient(this.currentMobile);
         }
     }
 
