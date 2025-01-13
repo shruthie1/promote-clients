@@ -90,23 +90,23 @@ export class Reactions {
         "1970767061", "2057158588"
     ];
 
-    async react(event: NewMessageEvent, targetMobile: string): Promise<void> {
+    async react(message: Api.Message, targetMobile: string): Promise<void> {
         if (targetMobile !== this.currentMobile || !this.flag || this.waitReactTime > Date.now()) {
             return;
         }
         try {
-            const chatId = event.message.chatId.toString();
+            const chatId = message.chatId.toString();
             if (this.shouldReact(chatId)) {
                 const availableReactions = getAllReactions(chatId);
                 if (availableReactions && availableReactions.length > 1) {
                     const reaction = this.selectReaction(availableReactions);
-                    await this.processReaction(event, reaction);
+                    await this.processReaction(message, reaction);
                 } else {
-                    this.processReaction(event, selectRandomElements(this.standardReactions, 1));
-                    await this.handleReactionsCache(event, chatId);
+                    this.processReaction(message, selectRandomElements(this.standardReactions, 1));
+                    await this.handleReactionsCache(targetMobile, chatId);
                 }
             } else {
-                await this.handleReactionRestart(event, chatId);
+                await this.handleReactionRestart(message, chatId);
             }
         } catch (error) {
             this.handleError(error);
@@ -154,11 +154,11 @@ export class Reactions {
         }
     }
 
-    private async handleReactionsCache(event: NewMessageEvent, chatId: string): Promise<void> {
+    private async handleReactionsCache(mobile: string, chatId: string): Promise<void> {
         if (this.flag2) {
             this.flag2 = false;
             try {
-                const availableReactions = await this.getReactions(chatId, event.client);
+                const availableReactions = await this.getReactions(chatId, this.getClient(mobile)?.client);
                 await this.updateReactionsCache(chatId, availableReactions);
             } catch (error) {
                 this.handleCacheError(error, chatId);
@@ -204,11 +204,11 @@ export class Reactions {
         );
     }
 
-    private async processReaction(event: NewMessageEvent, reaction: Api.ReactionEmoji[]): Promise<void> {
+    private async processReaction(message: Api.Message, reaction: Api.ReactionEmoji[]): Promise<void> {
         this.flag = false;
         const tgManager = this.getClient(this.currentMobile);
         if (tgManager?.client) {
-            await this.executeReaction(event, tgManager.client, reaction);
+            await this.executeReaction(message, tgManager.client, reaction);
             this.currentMobile = this.selectNextMobile();
         } else {
             this.flag = true;
@@ -220,11 +220,10 @@ export class Reactions {
         }
     }
 
-    private async executeReaction(event: NewMessageEvent, client: TelegramClient, reaction: Api.ReactionEmoji[]): Promise<void> {
-        const chatId = event.chatId.toString();
-
+    private async executeReaction(message: Api.Message, client: TelegramClient, reaction: Api.ReactionEmoji[]): Promise<void> {
+        const chatId = message.chatId.toString();
         try {
-            await this.sendReaction(client, event, reaction);
+            await this.sendReaction(client, message, reaction);
             console.log(`${this.currentMobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
             await this.updateReactionStats();
         } catch (error) {
@@ -245,10 +244,10 @@ export class Reactions {
         return [availableReactions[reactionIndex]];
     }
 
-    private async sendReaction(client: TelegramClient, event: NewMessageEvent, reaction: Api.ReactionEmoji[]): Promise<void> {
+    private async sendReaction(client: TelegramClient, message: Api.Message, reaction: Api.ReactionEmoji[]): Promise<void> {
         const MsgClass = new Api.messages.SendReaction({
-            peer: event.message.chat,
-            msgId: event.message.id,
+            peer: message.chat,
+            msgId: message.id,
             reaction,
         });
 
@@ -303,7 +302,7 @@ export class Reactions {
         this.floodCount++;
     }
 
-    private async handleReactionRestart(event: NewMessageEvent, chatId: string): Promise<void> {
+    private async handleReactionRestart(message: Api.Message, chatId: string): Promise<void> {
         if (this.lastReactedtime < Date.now() - 60000 && this.shouldRestart(chatId)) {
             console.log("Restarting reaction process...");
             this.resetReactionState();

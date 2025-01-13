@@ -16,6 +16,12 @@ import { UserDataDtoCrud } from "./dbservice";
 import { sleep } from "telegram/Helpers";
 import { createPhoneCallState, requestPhoneCall, generateRandomInt, destroyPhoneCallState } from "./phonestate";
 
+const CHANNEL_UPDATE_INTERVAL = 5 * 60 * 1000; // Update top channels every 5 minutes
+const REACTION_INTERVAL = 3000; // Average time to wait between reactions (in ms)
+const MIN_REACTION_DELAY = 2000; // Minimum reaction delay (in ms)
+const MAX_REACTION_DELAY = 5000; // Maximum reaction delay (in ms)
+const CHANNELS_LIMIT = 50; // Number of top channels to monitor
+
 class TelegramManager {
     private phoneCall = undefined;
     private clientDetails: IClientDetails = undefined
@@ -29,10 +35,54 @@ class TelegramManager {
     private reactorInstance: Reactions;
     private promoterInstance: Promotion;
 
+    private channels = []; // Array to store the top channels
+
+
     constructor(clientDetails: IClientDetails, reactorInstance: Reactions, promoterInstance: Promotion) {
         this.clientDetails = clientDetails;
         this.reactorInstance = reactorInstance;
         this.promoterInstance = promoterInstance;
+        setInterval(this.updateChannels, CHANNEL_UPDATE_INTERVAL);
+    }
+    // Function to update the list of top channels (every 5 minutes)
+    async updateChannels() {
+        console.log("Updating top channels...");
+        const dialogs = await this.client.getDialogs({ limit: CHANNELS_LIMIT, offsetId: -100 });
+        this.channels = dialogs
+            .filter((dialog) => dialog.isChannel || dialog.isGroup)
+            .map((dialog) => dialog.entity);
+        console.log(`Found ${this.channels.length} channels to monitor.`);
+    }
+
+    async randomChannelReaction() {
+        while (true) {
+            // Randomly select a channel from the updated top 50
+            const randomChannel = this.channels[Math.floor(Math.random() * this.channels.length)];
+            if (randomChannel) {
+                // React to the latest message in the randomly selected channel
+                await this.reactToMessage(randomChannel);
+            }
+
+            // Human-like average reaction delay (around 3 seconds, adjustable)
+            const randomDelay = Math.random() * (REACTION_INTERVAL - 1000) + 1000; // Random delay between 1-3 seconds
+            await new Promise((resolve) => setTimeout(resolve, randomDelay));
+        }
+    }
+
+    async reactToMessage(channel) {
+        try {
+            const messages = await this.client.getMessages(channel.id, { limit: 1 }); // Fetch the latest message
+            const message = messages[0];
+
+            if (message) {
+                console.log(`New message in ${channel.title}: ${message.message}`);
+                this.reactorInstance?.react(message, this.clientDetails.mobile);
+                const reactionDelay = Math.random() * (MAX_REACTION_DELAY - MIN_REACTION_DELAY) + MIN_REACTION_DELAY;
+                await sleep(reactionDelay);
+            }
+        } catch (err) {
+            console.error(`Failed to process messages in channel ${channel.title}:`, err);
+        }
     }
 
     connected() {
@@ -388,7 +438,7 @@ class TelegramManager {
                     }
                 }
             } else {
-                await this.reactorInstance?.react(event, this.clientDetails.mobile);
+                // await this.reactorInstance?.react(event, this.clientDetails.mobile);
                 setSendPing(true)
             }
         } catch (error) {
