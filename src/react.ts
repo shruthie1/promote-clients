@@ -90,7 +90,7 @@ export class Reactions {
     ];
 
     async react(message: Api.Message, targetMobile: string): Promise<void> {
-        if (!this.flag || this.waitReactTime > Date.now()) {
+        if (this.currentMobile !== targetMobile || !this.flag || this.waitReactTime > Date.now()) {
             return;
         }
         try {
@@ -196,11 +196,7 @@ export class Reactions {
     }
 
     private shouldReact(chatId: string): boolean {
-        const isRestricted = contains(chatId, this.reactRestrictedIds);
-        const isInQueue = this.reactQueue.contains(chatId);
-        const hasMobiles = this.mobiles?.length > 1;
-        const result = !isRestricted && !isInQueue && hasMobiles;
-        return result
+        return !contains(chatId, this.reactRestrictedIds) && !this.reactQueue.contains(chatId) && this.mobiles?.length > 1;
     }
 
     private async processReaction(message: Api.Message, reaction: Api.ReactionEmoji[]): Promise<void> {
