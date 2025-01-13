@@ -203,7 +203,6 @@ async function startConn() {
     })
   }
   const telegramService = TelegramService.getInstance();
-  await telegramService.setMobiles(client.promoteMobile);
   await telegramService.connectClients()
 }
 
