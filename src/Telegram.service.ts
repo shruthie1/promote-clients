@@ -1,4 +1,4 @@
-import { getMapValues, IClientDetails } from "./express";
+import { getMapKeys, getMapValues, IClientDetails } from "./express";
 import { parseError } from "./parseError";
 import { Reactions } from "./react";
 import TelegramManager from "./TelegramManager";
@@ -26,7 +26,7 @@ export class TelegramService {
         console.log("Connecting....!!");
         const clients = getMapValues();
         console.log("Total clients:", clients.length);
-        this.reactorInstance = new Reactions(this.getMapKeys(), this.getClient.bind(this));
+        this.reactorInstance = new Reactions(getMapKeys(), this.getClient.bind(this));
         for (const client of clients) {
             await this.createClient(client, false, true);
         }
