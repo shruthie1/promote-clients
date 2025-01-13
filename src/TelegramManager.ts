@@ -78,6 +78,7 @@ class TelegramManager {
                 }
             }
         }
+        console.log("Reaction Loop Stopped", this.clientDetails.mobile);
         this.isReacting = false;
     }
 
