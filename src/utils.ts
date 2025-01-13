@@ -164,6 +164,8 @@ export async function setupNewMobile(mobile: string, saveOld: boolean = true, da
         await telegramService.disposeClient(mobile);
         console.log(mobile, " - New Promote Client: ", newPromoteClient);
         process.exit(1);
+      } else {
+        await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}- New Promote Clients Not available`);
       }
     } catch (error) {
       const errorDetails = parseError(error, "Error Setting up new mobile");
