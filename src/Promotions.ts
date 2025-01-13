@@ -338,7 +338,7 @@ export class Promotion {
     }
 
     public async startPromotion() {
-        console.log("Starting Promotion...............");
+        console.log("promotion triggered...............");
         this.startPromoteCount++;
         if (this.startPromoteCount > 10 && this.lastMessageTime < Date.now() - 25 * 60 * 1000) {
             await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion HARD STOPPED.`);
