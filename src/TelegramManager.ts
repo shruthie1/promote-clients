@@ -136,6 +136,9 @@ class TelegramManager {
                 //     //console.log("Adding event Handler")
                 // }
                 // this.promoterInstance.PromoteToGrp()
+                setTimeout(() => {
+                    this.randomChannelReaction();
+                }, 30000);
                 return this.client
             } else {
                 console.log(`No Session Found: ${this.clientDetails.mobile}`)
