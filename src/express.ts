@@ -123,6 +123,19 @@ app.get('/getPromotionResults', async (req, res) => {
   }
 });
 
+app.get('/updateProfilePics', async (req, res, next) => {
+  try {
+    res.json({ message: "Updating Profile Pics" });
+  } catch (error) {
+    parseError(error, "Error Executing ");
+  }
+  next();
+}, async (req, res) => {
+  const telegramService = TelegramService.getInstance();
+  telegramService.updateProfilePics()
+});
+
+
 app.get('/getMobileStats', async (req, res) => {
   try {
     const telegramService = TelegramService.getInstance();

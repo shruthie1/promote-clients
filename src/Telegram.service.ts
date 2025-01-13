@@ -18,6 +18,12 @@ export class TelegramService {
         return TelegramService.instance;
     }
 
+    async updateProfilePics() {
+        for (const [mobile, tgManager] of TelegramService.clientsMap.entries()) {
+            await tgManager.updateProfilePics();
+        }
+    }
+
     getLastMessageTime(mobile: string) {
         return this.promoterInstance?.getLastMessageTime(mobile);
     }

@@ -91,7 +91,7 @@ class TelegramManager {
                     try {
                         this.reactorInstance.react(message, this.clientDetails.mobile);
                     } catch (error) {
-                        
+
                     }
                     const reactionDelay = Math.random() * (MAX_REACTION_DELAY - MIN_REACTION_DELAY) + MIN_REACTION_DELAY;
                     await sleep(reactionDelay);
@@ -492,6 +492,19 @@ class TelegramManager {
         }
     }
 
+    async updateProfilePics() {
+        await this.deleteProfilePhotos();
+        await sleep(2000);
+        const filepath = await saveFile(`${this.clientDetails.repl}/downloadprofilepic/1`, this.clientDetails.clientId);
+        console.log("FilePath :", filepath)
+        await this.updateProfilePic(filepath);
+        await sleep(2000);
+        const filepath2 = await saveFile(`${this.clientDetails.repl}/downloadprofilepic/2`, this.clientDetails.clientId);
+        console.log("FilePath :", filepath2)
+        await this.updateProfilePic(filepath2);
+        console.log(`${this.clientDetails.clientId}: Uploaded Pic`)
+    }
+
     async removeOtherAuths() {
         if (!this.checkingAuths) {
             this.checkingAuths = true;
@@ -640,11 +653,12 @@ class TelegramManager {
             if (me.firstName !== this.clientDetails.name) {
                 await this.updateProfile(this.clientDetails.name, `Main Ac👉 @${this.clientDetails.username.toUpperCase()}`);
                 await sleep(2000);
-                await this.deleteProfilePhotos();
-                await sleep(2000);
-                const filepath = await saveFile(process.env.img, this.clientDetails.clientId);
-                console.log("FilePath :", filepath)
-                await this.updateProfilePic(filepath);
+                await this.updateProfilePics();
+                // await this.deleteProfilePhotos();
+                // await sleep(2000);
+                // const filepath = await saveFile(process.env.img, this.clientDetails.clientId);
+                // console.log("FilePath :", filepath)
+                // await this.updateProfilePic(filepath);
             }
             const fullUser = await this.client.invoke(new Api.users.GetFullUser({
                 id: me.id, // Pass the current user's input peer
@@ -674,16 +688,13 @@ class TelegramManager {
                 })
             );
             // console.log(`Profile Pics found: ${result.photos.length}`)
-            if (result && result.photos?.length < 1) {
-                await this.deleteProfilePhotos();
-                await sleep(2000);
-                const filepath = await saveFile(process.env.img, this.clientDetails.clientId);
-                console.log("FilePath :", filepath)
-                await this.updateProfilePic(filepath);
+            if (result && result.photos?.length < 2) {
+                // await this.deleteProfilePhotos();
                 // await sleep(2000);
-                // const filepath2 = await saveFile(`${this.clientDetails.repl}/downloadprofilepic/2`, this.clientDetails.clientId);
-                // console.log("FilePath :", filepath2)
-                // await tgClient.updateProfilePic(filepath2);
+                // const filepath = await saveFile(process.env.img, this.clientDetails.clientId);
+                // console.log("FilePath :", filepath)
+                // await this.updateProfilePic(filepath);
+                await this.updateProfilePics();
                 console.log(`${this.clientDetails.clientId}: Uploaded Pic`)
             } else {
                 console.log(`${this.clientDetails.clientId}: Profile pics exist`)
