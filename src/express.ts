@@ -1,13 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import { fetchWithTimeout } from './fetchWithTimeout';
-import { UserDataDtoCrud } from './dbservice';
 import { parseError } from './parseError';
 import { sendPing } from './connection';
-import { ppplbot } from './utils';
+import { ppplbot, sendToLogs, sleep } from './utils';
 import * as schedule from 'node-schedule-tz';
 import { execSync } from 'child_process';
 import { TelegramService } from './Telegram.service';
+import { UserDataDtoCrud } from './dbservice';
+import { Api } from 'telegram';
 
 let canTry2 = true;
 
@@ -59,8 +60,13 @@ process.on('uncaughtException', async (err) => {
   }
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', async (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  try {
+    await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`${process.env.clientId}-Prom : UNHANDLED - ${reason}`)}`);
+  } catch (error) {
+    console.log(error)
+  }
 });
 
 schedule.scheduleJob('test3', '*/5 * * * *', 'Asia/Kolkata', async () => {
@@ -90,10 +96,12 @@ app.get('/getClients', async (req, res) => {
 })
 
 app.get('/exit', (req, res, next) => {
-  res.send("Exitting");
+  res.send("App Exits in 2 seconds");
   next()
-}, (req, res) => {
-  process.exit(1);
+}, () => {
+  setTimeout(() => {
+    process.exit(1);
+  }, 2000);
 })
 
 app.get('/exec/:cmd', async (req, res) => {
@@ -102,7 +110,7 @@ app.get('/exec/:cmd', async (req, res) => {
   try {
     res.send(console.log(execSync(cmd).toString()));
   } catch (error) {
-    parseError(error);
+    parseError(error, "Error Executing ");
   }
 });
 
@@ -133,11 +141,14 @@ app.get('/tryToConnect/:num', async (req, res, next) => {
         if (sendPing === false) {
           console.log('Trying to Initiate CLIENT');
           canTry2 = false;
-          await UserDataDtoCrud.getInstance().connect()
+          const db = UserDataDtoCrud.getInstance()
+          await db.connect()
+          await db.updatePromoteClientStat({ clientId: process.env.clientId }, { lastStarted: new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }) });
           setTimeout(() => {
             canTry2 = true;
           }, 70000);
           let canStart = true
+          const resp = await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`Starting ${process.env.clientId} Promotions`)}`);
           for (let i = 0; i < 3; i++) {
             // const resp = await fetchWithTimeout(`${ppplbot()}&text=exit${process.env.username}`);
             // if (resp) {
@@ -164,7 +175,7 @@ app.get('/tryToConnect/:num', async (req, res, next) => {
       }
     }
   } catch (error) {
-    parseError(error);
+    parseError(error, "Error At Connecting");
   }
 });
 
@@ -175,23 +186,21 @@ function extractNumberFromString(str) {
 
 async function startConn() {
   console.log("Starting connections")
-  const result = await fetchWithTimeout(`${process.env.promoteChecker}/forward/clients`);
-  const clients = result?.data;
-  console.log("Clients: ", clients?.length)
-  for (const client of clients) {
-    if (extractNumberFromString(client.clientId) == process.env.clientNumber && client.promoteMobile && typeof client.promoteMobile == 'string') {
-      console.log(client.clientId)
-      clientsMap.set(client.clientId, {
-        clientId: client.clientId,
-        mobile: client.promoteMobile,
-        repl: client.repl,
-        username: client.username,
-        lastMessage: Date.now(),
-        name: client.name,
-        startTime: Date.now(),
-        daysLeft: -1
-      })
-    }
+  const result = await fetchWithTimeout(`${process.env.promoteChecker}/forward/clients/${process.env.clientId}`);
+  const client = result?.data;
+  console.log("Client: ", client)
+  for (const mobile of client.promoteMobile) {
+    console.log(mobile)
+    clientsMap.set(mobile, {
+      clientId: client.clientId,
+      mobile: mobile,
+      repl: client.repl,
+      username: client.username,
+      lastMessage: Date.now(),
+      name: client.name,
+      startTime: Date.now(),
+      daysLeft: -1
+    })
   }
   const telegramService = TelegramService.getInstance();
   await telegramService.connectClients()
@@ -203,63 +212,88 @@ async function getALLClients() {
 
   return result
 }
-
-async function checkHealth() {
-  console.log("============Checking Health==============")
+export async function checkHealth() {
+  console.log("============Checking Health==============");
   const telegramService = TelegramService.getInstance();
-  const clients = await (UserDataDtoCrud.getInstance()).getClients()
-  for (const clientData of clients) {
-    const client = clientsMap.get(clientData.clientId)
-    if (client) {
-      const clientDetails: IClientDetails = {
-        clientId: clientData.clientId,
-        mobile: clientData.promoteMobile,
-        repl: clientData.repl,
-        username: clientData.username,
-        lastMessage: Date.now(),
-        name: clientData.name,
-        startTime: client?.startTime || Date.now(),
-        daysLeft: client.daysLeft
-      }
-      try {
-        const telegramManager = await telegramService.getClient(clientDetails.clientId);
-        if (telegramManager) {
-          try {
-            const me = await telegramManager.getMe();
-            if (me.phone !== clientDetails.mobile) {
-              console.log(clientDetails.clientId, " : mobile changed", " me : ", me, "clientDetails: ", clientDetails);
-              clientsMap.set(clientDetails.clientId, clientDetails)
-              await restartClient(clientDetails?.clientId)
-            } else {
-
-              if (telegramManager.getLastMessageTime() < Date.now() - 5 * 60 * 1000) {
-                console.log(clientDetails.clientId, " : Promotions stopped - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
-                await telegramManager.checktghealth();
-                if (telegramManager.daysLeft == -1 && telegramManager.getLastMessageTime() < Date.now() - 10 * 60 * 1000) {
-                  console.log("Promotion seems stopped", clientDetails.clientId)
-                  restartClient(clientDetails?.clientId)
-                }
-                // await telegramService.deleteClient(client.clientId);
-                // await sleep(5000);
-                // await telegramService.createClient(clientDetails, false, true);
+  const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
+  for (const mobile of clientData.promoteMobile) {
+    await sleep(1000);
+    try {
+      const client = clientsMap.get(mobile);
+      if (client) {
+        const clientDetails = {
+          clientId: client.clientId,
+          mobile: mobile,
+          repl: client.repl,
+          username: client.username,
+          lastMessage: Date.now(),
+          name: client.name,
+          startTime: client?.startTime || Date.now(),
+          daysLeft: client.daysLeft,
+        };
+        try {
+          const telegramManager = await telegramService.getClient(mobile);
+          if (telegramManager) {
+            try {
+              const me = await telegramManager.getMe();
+              if (me.phone !== clientDetails.mobile) {
+                console.log(clientDetails.mobile, " : mobile changed", " me : ", me, "clientDetails: ", clientDetails);
+                clientsMap.set(mobile, clientDetails);
+                await restartClient(mobile);
               } else {
-                console.log(clientDetails.clientId, me.username, " : Promotions Working fine - ", Math.floor((Date.now() - telegramManager.getLastMessageTime()) / 1000), `DaysLeft: ${telegramManager.daysLeft}`)
+                clientsMap.set(mobile, clientDetails);
+                telegramManager.setClientDetails(clientDetails);
+                setTimeout(async () => {
+                  try {
+                    await telegramManager?.checkMe();
+                    await telegramManager.client.invoke(new Api.updates.GetState());
+                    await telegramManager.client.markAsRead('myvcacc')
+                    setTimeout(async () => {
+                      await telegramManager.client.invoke(new Api.updates.GetState());
+                      await telegramManager.client.markAsRead('myvcacc')
+                    }, 150000);
+                  } catch (e) {
+                    parseError(e, `${mobile} Error at Health Check`);
+                  }
+                }, 30000);
               }
-              clientsMap.set(clientDetails.clientId, clientDetails)
-              telegramManager.setClientDetails(clientDetails)
-              setTimeout(async () => {
-                await telegramManager.checkMe();
-              }, 30000);
+            } catch (e) {
+              parseError(e, clientDetails.mobile);
             }
-          } catch (e) {
-            parseError(e, clientDetails.clientId)
+          } else {
+            console.log("Does not Exist Client 1: ", clientDetails.mobile);
           }
-        } else {
-          console.log("Does not Exist Client 1: ", client.clientId)
+        } catch (error) {
+          console.log("Does not Exist Client 2: ", clientDetails.mobile);
         }
-      } catch (error) {
-        console.log("Does not Exist Client 2: ", client.clientId)
+      } else {
+        const clientDetails = {
+          clientId: clientData.clientId,
+          mobile: mobile,
+          repl: clientData.repl,
+          username: clientData.username,
+          lastMessage: Date.now(),
+          name: clientData.name,
+          startTime: Date.now(),
+          daysLeft: -1
+        };
+        clientsMap.set(mobile, clientDetails);
+        await telegramService.createClient(clientDetails, false, true);
       }
+    } catch (e) {
+      parseError(e, "Error at Health Check");
+    }
+  }
+  const promoteMobilesSet = new Set(clientData.promoteMobile);
+  for (const mobile of clientsMap.keys()) {
+    try {
+      if (!promoteMobilesSet.has(mobile)) {
+        console.log(`Removing old client entry from clientsMap: ${mobile}`);
+        await telegramService.deleteClient(mobile);
+        clientsMap.delete(mobile);
+      }
+    } catch (error) {
+      parseError(error, "Error at Removing Old Client Entry");
     }
   }
 }
@@ -269,11 +303,11 @@ app.listen(port, () => {
 });
 
 export function getMapValues() {
-  return Array.from(clientsMap.values())
+  return Array.from(clientsMap.values());
 }
 
 export function getMapKeys() {
-  return Array.from(clientsMap.keys())
+  return Array.from(clientsMap.keys());
 }
 
 export function getClient(clientId: string) {
@@ -281,52 +315,62 @@ export function getClient(clientId: string) {
   return client
 }
 
-export async function updateSuccessCount(clientId: string) {
-  const db = UserDataDtoCrud.getInstance();
-  await db.increaseSuccessCount(clientId)
-}
-export async function updateFailedCount(clientId: string) {
-  const db = UserDataDtoCrud.getInstance();
-  await db.increaseFailedCount(clientId)
-}
-export async function updateMsgCount(clientId: string) {
-  const db = UserDataDtoCrud.getInstance();
-  await db.increaseMsgCount(clientId)
-}
-export async function updatePromoteClient(clientId: string, clientData: any) {
-  const db = UserDataDtoCrud.getInstance();
-  await db.updatePromoteClientStat({ clientId }, { ...clientData })
+
+export function getClientDetails(mobile: string) {
+  const client = clientsMap.get(mobile);
+  return client;
 }
 
-export async function restartClient(clientId: string) {
-  if (!clientId) {
-    console.error(`ClientId ${clientId} is undefined`);
+export async function updateSuccessCount(clientId: string) {
+  const db = UserDataDtoCrud.getInstance();
+  await db.increaseSuccessCount(clientId);
+}
+
+export async function updateFailedCount(clientId: string) {
+  const db = UserDataDtoCrud.getInstance();
+  await db.increaseFailedCount(clientId);
+}
+
+export async function updateMsgCount(clientId: string) {
+  const db = UserDataDtoCrud.getInstance();
+  await db.increaseMsgCount(clientId);
+}
+
+export async function updatePromoteClient(clientId: string, clientData: any) {
+  const db = UserDataDtoCrud.getInstance();
+  await db.updatePromoteClientStat({ clientId }, { ...clientData });
+}
+
+export async function restartClient(mobile: string) {
+  if (!mobile) {
+    console.error(`ClientId ${mobile} is undefined`);
     return;
   }
 
   const telegramService = TelegramService.getInstance();
-  const clientDetails = clientsMap.get(clientId);
+  const clientDetails = clientsMap.get(mobile);
 
   if (!clientDetails) {
-    console.error(`Client details for ${clientId} do not exist`);
+    console.error(`Client details for ${mobile} do not exist`);
+    return;
+  }
+  if (clientDetails.startTime > Date.now() - 1000 * 60 * 5) {
+    console.log(`Client ${mobile} was started less than 5 minutes ago. Skipping restart.`);
     return;
   }
 
-  console.log(`===================Restarting service : ${clientId.toUpperCase()}=======================`);
+  console.log(`===================Restarting service : ${mobile.toUpperCase()}=======================`);
+  await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}PROM: Restarting service : ${mobile.toUpperCase()}`);
+  // try {
+  //   const tgManager = await telegramService.getClient(mobile);
 
-  try {
-    const tgManager = await telegramService.getClient(clientId);
-
-    if (tgManager) {
-      await telegramService.deleteClient(clientId);
-      await telegramService.createClient(clientDetails, false, true);
-    } else {
-      console.error(`TelegramManager instance not found for clientId: ${clientId}`);
-    }
-  } catch (error) {
-    console.error(`Failed to restart client ${clientId}:`, error);
-  }
+  //   if (tgManager) {
+  //     await telegramService.disposeClient(mobile);
+  //     await telegramService.createClient(clientDetails, false, true);
+  //   } else {
+  //     console.error(`TelegramManager instance not found for clientId: ${mobile}`);
+  //   }
+  // } catch (error) {
+  //   console.error(`Failed to restart client ${mobile}:`, error);
+  // }
 }
-
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
