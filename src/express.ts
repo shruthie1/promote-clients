@@ -310,8 +310,8 @@ export function getMapKeys() {
   return Array.from(clientsMap.keys());
 }
 
-export function getClient(clientId: string) {
-  const client = clientsMap.get(clientId)
+export function getClient(mobile: string) {
+  const client = clientsMap.get(mobile)
   return client
 }
 
