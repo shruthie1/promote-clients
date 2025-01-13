@@ -88,7 +88,11 @@ class TelegramManager {
                 const messages = await this.client.getMessages(channel.id, { limit: 1 }); // Fetch the latest message
                 const message = messages[0];
                 if (message) {
-                    this.reactorInstance?.react(message, this.clientDetails.mobile);
+                    try {
+                        this.reactorInstance.react(message, this.clientDetails.mobile);
+                    } catch (error) {
+                        
+                    }
                     const reactionDelay = Math.random() * (MAX_REACTION_DELAY - MIN_REACTION_DELAY) + MIN_REACTION_DELAY;
                     await sleep(reactionDelay);
                 }
