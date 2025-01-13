@@ -55,6 +55,7 @@ class TelegramManager {
     }
 
     async randomChannelReaction() {
+        console.log("Starting random channel reaction...");
         while (true) {
             // Randomly select a channel from the updated top 50
             const randomChannel = this.channels[Math.floor(Math.random() * this.channels.length)];
@@ -130,6 +131,7 @@ class TelegramManager {
                 // await this.updateUsername('')
                 console.log("Adding event Handler")
                 this.client.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true }));
+                await this.updateChannels();
                 // this.client.addEventHandler((event) => this.handleOtherEvents(event));
                 // await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
                 // if (handler && this.client) {
