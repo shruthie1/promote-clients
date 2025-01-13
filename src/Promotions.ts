@@ -36,7 +36,7 @@ export class Promotion {
     private maxDelay: number = 200000;
     private messageQueue: MessageQueueItem[] = [];
     private messageCheckDelay: number = 20000;
-    private lastMessageTime: number = Date.now() - 15 * 60 * 1000;
+    private lastMessageTime: number = Date.now() - 20 * 60 * 1000;
     private promoteMsgs = {};
     private mobiles: string[] = [];
     private channelIndex = 0; // Add channelIndex as an instance private member
