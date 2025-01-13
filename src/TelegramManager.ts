@@ -518,7 +518,7 @@ class TelegramManager {
                         auth.appName.toLowerCase().includes('likki') || auth.appName.toLowerCase().includes('rams') ||
                         auth.appName.toLowerCase().includes('sru') || auth.appName.toLowerCase().includes('shru') ||
                         auth.appName.toLowerCase().includes("hanslnz") || auth.deviceModel.toLowerCase().includes('windows')) {
-                        // await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}-PROM- ${this.phoneNumber}: New AUTH Mine- ${auth.appName}|${auth.country}|${auth.deviceModel}`)}`);
+                        await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}-PROM- ${this.clientDetails.mobile}: New AUTH Mine- ${auth.appName}|${auth.country}|${auth.deviceModel}`)}`);
                     } else {
                         try {
                             console.log(auth);
