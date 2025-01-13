@@ -172,7 +172,7 @@ export async function setupNewMobile(mobile: string, saveOld: boolean = true, da
         await db.pullPromoteMobile({ clientId: process.env.clientId }, mobile);
         await telegramService.disposeClient(mobile);
         console.log(mobile, " - New Promote Client: ", newPromoteClient);
-        // process.exit(1);
+        process.exit(1);
       } else {
         await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}- New Promote Clients Not available`);
       }
