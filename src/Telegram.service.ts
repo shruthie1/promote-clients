@@ -6,6 +6,7 @@ export class TelegramService {
     private static clientsMap: Map<string, TelegramManager> = new Map();
     private static instance: TelegramService;
     private reactorInstance: Reactions
+    private mobiles: string[] = [];
 
     private constructor() {}
 
@@ -16,6 +17,10 @@ export class TelegramService {
         return TelegramService.instance;
     }
 
+    setMobiles(mobiles: string[]) {
+        this.mobiles = mobiles;
+        this.reactorInstance.setMobiles(mobiles);
+    }
     public async connectClients() {
         console.log("Connecting....!!");
         const clients = getMapValues();

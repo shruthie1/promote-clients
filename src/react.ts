@@ -90,7 +90,7 @@ export class Reactions {
     ];
 
     async react(message: Api.Message, targetMobile: string): Promise<void> {
-        if (targetMobile !== this.currentMobile || !this.flag || this.waitReactTime > Date.now()) {
+        if (!this.flag || this.waitReactTime > Date.now()) {
             return;
         }
         try {

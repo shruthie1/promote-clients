@@ -158,6 +158,7 @@ class TelegramManager {
             await this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
             this.promoterInstance = new Promotion(this.client, this.clientDetails);
             await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
+            await this.updateChannels()
             // if (handler && this.client) {
             //     //console.log("Adding event Handler")
             // }

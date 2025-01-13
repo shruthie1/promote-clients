@@ -203,6 +203,7 @@ async function startConn() {
     })
   }
   const telegramService = TelegramService.getInstance();
+  await telegramService.setMobiles(client.promoteMobile);
   await telegramService.connectClients()
 }
 
@@ -216,6 +217,7 @@ export async function checkHealth() {
   console.log("============Checking Health==============");
   const telegramService = TelegramService.getInstance();
   const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
+  telegramService.setMobiles(clientData.promoteMobile);
   for (const mobile of clientData.promoteMobile) {
     await sleep(1000);
     try {
