@@ -1,12 +1,11 @@
-import { getMapKeys, getMapValues, IClientDetails } from "./express";
+import { getClientDetails, getMapKeys, getMapValues, IClientDetails } from "./express";
 import { parseError } from "./parseError";
 import { Reactions } from "./react";
 import TelegramManager from "./TelegramManager";
 export class TelegramService {
     private static clientsMap: Map<string, TelegramManager> = new Map();
     private static instance: TelegramService;
-    private reactorInstance: Reactions
-    private mobiles: string[] = [];
+    private reactorInstance: Reactions;
 
     private constructor() {}
 
@@ -17,22 +16,29 @@ export class TelegramService {
         return TelegramService.instance;
     }
 
-    setMobiles(mobiles: string[]) {
-        this.mobiles = mobiles;
-        this.reactorInstance?.setMobiles(mobiles);
+    async setMobiles(mobiles: string[]) {
+        await this.reactorInstance.setMobiles(mobiles)
     }
-    
     public async connectClients() {
         console.log("Connecting....!!");
-        const clients = getMapValues();
-        console.log("Total clients:", clients.length);
-        this.reactorInstance = new Reactions(getMapKeys(), this.getClient.bind(this));
-        for (const client of clients) {
-            await this.createClient(client, false, true);
+        const mobiles = getMapKeys();
+        console.log("Total clients:", mobiles.length);
+        this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this))
+        for (const mobile of mobiles) {
+            const clientDetails = getClientDetails(mobile)
+            await this.createClient(clientDetails, false, true);
         }
         console.log("Connected....!!");
     }
 
+
+    public getAverageReactionDelay() {
+        return this.reactorInstance.averageReactionDelay
+    }
+
+    public getLastReactedTime() {
+        return this.reactorInstance.lastReactedtime
+    }
 
     public getMapValues() {
         return Array.from(TelegramService.clientsMap.values())
@@ -42,12 +48,11 @@ export class TelegramService {
         return Array.from(TelegramService.clientsMap.keys())
     }
 
-    public async getClient(mobile: string) {
-        console.log("Getting Client :", mobile)
+    public getClient(mobile: string) {
+        // console.log("Getting Client :", mobile)
         const tgManager = TelegramService.clientsMap.get(mobile);
         try {
-            if (tgManager && tgManager.connected()) {
-                await tgManager.client.connect();
+            if (tgManager) {
                 return tgManager
             } else {
                 console.log(`tg manager is undefined: ${mobile}`)
@@ -61,6 +66,19 @@ export class TelegramService {
 
     public hasClient(mobile: string) {
         return TelegramService.clientsMap.has(mobile);
+    }
+
+    async disposeClient(mobile: string) {
+        try {
+            let tgManager = await this.getClient(mobile);
+            if (tgManager) {
+                await tgManager.destroy();
+                console.log(`Disconnected and disposed old client for ${mobile}.`)
+            }
+            return TelegramService.clientsMap.delete(mobile)
+        } catch (disposeError) {
+            parseError(disposeError, `Failed to dispose old client for ${mobile}:`)
+        }
     }
 
     async deleteClient(mobile: string) {
@@ -80,14 +98,15 @@ export class TelegramService {
     async disconnectAll() {
         const data = TelegramService.clientsMap.entries();
         console.log("Disconnecting All Clients");
-        for (const [mobile, tgManager] of data) {
+        for (const [clientId, tgManager] of data) {
             try {
+                this.reactorInstance = null;
                 await tgManager.client?.disconnect();
-                TelegramService.clientsMap.delete(mobile);
-                console.log(`Client disconnected: ${mobile}`);
+                TelegramService.clientsMap.delete(clientId);
+                console.log(`Client disconnected: ${clientId}`);
             } catch (error) {
-                console.log(parseError(error));
-                console.log(`Failed to Disconnect : ${mobile}`);
+                console.log(parseError(error, "Failed to Disconnect"));
+                console.log(`Failed to Disconnect : ${clientId}`);
             }
         }
         TelegramService.clientsMap.clear();
@@ -100,8 +119,8 @@ export class TelegramService {
             try {
                 const client = await telegramManager.createClient(handler);
                 TelegramService.clientsMap.set(clientDetails.mobile, telegramManager);
-                await client.getMe();
                 if (client) {
+                    await client.getMe();
                     if (autoDisconnect) {
                         setTimeout(async () => {
                             if (client.connected || await this.getClient(clientDetails.mobile)) {
@@ -123,7 +142,7 @@ export class TelegramService {
                     }
                     return telegramManager;
                 } else {
-                    console.log("Client Expired")
+                    console.log(`Client Expired: ${clientDetails.mobile}`)
                     // throw new BadRequestException('Client Expired');
                 }
             } catch (error) {
@@ -132,7 +151,7 @@ export class TelegramService {
             }
         } else {
             console.log("Client Already exists: ", clientDetails.mobile)
-            return await this.getClient(clientDetails.mobile)
+            return this.getClient(clientDetails.mobile)
         }
     }
 }
