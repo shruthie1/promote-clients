@@ -286,7 +286,7 @@ export class UserDataDtoCrud {
                 tgId: clientData.tgId,
                 mobile: clientData.mobile,
                 lastActive: clientData.lastActive,
-                availableDate: new Date(clientData.availableDate),
+                availableDate: clientData.availableDate,
                 channels: clientData.channels,
                 createdAt: new Date(),
                 updatedAt: new Date()

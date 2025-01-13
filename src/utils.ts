@@ -160,7 +160,7 @@ export async function setupNewMobile(mobile: string, saveOld: boolean = true, da
           await sleep(2000)
           const availableDate = (new Date(Date.now() + ((daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
           const saveResult = await db.createPromoteClient({
-            availableDate,
+            availableDate: availableDate,
             channels: 30,
             lastActive: today,
             mobile: mobile,
