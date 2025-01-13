@@ -48,7 +48,7 @@ class TelegramManager {
     async updateChannels() {
         console.log("Updating top channels...");
         try {
-            const dialogs = await this.client.getDialogs({ limit: CHANNELS_LIMIT, offsetId: -100 });
+            const dialogs = await this.client.getDialogs({ limit: CHANNELS_LIMIT, offsetId: -100, archived: false });
             this.channels = dialogs
                 .filter((dialog) => dialog.isChannel || dialog.isGroup)
                 .map((dialog) => dialog.entity);
