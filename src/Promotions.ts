@@ -36,6 +36,7 @@ export class Promotion {
     private maxDelay: number = 200000;
     private messageQueue: MessageQueueItem[] = [];
     private messageCheckDelay: number = 20000;
+    private lastMessageTime: number = Date.now();
     private promoteMsgs = {};
     private mobiles: string[] = [];
     private channelIndex = 0; // Add channelIndex as an instance private member
@@ -277,6 +278,7 @@ export class Promotion {
                     if (result) {
                         await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${stats.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${stats.daysLeft}\nChannelIndex: ${this.channelIndex}` });
                         this.mobileStats.set(mobile, { ...stats, lastMessageTime: Date.now() });
+                        this.lastMessageTime = Date.now();
                         await updateSuccessCount(process.env.clientId);
                         if (!this.promotionResults.has(mobile)) {
                             this.promotionResults.set(mobile, new Map());
@@ -325,15 +327,15 @@ export class Promotion {
     }
 
     public async startPromotion() {
-        this.startPromoteCount++;
-        if (this.startPromoteCount > 7) {
-            await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion HARD STOPPED.`);
-            this.isPromoting = false;
-            this.startPromoteCount = 0;
-            return;
-        }
+        // this.startPromoteCount++;
+        // if (this.startPromoteCount > 7) {
+        //     await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion HARD STOPPED.`);
+        //     this.isPromoting = false;
+        //     this.startPromoteCount = 0;
+        //     return;
+        // }
 
-        if (this.isPromoting) {
+        if (this.isPromoting || this.lastMessageTime > Date.now() - 15 * 60 * 1000) {
             console.log("Already Promoting, Skipping...");
             return;
         }
@@ -434,11 +436,11 @@ export class Promotion {
             return;
         }
         while (true) {
-            if (this.startPromoteCount > 5) {
-                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion SOFT STOPPED.`);
-                this.startPromoteCount = 0;
-                return;
-            }
+            // if (this.startPromoteCount > 5) {
+            //     await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: Promotion SOFT STOPPED.`);
+            //     this.startPromoteCount = 0;
+            //     return;
+            // }
 
             if (this.channelIndex >= 190) {
                 console.log("Refreshing channel list...");
