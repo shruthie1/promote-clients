@@ -14,6 +14,7 @@ export interface IChannel {
   restricted: boolean;
   broadcast: boolean;
   sendMessages: boolean;
+  megagroup?: boolean;
   canSendMsgs: boolean;
   wordRestriction?: number;
   dMRestriction?: number;

@@ -1,9 +1,11 @@
 import { getMapValues, IClientDetails } from "./express";
 import { parseError } from "./parseError";
+import { Reactions } from "./react";
 import TelegramManager from "./TelegramManager";
 export class TelegramService {
     private static clientsMap: Map<string, TelegramManager> = new Map();
     private static instance: TelegramService;
+    private reactorInstance: Reactions
 
     private constructor() {}
 
@@ -18,12 +20,13 @@ export class TelegramService {
         console.log("Connecting....!!");
         const clients = getMapValues();
         console.log("Total clients:", clients.length);
+        this.reactorInstance = new Reactions(this.getMapKeys(), this.getClient.bind(this));
         for (const client of clients) {
             await this.createClient(client, false, true);
         }
         console.log("Connected....!!");
     }
-    
+
 
     public getMapValues() {
         return Array.from(TelegramService.clientsMap.values())
@@ -87,7 +90,7 @@ export class TelegramService {
     async createClient(clientDetails: IClientDetails, autoDisconnect = false, handler = true): Promise<TelegramManager> {
         const clientData = await this.getClient(clientDetails.mobile)
         if (!clientData || !clientData.client) {
-            const telegramManager = new TelegramManager(clientDetails);
+            const telegramManager = new TelegramManager(clientDetails, this.reactorInstance);
             try {
                 const client = await telegramManager.createClient(handler);
                 TelegramService.clientsMap.set(clientDetails.mobile, telegramManager);

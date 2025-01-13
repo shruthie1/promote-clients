@@ -11,24 +11,97 @@ import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
 import { IClientDetails, updatePromoteClient, updateMsgCount, restartClient } from "./express";
 import { createPromoteClient, getdaysLeft, saveFile, sendToLogs, startNewUserProcess } from "./utils";
-
 import { Promotion } from "./Promotions2";
 import { UserDataDtoCrud } from "./dbservice";
 import { sleep } from "telegram/Helpers";
 
 const ppplbot = `https://api.telegram.org/bot6735591051:AAELwIkSHegcBIVv5pf484Pn09WNQj1Nl54/sendMessage?chat_id=${process.env.updatesChannel}`
 
+const CHANNEL_UPDATE_INTERVAL = 5 * 60 * 1000; // Update top channels every 5 minutes
+const REACTION_INTERVAL = 3000; // Average time to wait between reactions (in ms)
+const MIN_REACTION_DELAY = 2000; // Minimum reaction delay (in ms)
+const MAX_REACTION_DELAY = 5000; // Maximum reaction delay (in ms)
+const CHANNELS_LIMIT = 50; // Number of top channels to monitor
+
 class TelegramManager {
+    private phoneCall = undefined;
     private clientDetails: IClientDetails = undefined
     public client: TelegramClient | null;
     private lastCheckedTime = 0;
-    private tgId: string;
-    private reactorInstance: Reactions;
-    public promoterInstance: Promotion;
+    private checkingAuths = false;
+    private lastResetTime = 0;
+    private liveMap: Map<string, { time: number, value: boolean }> = new Map();
+    public tgId: string;
     public daysLeft = -1;
+    private reactorInstance: Reactions;
+    private promoterInstance: Promotion;
+    private channels = []; // Array to store the top channels
+    private updateChannelsInterval: NodeJS.Timeout;
+    private isReacting: boolean = false;
 
-    constructor(clientDetails: IClientDetails) {
+
+    constructor(clientDetails: IClientDetails, reactorInstance: Reactions) {
         this.clientDetails = clientDetails;
+        this.reactorInstance = reactorInstance;
+        this.updateChannelsInterval = setInterval(this.updateChannels.bind(this), CHANNEL_UPDATE_INTERVAL);
+    }
+    // Function to update the list of top channels (every 5 minutes)
+    async updateChannels() {
+        console.log("Updating top channels...");
+        try {
+            const dialogs = await this.client.getDialogs({ limit: CHANNELS_LIMIT, offsetId: -100, archived: false });
+            this.channels = dialogs
+                .filter((dialog) => dialog.isChannel || dialog.isGroup)
+                .map((dialog) => dialog.entity);
+            console.log(`Found ${this.channels.length} channels to monitor.`);
+            this.randomChannelReaction()
+        } catch (error) {
+            console.error(`${this.clientDetails.mobile} Failed to update top channels: `, error);
+
+        }
+    }
+
+    async randomChannelReaction() {
+        if (this.isReacting) {
+            console.log("Already Reacting, ignoring trigger ", this.clientDetails.mobile);
+            return;
+        }
+        console.log("Starting random channel reaction...");
+        while (true) {
+            const randomChannel = this.channels[Math.floor(Math.random() * this.channels.length)];
+            if (randomChannel) {
+                await this.reactToMessage(randomChannel);
+                await sleep(REACTION_INTERVAL);
+                if (!this.client) {
+                    console.log("Breaking reaction loop: ", this.clientDetails.mobile);
+                    break;
+                }
+            }
+        }
+        console.log("Reaction Loop Stopped", this.clientDetails.mobile);
+        this.isReacting = false;
+    }
+
+    async reactToMessage(channel) {
+        try {
+            if (this.client) {
+                const messages = await this.client.getMessages(channel.id, { limit: 1 }); // Fetch the latest message
+                const message = messages[0];
+                if (message) {
+                    try {
+                        this.reactorInstance.react(message, this.clientDetails.mobile);
+                    } catch (error) {
+
+                    }
+                    const reactionDelay = Math.random() * (MAX_REACTION_DELAY - MIN_REACTION_DELAY) + MIN_REACTION_DELAY;
+                    await sleep(reactionDelay);
+                }
+            } else {
+                console.log(`Client is not connected to react: ${this.clientDetails.mobile}`);
+            }
+        } catch (err) {
+            console.error(`Failed to process messages in channel ${channel.title}:`, err);
+        }
     }
 
     getLastMessageTime() {
@@ -82,7 +155,6 @@ class TelegramManager {
             await sleep(1500)
             await this.updateUsername('')//`${this.clientDetails.name.split(' ').join("_")}_0${process.env.clientNumber}`)
             await sleep(1500)
-            this.reactorInstance = new Reactions(this.clientDetails)
             await this.client.addEventHandler(this.handleEvents.bind(this), new NewMessage());
             this.promoterInstance = new Promotion(this.client, this.clientDetails);
             await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
@@ -273,7 +345,7 @@ class TelegramManager {
                 }
             }
         } else {
-            await this.reactorInstance?.react(event);
+            // await this.reactorInstance?.react(event);
             setSendPing(true)
         }
     }
