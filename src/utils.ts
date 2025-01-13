@@ -1,11 +1,11 @@
+import { TelegramService } from './Telegram.service';
 import axios from "axios";
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { UserDataDtoCrud } from "./dbservice";
 import { parseError } from "./parseError";
-import { getClientDetails } from "./express";
 import * as fs from 'fs';
 import * as path from 'path';
-
+let setupTime = Date.now() - 5 * 60 * 1000;
 export interface IChannel {
   channelId: string;
   title: string;
@@ -118,24 +118,64 @@ export async function startNewUserProcess(error: any, mobile: string) {
     process.exit(1);
   }
   if (error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage == 'SESSION_REVOKED' || error.errorMessage === "USER_DEACTIVATED") {
-    sendToLogs({ message: `${mobile}\n${error.errorMessage}` })
-    const db = UserDataDtoCrud.getInstance();
-    const clientDetails = getClientDetails(mobile);
+    await sendToLogs({ message: `${mobile}\n${error.errorMessage}` })
     console.log(`${(process.env.clientId).toUpperCase()}-${mobile} ${error.errorMessage} : Exitiing`)
     await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-${mobile}: ${error.errorMessage} : Exitiing`);
-    const today = (new Date(Date.now())).toISOString().split('T')[0];
-    const query = { availableDate: { $lte: today }, channels: { $gt: 200 } }
-    const newPromoteClient = await db.findPromoteClient(query)
-    if (newPromoteClient) {
-      await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-PROM Changed Number from ${clientDetails.mobile} to ${newPromoteClient.mobile}`);
-      console.log(mobile, " - New Promote Client: ", newPromoteClient)
-      await db.pushPromoteMobile({ clientId: process.env.clientId }, newPromoteClient.mobile);
-      await db.pullPromoteMobile({ clientId: process.env.clientId }, clientDetails.mobile);
-      await db.deletePromoteClient({ mobile: newPromoteClient.mobile })
-    } else {
-      console.log(`${(process.env.clientId).toUpperCase()}-${mobile} new client does not exist`)
+    await setupNewMobile(mobile, false);
+    process.exit(1)
+  }
+}
+
+export async function setupNewMobile(mobile: string, saveOld: boolean = true, daysLeft: number = 3) {
+  if (setupTime > Date.now() - 5 * 60 * 1000) {
+    try {
+      const db = UserDataDtoCrud.getInstance();
+      const existingClients = await db.getClients();
+      const promoteMobiles = [];
+      for (const existingClient of existingClients) {
+        promoteMobiles.push(existingClient.promoteMobile);
+      }
+      const today = (new Date(Date.now())).toISOString().split('T')[0];
+      const query = { availableDate: { $lte: today }, channels: { $gt: 350 }, mobile: { $nin: promoteMobiles } };
+      const newPromoteClient = await db.findPromoteClient(query);
+      if (newPromoteClient) {
+        await sendToLogs({ message: `Setting up new client for :  ${process.env.clientId} as days : ${daysLeft}` });
+        await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-PROM Changed Number from ${mobile} to ${newPromoteClient.mobile}`);
+        await db.pushPromoteMobile({ clientId: process.env.clientId }, newPromoteClient.mobile);
+        await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
+        if (saveOld) {
+          const telegramService = TelegramService.getInstance();
+          const tgManager = telegramService.getClient(mobile);
+          await tgManager.deleteProfilePhotos();
+          await sleep(1500);
+          await tgManager.updatePrivacyforDeletedAccount();
+          await sleep(1500);
+          await tgManager.updateUsername('');
+          await sleep(1500);
+          await tgManager.updateProfile('Deleted Account', '');
+          await sleep(1500);
+          const availableDate = (new Date(Date.now() + ((daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
+          console.log("Today: ", today, "Available Date: ", availableDate);
+          await db.createPromoteClient({
+            availableDate,
+            channels: 30,
+            lastActive: today,
+            mobile: mobile,
+            tgId: tgManager.tgId
+          })
+        }
+        await db.pullPromoteMobile({ clientId: process.env.clientId }, mobile);
+        await fetchWithTimeout(`${process.env.tgcms}/refreshMap`)
+        await fetchWithTimeout(`${process.env.uptimeChecker}/refreshMap`)
+        console.log(mobile, " - New Promote Client: ", newPromoteClient);
+        process.exit(1);
+      }
+    } catch (error) {
+      parseError(error, "Error Setting up new mobile");
     }
-    // process.exit(1)
+  } else {
+    console.log("Setup Time is less than 5 minutes")
+    await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-PROM Stopped Changing from ${mobile} as Setup Time is less than 5 minutes`);
   }
 }
 

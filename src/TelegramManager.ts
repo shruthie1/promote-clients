@@ -30,7 +30,7 @@ class TelegramManager {
     private checkingAuths = false;
     private lastResetTime = 0;
     private liveMap: Map<string, { time: number, value: boolean }> = new Map();
-    private tgId: string;
+    public tgId: string;
     public daysLeft = -1;
     private reactorInstance: Reactions;
     private promoterInstance: Promotion;

@@ -3,7 +3,7 @@ import cors from 'cors';
 import { fetchWithTimeout } from './fetchWithTimeout';
 import { parseError } from './parseError';
 import { sendPing } from './connection';
-import { ppplbot, sendToLogs, sleep } from './utils';
+import { ppplbot, sendToLogs, setupNewMobile, sleep } from './utils';
 import * as schedule from 'node-schedule-tz';
 import { execSync } from 'child_process';
 import { TelegramService } from './Telegram.service';
@@ -279,7 +279,7 @@ export async function checkHealth() {
                   if (telegramManager.daysLeft == -1 && lastMessageTime < Date.now() - 25 * 60 * 1000) {
                     console.log("Promotion stopped", clientDetails.mobile, "DaysLeft: ", telegramService.getDaysLeft(mobile));
                     await sendToLogs({ message: `\n❌❌ Promotion stopped ❌❌\n${clientDetails.mobile}:\nLastMSg : ${timeInMins} mins ago` });
-                    restartClient(mobile);
+                    await setupNewMobile(mobile,true, telegramManager.daysLeft);
                   }
                 } else {
                   console.log(mobile, me.username, " : Promotions Working fine - ", `LastMSg : ${timeInMins} mins ago`, `DaysLeft: ${telegramService.getDaysLeft(mobile)}`);
