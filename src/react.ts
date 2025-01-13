@@ -41,7 +41,7 @@ export class Reactions {
         this.mobiles = mobiles;
         this.getClient = getClient;
         this.currentMobile = mobiles[0];
-        console.log("Reaction Instance created");
+        console.log("Reaction Instance created, mobiles:", mobiles.length);
     }
 
     public async setMobiles(mobiles: string[]) {
@@ -196,11 +196,16 @@ export class Reactions {
     }
 
     private shouldReact(chatId: string): boolean {
-        return (
-            !contains(chatId, this.reactRestrictedIds) &&
-            !this.reactQueue.contains(chatId) &&
-            this.mobiles?.length > 1
-        );
+        const isRestricted = contains(chatId, this.reactRestrictedIds);
+        const isInQueue = this.reactQueue.contains(chatId);
+        const hasMobiles = this.mobiles?.length > 1;
+
+        console.log(`Checking if should react to chatId: ${chatId}`);
+        console.log(`Is restricted: ${isRestricted}`);
+        console.log(`Is in queue: ${isInQueue}`);
+        console.log(`Has mobiles: ${hasMobiles}`);
+
+        return !isRestricted && !isInQueue && hasMobiles;
     }
 
     private async processReaction(message: Api.Message, reaction: Api.ReactionEmoji[]): Promise<void> {
@@ -212,10 +217,10 @@ export class Reactions {
         } else {
             this.flag = true;
             console.log(`Client is undefined: ${this.currentMobile}`);
-            this.mobiles = this.mobiles.filter(mobile => mobile !== this.currentMobile);
-            this.floodControl.delete(this.currentMobile);
+            // this.mobiles = this.mobiles.filter(mobile => mobile !== this.currentMobile);
+            // this.floodControl.delete(this.currentMobile);
             this.currentMobile = this.selectNextMobile();
-            await restartClient(this.currentMobile);
+            // await restartClient(this.currentMobile);
         }
     }
 

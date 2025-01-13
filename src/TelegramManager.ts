@@ -89,6 +89,7 @@ class TelegramManager {
                 const message = messages[0];
                 if (message) {
                     try {
+                        console.log(`Reacting to message in channel ${channel.title}`);
                         this.reactorInstance.react(message, this.clientDetails.mobile);
                     } catch (error) {
 
