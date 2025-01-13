@@ -145,14 +145,14 @@ export async function setupNewMobile(mobile: string, saveOld: boolean = true, da
         await db.pushPromoteMobile({ clientId: process.env.clientId }, newPromoteClient.mobile);
         await db.deletePromoteClient({ mobile: newPromoteClient.mobile });
         if (saveOld) {
+          await db.pullPromoteMobile({ clientId: process.env.clientId }, mobile);
           await fetchWithTimeout(`${process.env.uptimeChecker}/refreshMap`)
+          await sleep(2000)
           const telegramService = TelegramService.getInstance();
           await telegramService.disposeClient(mobile);
-          await sleep(2000)
           const response = await fetchWithTimeout(`${process.env.uptimeChecker}/promoteclients/SetAsPromoteClient/${mobile}`);
           await fetchWithTimeout(`${ppplbot()}&text=@${process.env.clientId.toUpperCase()}-${mobile}: ${response.data}`);
         }
-        await db.pullPromoteMobile({ clientId: process.env.clientId }, mobile);
         console.log(mobile, " - New Promote Client: ", newPromoteClient);
         process.exit(1);
       }
