@@ -42,7 +42,7 @@ class TelegramManager {
         this.clientDetails = clientDetails;
         this.reactorInstance = reactorInstance;
         this.promoterInstance = promoterInstance;
-        this.updateChannelsInterval =setInterval(this.updateChannels.bind(this), CHANNEL_UPDATE_INTERVAL);
+        this.updateChannelsInterval = setInterval(this.updateChannels.bind(this), CHANNEL_UPDATE_INTERVAL);
     }
     // Function to update the list of top channels (every 5 minutes)
     async updateChannels() {
@@ -65,6 +65,7 @@ class TelegramManager {
             const randomChannel = this.channels[Math.floor(Math.random() * this.channels.length)];
             if (randomChannel) {
                 await this.reactToMessage(randomChannel);
+                await sleep(REACTION_INTERVAL);
             }
         }
     }
@@ -79,7 +80,7 @@ class TelegramManager {
                     const reactionDelay = Math.random() * (MAX_REACTION_DELAY - MIN_REACTION_DELAY) + MIN_REACTION_DELAY;
                     await sleep(reactionDelay);
                 }
-            }else{
+            } else {
                 console.log(`Client is not connected to react: ${this.clientDetails.mobile}`);
             }
         } catch (err) {
