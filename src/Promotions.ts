@@ -411,11 +411,7 @@ export class Promotion {
 
     private async handleSuccessfulMessage(mobile: string, channelId: string, sentMessage: Api.Message) {
         const stats = this.mobileStats.get(mobile);
-        if (stats.daysLeft == 0) {
-            this.mobileStats.set(mobile, { ...stats, daysLeft: -1 });
-        } else {
-            this.mobileStats.set(mobile, { ...stats, messagesSent: stats.messagesSent + 1, failCount: 0 });
-        }
+        this.mobileStats.set(mobile, { ...stats, messagesSent: stats.messagesSent + 1, failCount: 0 });
         this.messageQueue.push({
             mobile,
             channelId,
@@ -496,7 +492,7 @@ export class Promotion {
                         } else {
                             const stats = this.mobileStats.get(mobile);
                             this.mobileStats.set(mobile, { ...stats, failedMessages: stats.failedMessages + 1, failCount: stats.failCount + 1 });
-                            if (stats.failCount > 6) {
+                            if (stats.failCount > 6 || (stats.lastMessageTime < Date.now() - 15 * 60 * 1000 && stats.failCount > 0)) {
                                 await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${stats.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(stats.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${stats.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
                             }
                         }
