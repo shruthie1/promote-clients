@@ -256,7 +256,7 @@ export class Reactions {
         try {
             await this.sendReaction(client, message, reaction);
             console.log(`${mobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
-            await this.updateReactionStats();
+            await this.updateReactionStats(mobile);
         } catch (error) {
             await this.handleReactionError(error, reaction, chatId, mobile);
         } finally {
@@ -286,7 +286,13 @@ export class Reactions {
         await client.invoke(MsgClass);
     }
 
-    private async updateReactionStats(): Promise<void> {
+    private async updateReactionStats(mobile: string): Promise<void> {
+        const stats = this.reactStats.get(mobile);
+        this.reactStats.set(mobile, {
+            ...stats,
+            lastReactedTime: Date.now(),
+            successCount: stats.successCount + 1,
+        });
         const reactionDelay = Math.min(Date.now() - this.lastReactedtime, 25000);
         this.lastReactedtime = Date.now();
         this.reactionDelays.push(reactionDelay);
@@ -304,6 +310,11 @@ export class Reactions {
         chatId: string,
         mobile: string
     ): Promise<void> {
+        const stats = this.reactStats.get(mobile);
+        this.reactStats.set(mobile, {
+            ...stats,
+            failedCount: stats.failedCount + 1,
+        });
         if (error.seconds) {
             await this.handleFloodError(error, mobile);
         } else if (error.errorMessage === "REACTION_INVALID") {
@@ -314,13 +325,13 @@ export class Reactions {
         } else {
             console.log(`${mobile} Reaction failed: ${error.errorMessage}`, new Date().toISOString().split('T')[1].split('.')[0]);
         }
+
     }
 
     private async handleFloodError(error: any, mobile: string): Promise<void> {
         console.log(`Handling flood error for mobile: ${mobile} for ${error.seconds} seconds`);
         const stats = this.reactStats.get(mobile);
         const releaseTime = Date.now() + error.seconds * 1000;
-
         this.reactStats.set(mobile, {
             ...stats,
             triggeredTime: Date.now(),
