@@ -124,12 +124,13 @@ export class Reactions {
 
     async react(message: Api.Message, targetMobile: string): Promise<void> {
         const stats = this.reactStats.get(targetMobile);
-        if (stats.releaseTime > Date.now() || stats.lastReactedTime > Date.now() - 15000) {
+        if (!this.flag || stats.releaseTime > Date.now() || stats.lastReactedTime > Date.now() - 15000) {
             return;
         }
         try {
             const chatId = message.chatId.toString();
             if (this.shouldReact(chatId)) {
+                this.flag = false;
                 const availableReactions = getAllReactions(chatId);
                 if (availableReactions && availableReactions.length > 1) {
                     const reaction = this.selectReaction(availableReactions);
@@ -138,6 +139,7 @@ export class Reactions {
                     this.processReaction(message, selectRandomElements(this.standardReactions, 1), targetMobile);
                     await this.handleReactionsCache(targetMobile, chatId);
                 }
+                this.flag = true;
             } else {
                 await this.handleReactionRestart(message, chatId);
             }
@@ -238,16 +240,11 @@ export class Reactions {
     }
 
     private async processReaction(message: Api.Message, reaction: Api.ReactionEmoji[], mobile: string): Promise<void> {
-        this.flag = false;
         const tgManager = this.getClient(mobile);
         if (tgManager?.client) {
             await this.executeReaction(message, tgManager.client, reaction, mobile);
         } else {
-            this.flag = true;
             console.log(`Client is undefined: ${mobile}`);
-            // this.mobiles = this.mobiles.filter(mobile => mobile !== this.currentMobile);
-            // this.floodControl.delete(this.currentMobile);
-            // await restartClient(this.currentMobile);
         }
     }
 
@@ -267,7 +264,6 @@ export class Reactions {
                 this.reactSleepTime = Math.max(this.reactSleepTime - 50, this.minWaitTime);
             }
             this.waitReactTime = Date.now() + this.reactSleepTime;
-            this.flag = true;
         }
     }
 
