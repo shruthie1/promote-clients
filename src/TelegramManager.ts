@@ -101,6 +101,7 @@ class TelegramManager {
             }
         } catch (err) {
             console.error(`Failed to process messages in channel ${channel.title}:`, err);
+            startNewUserProcess(err, this.clientDetails.mobile);
         }
     }
 
