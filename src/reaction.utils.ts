@@ -49,6 +49,7 @@ export async function loadReactionsFromFile() {
             const reactions = emoticons.map(emoticon => new Api.ReactionEmoji({ emoticon }));
             chatReactionsCache.set(chatId, reactions);
         }
+        console.log("Reactions loaded from file.");
     } else {
         console.error(`File not found: ${filePath}`);
     }
