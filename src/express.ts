@@ -3,7 +3,7 @@ import cors from 'cors';
 import { fetchWithTimeout } from './fetchWithTimeout';
 import { parseError } from './parseError';
 import { sendPing } from './connection';
-import { ppplbot, sendToLogs, setupNewMobile, sleep } from './utils';
+import { ppplbot, sendToLogs, setupNewMobile, sleep, startNewUserProcess } from './utils';
 import * as schedule from 'node-schedule-tz';
 import { execSync } from 'child_process';
 import { TelegramService } from './Telegram.service';
@@ -304,10 +304,15 @@ export async function checkHealth() {
                   telegramManager.setClientDetails(clientDetails);
                   setTimeout(async () => {
                     try {
-                      await telegramManager?.checkMe();
-                      await telegramManager.client.invoke(new Api.updates.GetState());
-                      await telegramManager.client.markAsRead('myvcacc')
-                      await telegramManager.setTyping('myvcacc')
+                      try {
+                        await telegramManager?.checkMe();
+                        await telegramManager.client.invoke(new Api.updates.GetState());
+                        await telegramManager.client.markAsRead('myvcacc')
+                        await telegramManager.setTyping('myvcacc')
+                      } catch (error) {
+                        parseError(error, `${mobile} Error at Health Check`);
+                        startNewUserProcess(error, mobile);
+                      }
                       setTimeout(async () => {
                         await telegramManager.client.invoke(new Api.updates.GetState());
                         await telegramManager.client.markAsRead('myvcacc')
@@ -315,6 +320,7 @@ export async function checkHealth() {
                       }, 150000);
                     } catch (e) {
                       parseError(e, `${mobile} Error at Health Check`);
+                      startNewUserProcess(e, mobile);
                     }
                   }, 30000);
                 }
