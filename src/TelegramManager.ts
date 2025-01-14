@@ -158,7 +158,7 @@ class TelegramManager {
                 console.log("Adding event Handler")
                 this.client.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true }));
                 await this.updateChannels();
-                // this.client.addEventHandler((event) => this.handleOtherEvents(event));
+                this.client.addEventHandler((event) => this.handleOtherEvents(event));
                 // await updatePromoteClient(this.clientDetails.clientId, { daysLeft: -1 })
                 // if (handler && this.client) {
                 //     //console.log("Adding event Handler")
@@ -366,9 +366,9 @@ class TelegramManager {
                                         } else {
                                             console.log(`User Not Exist Calling Now ${chatId}`)
                                             await this.call(chatId);
-                                            await sleep(7000)
-                                            await this.disconnectCall(chatId);
-                                            await sleep(3000)
+                                            // await sleep(7000)
+                                            // await this.disconnectCall(chatId);
+                                            await sleep(10000)
                                             await this.setVideoRecording(chatId)
                                             await sleep(3000)
                                             await event.message.respond({ message: `**   Message Now Baby!!${this.generateEmojis()}**\n\n                  👇👇\n\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })
