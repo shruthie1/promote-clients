@@ -116,19 +116,17 @@ export async function startNewUserProcess(error: any, mobile: string) {
     } catch (error) {
       parseError(error, "Failed to delete archived client");
     }
-    process.exit(1);
   }
   if (error.errorMessage === "USER_DEACTIVATED_BAN" || error.errorMessage == 'SESSION_REVOKED' || error.errorMessage === "USER_DEACTIVATED") {
     await sendToLogs({ message: `${mobile}\n${error.errorMessage}` })
     console.log(`${(process.env.clientId).toUpperCase()}-${mobile} ${error.errorMessage} : Exitiing`)
     await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-${mobile}: ${error.errorMessage} : Exitiing`);
-    await setupNewMobile(mobile, false);
-    process.exit(1)
+    await setupNewMobile(mobile, false, 0, true);
   }
 }
 
-export async function setupNewMobile(mobile: string, saveOld: boolean = true, daysLeft: number = 3) {
-  if (setupTime < Date.now() - 5 * 60 * 1000 && startTime < Date.now() - 15 * 60 * 1000) {
+export async function setupNewMobile(mobile: string, saveOld: boolean = true, daysLeft: number = 3, force: boolean = false) {
+  if (force || (setupTime < Date.now() - 5 * 60 * 1000 && startTime < Date.now() - 15 * 60 * 1000)) {
     setupTime = Date.now();
     try {
       const db = UserDataDtoCrud.getInstance();
