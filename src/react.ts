@@ -309,6 +309,7 @@ export class Reactions {
         const stats = this.reactStats.get(mobile);
         this.reactStats.set(mobile, {
             ...stats,
+            lastReactedTime: Date.now(),
             failedCount: stats.failedCount + 1,
         });
         if (error.seconds) {
