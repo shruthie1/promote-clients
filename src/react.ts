@@ -320,7 +320,7 @@ export class Reactions {
             console.log(`${mobile} Removed Reaction : ${error.errorMessage}: ${chatId} ${reaction[0].emoticon}`, new Date().toISOString().split('T')[1].split('.')[0]);
             setReactions(chatId, availableReactions);
         } else {
-            parseError(error, `:: Reaction Error`, false);
+            console.log(error, reaction[0].emoticon);
             console.log(`${mobile} Reaction failed: ${error.errorMessage}`, new Date().toISOString().split('T')[1].split('.')[0]);
         }
 
