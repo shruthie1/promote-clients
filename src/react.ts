@@ -11,11 +11,18 @@ import { UserDataDtoCrud } from "./dbservice";
 import { restartClient } from "./express";
 
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=${process.env.notifChannel}`;
-
+interface ReactionStats {
+    successCount: number;
+    failedCount: number;
+    sleepTime: number;
+    releaseTime: number;
+    lastReactedTime: number;
+    triggeredTime: number;
+    floodCount: number;
+}
 export class Reactions {
     private flag = true;
     private flag2 = true;
-    private floodControl = new Map<string, { triggeredTime: number; releaseTime: number; count: number }>();
     private waitReactTime = Date.now();
     public lastReactedtime = Date.now() - 180000;
     private reactionDelays: number[] = [];
@@ -24,15 +31,12 @@ export class Reactions {
     private minWaitTime = 1500;
     private maxWaitTime = 21000;
     private reactSleepTime = 5000;
-    private floodTriggeredTime = 0;
-    private floodCount = 0;
     private targetReactionDelay = 6000;
     private reactQueue: ReactQueue;
     private nextMobileIndex = 0;
-    private currentMobile: string;
     private mobiles: string[] = [];
     private successCount = 0;
-    private debounceTimeout: NodeJS.Timeout | null = null;
+    private reactStats: Map<string, ReactionStats> = new Map<string, ReactionStats>();
 
     private getClient: (clientId: string) => TelegramManager | undefined;
 
@@ -40,7 +44,17 @@ export class Reactions {
         this.reactQueue = ReactQueue.getInstance();
         this.mobiles = mobiles;
         this.getClient = getClient;
-        this.currentMobile = mobiles[0];
+        for (const mobile of mobiles) {
+            this.reactStats.set(mobile, {
+                sleepTime: 0,
+                releaseTime: 0,
+                successCount: 0,
+                failedCount: 0,
+                lastReactedTime: 0,
+                triggeredTime: 0,
+                floodCount: 0
+            });
+        }
         console.log("Reaction Instance created");
     }
 
@@ -51,9 +65,27 @@ export class Reactions {
         const result = await db.increaseReactCount(process.env.clientId, this.successCount);
         console.log("Updated React Success Count", this.successCount);
         this.successCount = 0;
+
+        const mobileSet = new Set(mobiles);
+
+        for (const mobile of this.reactStats.keys()) {
+            if (!mobileSet.has(mobile)) {
+                this.reactStats.delete(mobile);
+                console.log(`Deleted mobile ${mobile} from mobileStats`);
+            }
+        }
+
         for (const mobile of mobiles) {
-            if (!this.floodControl.has(mobile)) {
-                this.floodControl.set(mobile, { count: 0, releaseTime: 0, triggeredTime: 0 });
+            if (!this.reactStats.has(mobile)) {
+                this.reactStats.set(mobile, {
+                    sleepTime: 0,
+                    releaseTime: 0,
+                    successCount: 0,
+                    failedCount: 0,
+                    lastReactedTime: 0,
+                    triggeredTime: 0,
+                    floodCount: 0
+                });
             }
         }
     }
@@ -91,7 +123,8 @@ export class Reactions {
     ];
 
     async react(message: Api.Message, targetMobile: string): Promise<void> {
-        if (targetMobile !== this.currentMobile || !this.flag || this.waitReactTime > Date.now()) {
+        const stats = this.reactStats.get(targetMobile);
+        if (stats.releaseTime > Date.now() || stats.lastReactedTime > Date.now() - 15000) {
             return;
         }
         try {
@@ -100,9 +133,9 @@ export class Reactions {
                 const availableReactions = getAllReactions(chatId);
                 if (availableReactions && availableReactions.length > 1) {
                     const reaction = this.selectReaction(availableReactions);
-                    await this.processReaction(message, reaction);
+                    await this.processReaction(message, reaction, targetMobile);
                 } else {
-                    this.processReaction(message, selectRandomElements(this.standardReactions, 1));
+                    this.processReaction(message, selectRandomElements(this.standardReactions, 1), targetMobile);
                     await this.handleReactionsCache(targetMobile, chatId);
                 }
             } else {
@@ -204,34 +237,33 @@ export class Reactions {
         );
     }
 
-    private async processReaction(message: Api.Message, reaction: Api.ReactionEmoji[]): Promise<void> {
+    private async processReaction(message: Api.Message, reaction: Api.ReactionEmoji[], mobile: string): Promise<void> {
         this.flag = false;
-        const tgManager = this.getClient(this.currentMobile);
+        const tgManager = this.getClient(mobile);
         if (tgManager?.client) {
-            await this.executeReaction(message, tgManager.client, reaction);
-            this.currentMobile = this.selectNextMobile();
+            await this.executeReaction(message, tgManager.client, reaction, mobile);
         } else {
             this.flag = true;
-            console.log(`Client is undefined: ${this.currentMobile}`);
+            console.log(`Client is undefined: ${mobile}`);
             // this.mobiles = this.mobiles.filter(mobile => mobile !== this.currentMobile);
             // this.floodControl.delete(this.currentMobile);
-            this.currentMobile = this.selectNextMobile();
             // await restartClient(this.currentMobile);
         }
     }
 
-    private async executeReaction(message: Api.Message, client: TelegramClient, reaction: Api.ReactionEmoji[]): Promise<void> {
+    private async executeReaction(message: Api.Message, client: TelegramClient, reaction: Api.ReactionEmoji[], mobile: string): Promise<void> {
         const chatId = message.chatId.toString();
         try {
             await this.sendReaction(client, message, reaction);
-            console.log(`${this.currentMobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
+            console.log(`${mobile} Reacted Successfully, Average Reaction Delay:`, this.averageReactionDelay, "ms", reaction[0].emoticon, this.reactSleepTime, new Date().toISOString().split('T')[1].split('.')[0]);
             await this.updateReactionStats();
         } catch (error) {
-            await this.handleReactionError(error, reaction, chatId, this.currentMobile);
+            await this.handleReactionError(error, reaction, chatId, mobile);
         } finally {
+            const stats = this.reactStats.get(mobile);
             if (this.averageReactionDelay < this.targetReactionDelay) {
                 this.reactSleepTime = Math.min(this.reactSleepTime + 200, this.maxWaitTime);
-            } else if (Date.now() > this.floodTriggeredTime + 600000 && this.floodCount < 3) {
+            } else if (Date.now() > stats.triggeredTime + 600000 && stats.floodCount < 3) {
                 this.reactSleepTime = Math.max(this.reactSleepTime - 50, this.minWaitTime);
             }
             this.waitReactTime = Date.now() + this.reactSleepTime;
@@ -286,20 +318,18 @@ export class Reactions {
 
     private async handleFloodError(error: any, mobile: string): Promise<void> {
         console.log(`Handling flood error for mobile: ${mobile} for ${error.seconds} seconds`);
-        const currentFlood = this.floodControl.get(mobile) || { triggeredTime: 0, releaseTime: 0, count: 0 };
-
+        const stats = this.reactStats.get(mobile);
         const releaseTime = Date.now() + error.seconds * 1000;
 
-        this.floodControl.set(mobile, {
+        this.reactStats.set(mobile, {
+            ...stats,
             triggeredTime: Date.now(),
             releaseTime,
-            count: currentFlood.count + 1,
+            floodCount: stats.floodCount + 1,
         });
         this.reactSleepTime = 5000;
         this.targetReactionDelay += 500;
         this.minWaitTime += 500;
-        this.floodTriggeredTime = Date.now();
-        this.floodCount++;
     }
 
     private async handleReactionRestart(message: Api.Message, chatId: string): Promise<void> {
@@ -332,8 +362,8 @@ export class Reactions {
 
     private getHealthyMobiles() {
         return this.mobiles.filter((mobile) => {
-            const floodData = this.floodControl.get(mobile) || { triggeredTime: 0, releaseTime: 0, count: 0 };
-            return floodData.releaseTime < Date.now();
+            const stats = this.reactStats.get(mobile);
+            return stats.releaseTime < Date.now();
         });
     }
 

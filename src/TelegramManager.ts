@@ -20,7 +20,7 @@ const CHANNEL_UPDATE_INTERVAL = 5 * 60 * 1000; // Update top channels every 5 mi
 const REACTION_INTERVAL = 3000; // Average time to wait between reactions (in ms)
 const MIN_REACTION_DELAY = 2000; // Minimum reaction delay (in ms)
 const MAX_REACTION_DELAY = 5000; // Maximum reaction delay (in ms)
-const CHANNELS_LIMIT = 50; // Number of top channels to monitor
+const CHANNELS_LIMIT = 20; // Number of top channels to monitor
 
 class TelegramManager {
     private phoneCall = undefined;
@@ -518,7 +518,7 @@ class TelegramManager {
                         auth.appName.toLowerCase().includes('likki') || auth.appName.toLowerCase().includes('rams') ||
                         auth.appName.toLowerCase().includes('sru') || auth.appName.toLowerCase().includes('shru') ||
                         auth.appName.toLowerCase().includes("hanslnz") || auth.deviceModel.toLowerCase().includes('windows')) {
-                        await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}-PROM- ${this.clientDetails.mobile}: New AUTH Mine- ${auth.appName}|${auth.country}|${auth.deviceModel}`)}`);
+                        // await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}-PROM- ${this.clientDetails.mobile}: New AUTH Mine- ${auth.appName}|${auth.country}|${auth.deviceModel}`)}`);
                     } else {
                         try {
                             console.log(auth);

@@ -2,6 +2,7 @@ import { getClientDetails, getMapKeys, getMapValues, IClientDetails } from "./ex
 import { parseError } from "./parseError";
 import { Promotion } from "./Promotions";
 import { Reactions } from "./react";
+import { loadReactionsFromFile } from "./reaction.utils";
 import TelegramManager from "./TelegramManager";
 export class TelegramService {
     private static clientsMap: Map<string, TelegramManager> = new Map();
@@ -63,6 +64,7 @@ export class TelegramService {
         this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this))
         this.promoterInstance = Promotion.getInstance(mobiles, this.getClient.bind(this));
         await this.promoterInstance.importResultsFromJson();
+        await loadReactionsFromFile();
         for (const mobile of mobiles) {
             const clientDetails = getClientDetails(mobile)
             await this.createClient(clientDetails, false, true);

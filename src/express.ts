@@ -9,6 +9,7 @@ import { execSync } from 'child_process';
 import { TelegramService } from './Telegram.service';
 import { UserDataDtoCrud } from './dbservice';
 import { Api } from 'telegram';
+import { saveReactionsToFile } from './reaction.utils';
 
 let canTry2 = true;
 
@@ -246,10 +247,9 @@ async function getALLClients() {
 export async function checkHealth() {
   console.log("============Checking Health==============");
   try {
-
-
     const telegramService = TelegramService.getInstance();
     await telegramService.saveMobileStats();
+    await saveReactionsToFile();
     const bannedMobiles = await telegramService.promotionsBannedMobiles();
     const clientData = await (UserDataDtoCrud.getInstance()).getClient({ clientId: process.env.clientId });
     const averageReactionDelay = telegramService.getAverageReactionDelay()
