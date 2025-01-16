@@ -214,7 +214,7 @@ export class Promotion {
         console.log(`Fetching dialogs from clients...`);
         try {
             for (let batch = 0; batch < totalBatches; batch++) {
-                const mobile = this.selectNextMobile(); // Rotate mobile   
+                const mobile = selectRandomElements(this.mobiles, 1)[0];
                 console.log(`Fetching dialogs for mobile: ${mobile}`);
                 const tgManager = this.getClient(mobile);
                 const client = tgManager?.client;
@@ -476,7 +476,7 @@ export class Promotion {
                 continue;
             }
 
-            if (channelInfo.banned || this.isChannelNotSuitable(channelInfo) || !channelInfo.username || channelInfo.username === 'undefined'|| channelInfo.username === 'null') {
+            if (channelInfo.banned || this.isChannelNotSuitable(channelInfo) || !channelInfo.username || channelInfo.username === 'undefined' || channelInfo.username === 'null') {
                 console.log(`Channel ${channelId} is banned or unsuitable. Skipping...`);
                 this.channelIndex++;
                 continue;
