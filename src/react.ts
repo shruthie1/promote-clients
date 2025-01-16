@@ -120,7 +120,7 @@ export class Reactions {
     ];
 
     async react(message: Api.Message, targetMobile: string): Promise<void> {
-        const stats = this.reactStats.get(targetMobile);
+        const stats = this.reactStats.get(targetMobile) || { releaseTime: 0, lastReactedTime: 0 };
         if (!this.flag || stats.releaseTime > Date.now() || stats.lastReactedTime > Date.now() - 15000) {
             return;
         }
@@ -371,7 +371,7 @@ export class Reactions {
     private getHealthyMobiles() {
         return this.mobiles.filter((mobile) => {
             const stats = this.reactStats.get(mobile);
-            return stats.releaseTime < Date.now();
+            return stats?.releaseTime < Date.now();
         });
     }
 
