@@ -63,11 +63,8 @@ export class Reactions {
         this.mobiles = mobiles;
         const db = UserDataDtoCrud.getInstance();
         const result = await db.increaseReactCount(process.env.clientId, this.successCount);
-        console.log("Updated React Success Count", this.successCount, mobiles.length, result);
         this.successCount = 0;
-
         const mobileSet = new Set(mobiles);
-
         for (const mobile of this.reactStats.keys()) {
             if (!mobileSet.has(mobile)) {
                 this.reactStats.delete(mobile);
@@ -88,7 +85,6 @@ export class Reactions {
                 });
             }
         }
-        console.log("Mobiles set in Reaction Instance", mobiles.length);
     }
 
     private standardEmoticons = ['👍', '❤', '🔥', '👏', '🥰', '😁'];
@@ -236,8 +232,11 @@ export class Reactions {
         const isRestricted = contains(chatId, this.reactRestrictedIds);
         const isInQueue = this.reactQueue.contains(chatId);
         const hasMobiles = this.mobiles?.length > 1;
-        this.setMobiles(getMapKeys());
-        return !isRestricted && !isInQueue && hasMobiles;
+        console.log("Mobiles in reactv : ", this.mobiles);
+        if (!hasMobiles) {
+            this.setMobiles(getMapKeys());
+        }
+        return !isRestricted && !isInQueue;
     }
 
     private async processReaction(message: Api.Message, reaction: Api.ReactionEmoji[], mobile: string): Promise<void> {
