@@ -119,7 +119,6 @@ class TelegramManager {
             clearInterval(this.updateChannelsInterval);
             this.liveMap.clear();
             this.phoneCall = undefined;
-            this.clientDetails = undefined;
             this.client = null;
             this.tgId = '';
             this.daysLeft = -1;
