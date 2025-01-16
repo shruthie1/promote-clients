@@ -63,7 +63,7 @@ export class Reactions {
         this.mobiles = mobiles;
         const db = UserDataDtoCrud.getInstance();
         const result = await db.increaseReactCount(process.env.clientId, this.successCount);
-        console.log("Updated React Success Count", this.successCount);
+        console.log("Updated React Success Count", this.successCount, mobiles.length, result);
         this.successCount = 0;
 
         const mobileSet = new Set(mobiles);
@@ -88,6 +88,7 @@ export class Reactions {
                 });
             }
         }
+        console.log("Mobiles set in Reaction Instance", mobiles.length);
     }
 
     private standardEmoticons = ['👍', '❤', '🔥', '👏', '🥰', '😁'];
