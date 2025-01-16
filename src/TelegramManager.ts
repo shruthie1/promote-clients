@@ -73,7 +73,7 @@ class TelegramManager {
                 await this.reactToMessage(randomChannel);
                 await sleep(REACTION_INTERVAL);
                 if (!this.client) {
-                    console.log("Breaking reaction loop: ", this.clientDetails.mobile);
+                    console.log("Breaking reaction loop: ", this?.clientDetails?.mobile);
                     break;
                 }
             }
