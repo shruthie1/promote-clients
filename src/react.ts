@@ -231,12 +231,11 @@ export class Reactions {
     private shouldReact(chatId: string): boolean {
         const isRestricted = contains(chatId, this.reactRestrictedIds);
         const isInQueue = this.reactQueue.contains(chatId);
-        const hasMobiles = this.mobiles?.length > 1;
-        console.log("Mobiles in reactv : ", this.mobiles);
+        const hasMobiles = this.mobiles?.length > 0;
         if (!hasMobiles) {
             this.setMobiles(getMapKeys());
         }
-        return !isRestricted && !isInQueue;
+        return !isRestricted && !isInQueue && this.mobiles?.length > 0;
     }
 
     private async processReaction(message: Api.Message, reaction: Api.ReactionEmoji[], mobile: string): Promise<void> {
