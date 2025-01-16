@@ -55,7 +55,7 @@ export class Reactions {
                 floodCount: 0
             });
         }
-        console.log("Reaction Instance created");
+        console.log("Reaction Instance created : ", mobiles, mobiles?.length);
     }
 
     public async setMobiles(mobiles: string[]) {
@@ -378,7 +378,7 @@ export class Reactions {
     private selectNextMobile(): string | null {
         const healthyMobiles = this.getHealthyMobiles();
         if (!healthyMobiles.length) {
-            console.warn("No healthy mobiles available for Reactions");
+            console.warn("No healthy mobiles available for Reactions, but mobiles: ", this.mobiles);
             return null;
         }
         const selectedMobile = healthyMobiles[this.nextMobileIndex % healthyMobiles.length];
