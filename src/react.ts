@@ -232,11 +232,16 @@ export class Reactions {
     }
 
     private shouldReact(chatId: string): boolean {
-        return (
-            !contains(chatId, this.reactRestrictedIds) &&
-            !this.reactQueue.contains(chatId) &&
-            this.mobiles?.length > 1
-        );
+        const isRestricted = contains(chatId, this.reactRestrictedIds);
+        const isInQueue = this.reactQueue.contains(chatId);
+        const hasMobiles = this.mobiles?.length > 1;
+
+        console.log(`Checking if should react to chatId: ${chatId}`);
+        console.log(`Is Restricted: ${isRestricted}`);
+        console.log(`Is In Queue: ${isInQueue}`);
+        console.log(`Has Mobiles: ${hasMobiles}`);
+
+        return !isRestricted && !isInQueue && hasMobiles;
     }
 
     private async processReaction(message: Api.Message, reaction: Api.ReactionEmoji[], mobile: string): Promise<void> {
