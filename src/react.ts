@@ -235,12 +235,6 @@ export class Reactions {
         const isRestricted = contains(chatId, this.reactRestrictedIds);
         const isInQueue = this.reactQueue.contains(chatId);
         const hasMobiles = this.mobiles?.length > 1;
-
-        console.log(`Checking if should react to chatId: ${chatId}`);
-        console.log(`Is Restricted: ${isRestricted}`);
-        console.log(`Is In Queue: ${isInQueue}`);
-        console.log(`Has Mobiles: ${hasMobiles}`);
-
         return !isRestricted && !isInQueue && hasMobiles;
     }
 
