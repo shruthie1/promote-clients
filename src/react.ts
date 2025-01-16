@@ -8,7 +8,7 @@ import { contains, IChannel, selectRandomElements } from "./utils";
 import { getAllReactions, setReactions } from "./reaction.utils";
 import TelegramManager from "./TelegramManager";
 import { UserDataDtoCrud } from "./dbservice";
-import { restartClient } from "./express";
+import { getMapKeys, restartClient } from "./express";
 
 const notifbot = `https://api.telegram.org/bot5856546982:AAEW5QCbfb7nFAcmsTyVjHXyV86TVVLcL_g/sendMessage?chat_id=${process.env.notifChannel}`;
 interface ReactionStats {
@@ -235,6 +235,7 @@ export class Reactions {
         const isRestricted = contains(chatId, this.reactRestrictedIds);
         const isInQueue = this.reactQueue.contains(chatId);
         const hasMobiles = this.mobiles?.length > 1;
+        this.setMobiles(getMapKeys());
         return !isRestricted && !isInQueue && hasMobiles;
     }
 
