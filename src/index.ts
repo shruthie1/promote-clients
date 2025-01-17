@@ -1,5 +1,4 @@
 require('dotenv').config()
-console.log("in Config");
 import { execSync } from "child_process";
 import fetch from "node-fetch";
 import fs from 'fs'
@@ -103,7 +102,6 @@ export async function getDataAndSetEnvVariables(url: string) {
         const response = await fetch(url);
         const jsonData: any = await response.json();
         for (const key in jsonData) {
-            console.log("Setting Key", key)
             process.env[key] = jsonData[key];
         }
         console.log('Environment variables set successfully!');

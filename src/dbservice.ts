@@ -1,4 +1,3 @@
-console.log(`in Db - ${process.env.dbcoll} | ${process.env.username}`);
 import { MongoClient, ServerApiVersion, ConnectOptions, ObjectId } from 'mongodb';
 import { parseError } from './parseError';
 import { IChannel } from './utils';

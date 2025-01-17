@@ -1,4 +1,3 @@
-console.log("in MEssages");
 export const endpoint = `mode=02`//&mam=15
 
 export let messages = {
