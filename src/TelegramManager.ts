@@ -47,13 +47,13 @@ class TelegramManager {
     }
     // Function to update the list of top channels (every 5 minutes)
     async updateChannels() {
-        console.log("Updating top channels...");
+        console.log(`${this.clientDetails.mobile}: Updating top channels...`);
         try {
             const dialogs = await this.client.getDialogs({ limit: CHANNELS_LIMIT, offsetId: -100, archived: false });
             this.channels = dialogs
                 .filter((dialog) => dialog.isChannel || dialog.isGroup)
                 .map((dialog) => dialog.entity);
-            console.log(`Found ${this.channels.length} channels to monitor.`);
+            console.log(`${this.clientDetails.mobile} Found ${this.channels.length} channels to monitor.`);
             this.randomChannelReaction()
         } catch (error) {
             console.error(`${this.clientDetails.mobile} Failed to update top channels: `, error);
@@ -66,8 +66,9 @@ class TelegramManager {
             console.log("Already Reacting, ignoring trigger ", this.clientDetails.mobile);
             return;
         }
-        console.log("Starting random channel reaction...");
+        console.log(`${this.clientDetails.mobile} Starting random channel reaction...`);
         while (true) {
+            this.isReacting = true;
             const randomChannel = this.channels[Math.floor(Math.random() * this.channels.length)];
             if (randomChannel) {
                 await this.reactToMessage(randomChannel);
