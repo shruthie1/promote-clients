@@ -49,8 +49,9 @@ export class Promotion {
     private isPromoting: boolean = false;
 
     private constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
-        this.mobiles = mobiles;
         this.getClient = getClient;
+        const validMobiles = mobiles.filter(mobile => this.getClient(mobile));
+        this.mobiles = validMobiles;
         console.log("Promotion Instance created");
         setInterval(() => this.checkQueuedMessages(), this.messageCheckDelay);
         const db = UserDataDtoCrud.getInstance();
@@ -521,7 +522,7 @@ export class Promotion {
                             messageSent = true;
                             break;
                         } else {
-                            const stats = this.mobileStats.get(mobile)|| { messagesSent: 0, failedMessages: 0, sleepTime: 0, releaseTime: 0, lastMessageTime: Date.now(), daysLeft: 0, failCount: 0 };
+                            const stats = this.mobileStats.get(mobile) || { messagesSent: 0, failedMessages: 0, sleepTime: 0, releaseTime: 0, lastMessageTime: Date.now(), daysLeft: 0, failCount: 0 };
                             this.mobileStats.set(mobile, { ...stats, failedMessages: stats.failedMessages + 1, failCount: stats.failCount + 1 });
                             if (stats.failCount > 6 || (stats.lastMessageTime < Date.now() - 15 * 60 * 1000 && stats.failCount > 0)) {
                                 await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${stats.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(stats.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${stats.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
@@ -790,8 +791,8 @@ export class Promotion {
         const twentyMinutesAgo = Date.now() - 20 * 60 * 1000;
         const mobilesWithOldMessages: string[] = [];
 
-        for(const mobile of this.mobileStats.keys()) {
-            const  value = this.mobileStats.get(mobile);
+        for (const mobile of this.mobileStats.keys()) {
+            const value = this.mobileStats.get(mobile);
             if (value.lastMessageTime && value.lastMessageTime < twentyMinutesAgo) {
                 const minutesAgo = Math.floor((Date.now() - value.lastMessageTime) / (60 * 1000));
                 mobilesWithOldMessages.push(`${mobile} : ${minutesAgo} mins`);

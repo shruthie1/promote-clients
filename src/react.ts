@@ -41,10 +41,10 @@ export class Reactions {
     private getClient: (clientId: string) => TelegramManager | undefined;
 
     constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
+        this.getClient = getClient;
         this.reactQueue = ReactQueue.getInstance();
         const validMobiles = mobiles.filter(mobile => this.getClient(mobile));
         this.mobiles = validMobiles;
-        this.getClient = getClient;
         for (const mobile of mobiles) {
             this.reactStats.set(mobile, {
                 sleepTime: 0,
@@ -61,7 +61,8 @@ export class Reactions {
 
     public async setMobiles(mobiles: string[]) {
         console.log("Setting Mobiles in Reaction Instance", mobiles.length);
-        this.mobiles = mobiles;
+        const validMobiles = mobiles.filter(mobile => this.getClient(mobile));
+        this.mobiles = validMobiles;
         const db = UserDataDtoCrud.getInstance();
         const result = await db.increaseReactCount(process.env.clientId, this.successCount);
         this.successCount = 0;
