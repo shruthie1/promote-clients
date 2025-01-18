@@ -72,7 +72,8 @@ export class Promotion {
 
     public setMobiles(mobiles: string[]) {
         console.log("Setting Mobiles in Promotion instance", mobiles.length);
-        this.mobiles = mobiles;
+        const validMobiles = mobiles.filter(mobile => this.getClient(mobile));
+        this.mobiles = validMobiles;
 
         const mobileSet = new Set(mobiles);
 
@@ -101,6 +102,25 @@ export class Promotion {
                     daysLeft: -1,
                     failCount: 0
                 });
+            }
+        }
+    }
+
+    public refreshStats(mobiles: string[]) {
+        console.log("Refreshing Stats for Promotion instance", mobiles);
+        const mobileSet = new Set(mobiles);
+
+        for (const mobile of this.mobileStats.keys()) {
+            if (!mobileSet.has(mobile)) {
+                this.mobileStats.delete(mobile);
+                console.log(`Deleted mobile ${mobile} from mobileStats`);
+            }
+        }
+
+        for (const mobile of this.promotionResults.keys()) {
+            if (!mobileSet.has(mobile)) {
+                this.promotionResults.delete(mobile);
+                console.log(`Deleted mobile ${mobile} from promotion Results`);
             }
         }
     }
@@ -307,7 +327,7 @@ export class Promotion {
                 }
             } else {
                 console.log("client Destroyed while promotions", mobile);
-                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${mobile}: Client Destroyed.`);
+                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}: ${mobile}: Client Does not exist.`);
                 return undefined;
             }
         } catch (error) {
@@ -501,7 +521,7 @@ export class Promotion {
                             messageSent = true;
                             break;
                         } else {
-                            const stats = this.mobileStats.get(mobile);
+                            const stats = this.mobileStats.get(mobile)|| { messagesSent: 0, failedMessages: 0, sleepTime: 0, releaseTime: 0, lastMessageTime: Date.now(), daysLeft: 0, failCount: 0 };
                             this.mobileStats.set(mobile, { ...stats, failedMessages: stats.failedMessages + 1, failCount: stats.failCount + 1 });
                             if (stats.failCount > 6 || (stats.lastMessageTime < Date.now() - 15 * 60 * 1000 && stats.failCount > 0)) {
                                 await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${stats.failCount}\nLastMsg:  ${((Date.now() - stats.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(stats.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${stats.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
@@ -770,12 +790,13 @@ export class Promotion {
         const twentyMinutesAgo = Date.now() - 20 * 60 * 1000;
         const mobilesWithOldMessages: string[] = [];
 
-        this.mobileStats.forEach((value, key) => {
+        for(const mobile of this.mobileStats.keys()) {
+            const  value = this.mobileStats.get(mobile);
             if (value.lastMessageTime && value.lastMessageTime < twentyMinutesAgo) {
                 const minutesAgo = Math.floor((Date.now() - value.lastMessageTime) / (60 * 1000));
-                mobilesWithOldMessages.push(`${key} : ${minutesAgo} mins`);
+                mobilesWithOldMessages.push(`${mobile} : ${minutesAgo} mins`);
             }
-        });
+        }
 
         console.log("Mobiles with last message time greater than 20 minutes:");
         mobilesWithOldMessages.forEach(mobile => console.log(mobile));

@@ -220,7 +220,6 @@ async function startConn() {
   console.log("Starting connections")
   const result = await fetchWithTimeout(`${process.env.promoteChecker}/forward/clients/${process.env.clientId}`);
   const client = result?.data;
-  console.log("Client: ", client)
   for (const mobile of client.promoteMobile) {
     console.log(mobile)
     clientsMap.set(mobile, {

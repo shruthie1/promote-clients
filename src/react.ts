@@ -42,7 +42,8 @@ export class Reactions {
 
     constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
         this.reactQueue = ReactQueue.getInstance();
-        this.mobiles = mobiles;
+        const validMobiles = mobiles.filter(mobile => this.getClient(mobile));
+        this.mobiles = validMobiles;
         this.getClient = getClient;
         for (const mobile of mobiles) {
             this.reactStats.set(mobile, {
@@ -256,7 +257,7 @@ export class Reactions {
         } catch (error) {
             await this.handleReactionError(error, reaction, chatId, mobile);
         } finally {
-            const stats = this.reactStats.get(mobile);
+            const stats = this.reactStats.get(mobile) || { triggeredTime: 0, floodCount: 0 };
             if (this.averageReactionDelay < this.targetReactionDelay) {
                 this.reactSleepTime = Math.min(this.reactSleepTime + 200, this.maxWaitTime);
             } else if (Date.now() > stats.triggeredTime + 600000 && stats.floodCount < 3) {
