@@ -155,7 +155,7 @@ export async function setupNewMobile(mobile: string, saveOld: boolean = true, da
           await sleep(1000);
           await tgManager.updateProfile('Deleted Account', '');
           await sleep(2000)
-          const availableDate = (new Date(Date.now() + ((daysLeft + 1) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
+          const availableDate = (new Date(Date.now() + ((Math.max(daysLeft + 1, 2)) * 24 * 60 * 60 * 1000))).toISOString().split('T')[0];
           const saveResult = await db.createPromoteClient({
             availableDate: availableDate,
             channels: 30,
