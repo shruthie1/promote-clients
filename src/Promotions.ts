@@ -50,8 +50,7 @@ export class Promotion {
 
     private constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
         this.getClient = getClient;
-        const validMobiles = mobiles.filter(mobile => this.getClient(mobile));
-        this.mobiles = validMobiles;
+        this.mobiles = mobiles;
         console.log("Promotion Instance created");
         setInterval(() => this.checkQueuedMessages(), this.messageCheckDelay);
         const db = UserDataDtoCrud.getInstance();

@@ -43,8 +43,7 @@ export class Reactions {
     constructor(mobiles: string[], getClient: (clientId: string) => TelegramManager | undefined) {
         this.getClient = getClient;
         this.reactQueue = ReactQueue.getInstance();
-        const validMobiles = mobiles.filter(mobile => this.getClient(mobile));
-        this.mobiles = validMobiles;
+        this.mobiles = mobiles;
         for (const mobile of mobiles) {
             this.reactStats.set(mobile, {
                 sleepTime: 0,
