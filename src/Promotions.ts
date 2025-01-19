@@ -75,21 +75,21 @@ export class Promotion {
         const validMobiles = mobiles.filter(mobile => this.getClient(mobile));
         this.mobiles = validMobiles;
 
-        const mobileSet = new Set(mobiles);
+        // const mobileSet = new Set(mobiles);
 
-        for (const mobile of this.mobileStats.keys()) {
-            if (!mobileSet.has(mobile)) {
-                this.mobileStats.delete(mobile);
-                console.log(`Deleted mobile ${mobile} from mobileStats`);
-            }
-        }
+        // for (const mobile of this.mobileStats.keys()) {
+        //     if (!mobileSet.has(mobile)) {
+        //         this.mobileStats.delete(mobile);
+        //         console.log(`Deleted mobile ${mobile} from mobileStats`);
+        //     }
+        // }
 
-        for (const mobile of this.promotionResults.keys()) {
-            if (!mobileSet.has(mobile)) {
-                this.promotionResults.delete(mobile);
-                console.log(`Deleted mobile ${mobile} from promotion Results`);
-            }
-        }
+        // for (const mobile of this.promotionResults.keys()) {
+        //     if (!mobileSet.has(mobile)) {
+        //         this.promotionResults.delete(mobile);
+        //         console.log(`Deleted mobile ${mobile} from promotion Results`);
+        //     }
+        // }
 
         for (const mobile of mobiles) {
             if (!this.mobileStats.has(mobile)) {
@@ -790,7 +790,7 @@ export class Promotion {
         const twentyMinutesAgo = Date.now() - 20 * 60 * 1000;
         const mobilesWithOldMessages: string[] = [];
 
-        for (const mobile of this.mobileStats.keys()) {
+        for (const mobile of this.mobiles) {
             const value = this.mobileStats.get(mobile);
             if (value.lastMessageTime && value.lastMessageTime < twentyMinutesAgo) {
                 const minutesAgo = Math.floor((Date.now() - value.lastMessageTime) / (60 * 1000));
