@@ -592,8 +592,8 @@ export class Promotion {
                 mobileStats: this.getMobileStats(),
                 promotionResults: this.getPromotionResults(),
             };
-            await fs.writeFile("./mobileStats.json", JSON.stringify(data, null, 2), 'utf-8');
-            console.log(`Results saved to mobileStats.json`);
+            await fs.writeFile(`./mobileStats-${this.clientDetails.mobile}`, JSON.stringify(data, null, 2), 'utf-8');
+            console.log(`Results saved to mobileStats-${this.clientDetails.mobile}.json`);
         } catch (error) {
             console.error(`Failed to save results to ./mobileStats.json:`, error.message);
         }
