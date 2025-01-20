@@ -36,20 +36,20 @@ export class Promotion {
     public failedMessages: number = 0;
     public releaseTime: number = 0;
     public failCount: number = 0;
-    public lastMessageTime: number = Date.now() - 240000;
+    public lastMessageTime: number = Date.now() - 16 * 60 * 1000;
     private lastCheckedTime: number = 0;
     private channels: string[] = [];
     private messageQueue: MessageQueueItem[] = [];
     private messageCheckDelay: number = 5000;
     private promoteMsgs: Record<string, any> = {};
-    channelIndex: any;
-    failureReason: any;
-    isPromoting: boolean;
+    private channelIndex: any;
+    private failureReason: any;
+    private isPromoting: boolean = false;
 
     constructor(client: TelegramClient, clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
         this.client = client;
-        console.log(clientDetails.clientId, ": Promotion Instance created")
+        console.log(clientDetails.mobile, ": Promotion Instance created")
         setInterval(() => this.checkQueuedMessages(), this.messageCheckDelay);
         const db = UserDataDtoCrud.getInstance();
         db.getPromoteMsgs().then((data) => {
