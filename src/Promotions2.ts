@@ -178,6 +178,9 @@ export class Promotion {
             this.failureReason = error.errorMessage;
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(mobile, `Some Error Occured, ${error.errorMessage}`);
+                if (!error.errorMessage) {
+                    parseError(error, "Error sending message to channel", true);
+                }
             }
             if (error instanceof errors.FloodWaitError) {
                 console.log(error);
