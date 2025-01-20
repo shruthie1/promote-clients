@@ -287,9 +287,9 @@ export async function checkHealth() {
                   const lastMessageTime = telegramService.getLastMessageTime(mobile);
                   const timeInMins = ((Date.now() - lastMessageTime) / 60000).toFixed(2)
                   if (lastMessageTime < Date.now() - 15 * 60 * 1000) {
-                    await telegramService.startPromotion();
+                    await telegramService.startPromotion(mobile);
                     console.log(clientDetails.clientId, " : Promotions Seems stopped - ", `LastMSg : ${timeInMins} mins ago`, `DaysLeft: ${telegramService.getDaysLeft(mobile)}`);
-                    await telegramManager.checktghealth();
+                    // await telegramManager.checktghealth();
 
                     if (lastMessageTime < Date.now() - 30 * 60 * 1000) {
                       console.log("Promotion stopped", clientDetails.mobile, "DaysLeft: ", telegramService.getDaysLeft(mobile));

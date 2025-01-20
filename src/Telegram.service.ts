@@ -1,6 +1,5 @@
 import { getClientDetails, getMapKeys, getMapValues, IClientDetails } from "./express";
 import { parseError } from "./parseError";
-import { Promotion } from "./Promotions";
 import { Reactions } from "./react";
 import { loadReactionsFromFile } from "./reaction.utils";
 import TelegramManager from "./TelegramManager";
@@ -8,7 +7,6 @@ export class TelegramService {
     private static clientsMap: Map<string, TelegramManager> = new Map();
     private static instance: TelegramService;
     private reactorInstance: Reactions;
-    private promoterInstance: Promotion;
 
     private constructor() {}
 
@@ -26,35 +24,57 @@ export class TelegramService {
     }
 
     getLastMessageTime(mobile: string) {
-        return this.promoterInstance?.getLastMessageTime(mobile);
+        const tgManager = this.getClient(mobile);
+        return tgManager?.promoterInstance.lastMessageTime;
     }
 
     getDaysLeft(mobile: string) {
-        return this.promoterInstance?.getDaysLeft(mobile);
+        const tgManager = this.getClient(mobile);
+        return tgManager?.promoterInstance.lastMessageTime;
+    }
+
+    startPromotion(mobile: string) {
+        const tgManager = this.getClient(mobile);
+        return tgManager?.promoterInstance.startPromotion();
     }
 
     getPromotionResults() {
-        return this.promoterInstance?.getPromotionResults();
+        const result = {};
+        for (const mobile of this.getMobiles()) {
+            const tgManager = this.getClient(mobile);
+            result[mobile] = tgManager?.promoterInstance?.getPromotionResults();
+        }
+        return result;
     }
 
     getMobileStats() {
-        return this.promoterInstance?.getMobileStats();
+        const result = {};
+        for (const mobile of this.getMobiles()) {
+            const tgManager = this.getClient(mobile);
+            result[mobile] = tgManager?.promoterInstance?.getMobileStats();
+        }
+        return result;
     }
 
     saveMobileStats() {
-        return this.promoterInstance?.saveResultsToJson();
+        const result = {};
+        for (const mobile of this.getMobiles()) {
+            const tgManager = this.getClient(mobile);
+            result[mobile] = tgManager?.promoterInstance?.saveResultsToJson();
+        }
+        return result;
     }
 
     importMobileStats() {
-        return this.promoterInstance?.saveResultsToJson();
-    }
-
-    promotionsBannedMobiles() {
-        return this.promoterInstance?.promotionsBannedMobiles();
+        const result = {};
+        for (const mobile of this.getMobiles()) {
+            const tgManager = this.getClient(mobile);
+            result[mobile] = tgManager?.promoterInstance?.saveResultsToJson();
+        }
+        return result;
     }
 
     async setMobiles(mobiles: string[]) {
-        this.promoterInstance.setMobiles(mobiles)
         await this.reactorInstance.setMobiles(mobiles)
     }
     public async connectClients() {
@@ -62,19 +82,12 @@ export class TelegramService {
         const mobiles = getMapKeys();
         console.log("Total clients:", mobiles.length);
         this.reactorInstance = new Reactions(mobiles, this.getClient.bind(this))
-        this.promoterInstance = Promotion.getInstance(mobiles, this.getClient.bind(this));
-        await this.promoterInstance.importResultsFromJson();
         await loadReactionsFromFile();
         for (const mobile of mobiles) {
             const clientDetails = getClientDetails(mobile)
             await this.createClient(clientDetails, false, true);
         }
-        this.promoterInstance.startPromotion()
         console.log("Connected....!!");
-    }
-
-    public startPromotion() {
-        return this.promoterInstance.startPromotion()
     }
 
     public getAverageReactionDelay() {
@@ -85,11 +98,11 @@ export class TelegramService {
         return this.reactorInstance.lastReactedtime
     }
 
-    public getMapValues() {
+    public getTgManagers() {
         return Array.from(TelegramService.clientsMap.values())
     }
 
-    public getMapKeys() {
+    public getMobiles() {
         return Array.from(TelegramService.clientsMap.keys())
     }
 
@@ -145,7 +158,6 @@ export class TelegramService {
         console.log("Disconnecting All Clients");
         for (const [clientId, tgManager] of data) {
             try {
-                this.promoterInstance = null;
                 this.reactorInstance = null;
                 await tgManager.client?.disconnect();
                 TelegramService.clientsMap.delete(clientId);
@@ -161,7 +173,7 @@ export class TelegramService {
     async createClient(clientDetails: IClientDetails, autoDisconnect = false, handler = true): Promise<TelegramManager> {
         const clientData = await this.getClient(clientDetails.mobile)
         if (!clientData || !clientData.client) {
-            const telegramManager = new TelegramManager(clientDetails, this.reactorInstance, this.promoterInstance);
+            const telegramManager = new TelegramManager(clientDetails, this.reactorInstance);
             try {
                 const client = await telegramManager.createClient(handler);
                 TelegramService.clientsMap.set(clientDetails.mobile, telegramManager);
@@ -199,5 +211,23 @@ export class TelegramService {
             console.log("Client Already exists: ", clientDetails.mobile)
             return this.getClient(clientDetails.mobile)
         }
+    }
+
+    public promotionsBannedMobiles(): string {
+        const twentyMinutesAgo = Date.now() - 20 * 60 * 1000;
+        const mobilesWithOldMessages: string[] = [];
+
+        for (const mobile of this.getMobiles()) {
+            const lastMessageTime = this.getLastMessageTime(mobile);
+            if (lastMessageTime && lastMessageTime < twentyMinutesAgo) {
+                const minutesAgo = Math.floor((Date.now() - lastMessageTime) / (60 * 1000));
+                mobilesWithOldMessages.push(`${mobile} : ${minutesAgo} mins`);
+            }
+        }
+
+        console.log("Mobiles with last message time greater than 20 minutes:");
+        mobilesWithOldMessages.forEach(mobile => console.log(mobile));
+
+        return mobilesWithOldMessages.join("\n");
     }
 }
