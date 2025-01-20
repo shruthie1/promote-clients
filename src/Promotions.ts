@@ -508,7 +508,7 @@ export class Promotion {
                 try {
                     if (this.promotionResults.has(mobile) && this.promotionResults.get(mobile)!.has(channelId)) {
                         const previousResult = this.promotionResults.get(mobile)!.get(channelId);
-                        if (previousResult?.success) {
+                        if (previousResult && previousResult.success == false) {
                             console.log(`Skipping promotion for mobile ${mobile} and channel ${channelId} based on previous result.`);
                             continue;
                         }
