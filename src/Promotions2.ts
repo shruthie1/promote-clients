@@ -159,11 +159,8 @@ export class Promotion {
                     await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - this.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${this.daysLeft}\nChannelIndex: ${this.channelIndex}` });
 
                     this.lastMessageTime = Date.now();
-                    await updateSuccessCount(process.env.clientId);
-                    // if (!this.promotionResults.has(mobile)) {
-                    //     this.promotionResults.set(mobile, {});
-                    // }
-                    // this.promotionResults.get(mobile)!.set(channelInfo.channelId, { success: true });
+                    await updateSuccessCount(process.env.clientId)
+                    this.promotionResults.set(channelInfo.channelId, { success: true });
                     return result;
                 } else {
                     console.error(`Client ${mobile}: Failed to send message to ${channelInfo.channelId} || @${channelInfo.username}`);
@@ -177,10 +174,7 @@ export class Promotion {
 
         } catch (error) {
             await updateFailedCount(process.env.clientId);
-            // if (!this.promotionResults.has(mobile)) {
-            //     this.promotionResults.set(mobile, new Map());
-            // }
-            // this.promotionResults.get(mobile)!.set(channelInfo.channelId, { success: false, errorMessage: error.errorMessage || "UNKNOWN" });
+            this.promotionResults.set(channelInfo.channelId, { success: false, errorMessage: error.errorMessage || "UNKNOWN" });
             this.failureReason = error.errorMessage;
             if (error.errorMessage !== 'USER_BANNED_IN_CHANNEL') {
                 console.log(mobile, `Some Error Occured, ${error.errorMessage}`);
