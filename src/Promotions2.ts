@@ -340,7 +340,7 @@ export class Promotion {
                 try {
                     if (this.promotionResults.has(channelId)) {
                         const previousResult = this.promotionResults.get(channelId);
-                        if (previousResult?.success) {
+                        if (previousResult && previousResult.success == false) {
                             console.log(`Skipping promotion for mobile ${mobile} and channel ${channelId} based on previous result.`);
                             continue;
                         }
@@ -625,34 +625,34 @@ export class Promotion {
         }
     }
 
-        async checktghealth(force: boolean = false) {
-            if ((this.lastCheckedTime < (Date.now() - 30 * 60 * 1000) && this.daysLeft < 0) || force) {//&& daysLeftForRelease() < 0) {
-                this.lastCheckedTime = Date.now();
-                try {
-                    if (this.client) {
-                        await this.client.sendMessage('@spambot', { message: '/start' })
-                    } else {
-                        //console.log("instanse not exist")
-                    }
-                } catch (error) {
-                    parseError(error, `CheckHealth in Tg: ${this.clientDetails?.mobile}`)
-                    await startNewUserProcess(error, this.clientDetails.mobile)
-                    try {
-                        await this.client.invoke(
-                            new Api.contacts.Unblock({
-                                id: '178220800'
-                            })
-                        );
-                    } catch (error) {
-                        parseError(error, this.clientDetails?.mobile)
-                        await startNewUserProcess(error, this.clientDetails.mobile)
-                    }
-                    await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-PROM: Failed To Check Health`);
+    async checktghealth(force: boolean = false) {
+        if ((this.lastCheckedTime < (Date.now() - 30 * 60 * 1000) && this.daysLeft < 0) || force) {//&& daysLeftForRelease() < 0) {
+            this.lastCheckedTime = Date.now();
+            try {
+                if (this.client) {
+                    await this.client.sendMessage('@spambot', { message: '/start' })
+                } else {
+                    //console.log("instanse not exist")
                 }
-                return true;
+            } catch (error) {
+                parseError(error, `CheckHealth in Tg: ${this.clientDetails?.mobile}`)
+                await startNewUserProcess(error, this.clientDetails.mobile)
+                try {
+                    await this.client.invoke(
+                        new Api.contacts.Unblock({
+                            id: '178220800'
+                        })
+                    );
+                } catch (error) {
+                    parseError(error, this.clientDetails?.mobile)
+                    await startNewUserProcess(error, this.clientDetails.mobile)
+                }
+                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-PROM: Failed To Check Health`);
             }
-            return false
+            return true;
         }
+        return false
+    }
 
 }
 
