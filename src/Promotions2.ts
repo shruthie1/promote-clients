@@ -610,14 +610,14 @@ export class Promotion {
             }
             this.setMobileStats(data.mobileStats);
             this.setPromotionResults(data.promotionResults);
-            console.log(`Results imported from mobileStats.json`);
+            console.log(`Results imported from ./mobileStats-${this.clientDetails.mobile}.json`);
         } catch (error) {
             if (error.code === 'ENOENT') {
-                console.error(`File not found: mobileStats.json`);
+                console.error(`File not found: ./mobileStats-${this.clientDetails.mobile}.json`);
             } else if (error instanceof SyntaxError) {
-                console.error(`Failed to parse JSON from mobileStats.json:`, error.message);
+                console.error(`Failed to parse JSON from ./mobileStats-${this.clientDetails.mobile}.json:`, error.message);
             } else {
-                console.error(`Failed to import results from mobileStats.json:`, error.message);
+                console.error(`Failed to import results from ./mobileStats-${this.clientDetails.mobile}.json:`, error.message);
             }
         }
     }
