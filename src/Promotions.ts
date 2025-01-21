@@ -25,6 +25,7 @@ interface MobileStats {
     lastMessageTime: number;
     daysLeft: number;
     failCount: number;
+    lastCheckedTime: number;
 }
 
 export class Promotion {
@@ -154,7 +155,7 @@ export class Promotion {
     async sendMessageToChannel(mobile: string, channelInfo: IChannel, message: SendMessageParams) {
         try {
             if (this.sleepTime < Date.now()) {
-                // console.log(`${mobile} Sending Message: to ${channelInfo.channelId} || @${channelInfo.username}`);
+                //console.log(`${mobile} Sending Message: to ${channelInfo.channelId} || @${channelInfo.username}`);
                 const result = await this.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                 if (result) {
                     await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - this.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${this.daysLeft}\nChannelIndex: ${this.channelIndex}` });
@@ -555,6 +556,7 @@ export class Promotion {
             lastMessageTime: this.lastMessageTime,
             daysLeft: this.daysLeft,
             failCount: this.failCount,
+            lastCheckedTime: this.lastCheckedTime
         };
     }
 
@@ -567,6 +569,7 @@ export class Promotion {
         this.lastMessageTime = mobileStats.lastMessageTime;
         this.daysLeft = mobileStats.daysLeft;
         this.failCount = mobileStats.failCount;
+        this.lastCheckedTime = mobileStats.lastCheckedTime;
     }
 
     public getPromotionResults(): Record<string, { success: boolean, errorMessage?: string }> {
@@ -630,7 +633,7 @@ export class Promotion {
     }
 
     async checktghealth(force: boolean = false) {
-        if ((this.lastCheckedTime < (Date.now() - 30 * 60 * 1000) && this.daysLeft < 0) || force) {//&& daysLeftForRelease() < 0) {
+        if ((this.lastCheckedTime < (Date.now() - 120 * 60 * 1000)) || force) {//&& daysLeftForRelease() < 0) {
             this.lastCheckedTime = Date.now();
             try {
                 if (this.client) {
