@@ -79,7 +79,7 @@ export class Promotion {
 
     async fetchDialogs() {
         const totalBatches = 1; // Fetch three batches
-        const batchSize = 350;
+        const batchSize = 500;
         const channelDataSet = new Set<string>(); // Use Set to avoid duplicates
         const channelDetails: { channelId: string; participantsCount: number }[] = [];
         console.log(`Fetching dialogs from clients...`);
@@ -122,7 +122,7 @@ export class Promotion {
             console.log(`Sorted channels by participants count: ${channelDetails.length}`);
 
             // Fisher-Yates Shuffle on top 250
-            const topChannels = channelDetails.slice(0, 200);
+            const topChannels = channelDetails.slice(0, 350);
             // for (let i = topChannels.length - 1; i > 0; i--) {
             //     const j = Math.floor(Math.random() * (i + 1));
             //     [topChannels[i], topChannels[j]] = [topChannels[j], topChannels[i]];
@@ -315,7 +315,7 @@ export class Promotion {
             //     return;
             // }
 
-            if (this.channelIndex >= 110) {
+            if ((this.daysLeft <= 0 && this.channelIndex >= 110) || (this.daysLeft > 0 && this.channelIndex >= 300)) {
                 console.log("Refreshing channel list...");
                 this.channels = await this.fetchDialogs();
                 this.channelIndex = 0;
