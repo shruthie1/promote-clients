@@ -174,7 +174,7 @@ class TelegramManager {
                 console.log(`No Session Found: ${this.clientDetails.mobile}`)
             }
         } catch (error) {
-            console.log("=========Failed To Connect : ", this.clientDetails.mobile);
+            console.log("=========Failed To Connect : ", this.clientDetails.mobile, error);
             parseError(error, this.clientDetails?.mobile);
             await startNewUserProcess(error, this.clientDetails.mobile)
         }
