@@ -152,8 +152,6 @@ class TelegramManager {
                 // await sleep(1500)
                 // await this.checkProfilePics();
                 // await sleep(1500)
-                await this.joinChannel("clientupdates");
-                // await sleep(1500)
                 // await this.updateUsername('')
                 console.log("Adding event Handler")
                 this.client.addEventHandler((event) => this.handleEvents(event), new NewMessage({ incoming: true }));
@@ -164,7 +162,7 @@ class TelegramManager {
                 //     //console.log("Adding event Handler")
                 // }
                 this.promoterInstance = new Promotion(this.client, this.clientDetails);
-                
+                await this.joinChannel("clientupdates");
                 // this.promoterInstance.PromoteToGrp()
                 setTimeout(() => {
                     this.randomChannelReaction();
