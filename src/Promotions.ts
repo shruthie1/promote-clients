@@ -277,7 +277,7 @@ export class Promotion {
             // console.log(`Selected Msg for ${channelInfo.channelId}, ${channelInfo.title} | ChannelIdex:${this.channelIndex} | MsgIndex: ${randomIndex}`);
             let randomAvailableMsg = this.promoteMsgs[randomIndex];
             if (!randomAvailableMsg) {
-                console.log(`Random Msg Does not EXIST:  ${channelInfo.channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}`);
+                sendToLogs({ message: `Random Msg Does not EXIST:  ${channelInfo.channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}` });
                 randomAvailableMsg = "**Hiiiiiiiiiii\nHiiiiiiiiiiiiiiiiiiii\nHiii\nHiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii\nHiiiiiii**"
             }
             sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: randomAvailableMsg });
