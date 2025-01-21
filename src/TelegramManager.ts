@@ -33,16 +33,15 @@ class TelegramManager {
     public tgId: string;
     public daysLeft = -1;
     private reactorInstance: Reactions;
-    private promoterInstance: Promotion;
+    public promoterInstance: Promotion;
     private channels = []; // Array to store the top channels
     private updateChannelsInterval: NodeJS.Timeout;
     private isReacting: boolean = false;
 
 
-    constructor(clientDetails: IClientDetails, reactorInstance: Reactions, promoterInstance: Promotion) {
+    constructor(clientDetails: IClientDetails, reactorInstance: Reactions) {
         this.clientDetails = clientDetails;
         this.reactorInstance = reactorInstance;
-        this.promoterInstance = promoterInstance;
         this.updateChannelsInterval = setInterval(this.updateChannels.bind(this), CHANNEL_UPDATE_INTERVAL);
     }
     // Function to update the list of top channels (every 5 minutes)
@@ -164,6 +163,8 @@ class TelegramManager {
                 // if (handler && this.client) {
                 //     //console.log("Adding event Handler")
                 // }
+                this.promoterInstance = new Promotion(this.client, this.clientDetails);
+                
                 // this.promoterInstance.PromoteToGrp()
                 setTimeout(() => {
                     this.randomChannelReaction();
@@ -398,16 +399,16 @@ class TelegramManager {
                                 const days = getdaysLeft(date);
                                 console.log("Days Left: ", days);
                                 this.daysLeft = days
-                                this.promoterInstance.setDaysLeft(this.clientDetails.mobile, days)
+                                this.promoterInstance.setDaysLeft(days)
                                 // if (days == 3) {
                                 // this.promoterInstance.setChannels(openChannels)
                                 // }
                             } else if (event.message.text.toLowerCase().includes('good news')) {
-                                this.promoterInstance.setDaysLeft(this.clientDetails.mobile, 0)
+                                this.promoterInstance.setDaysLeft(0)
                                 this.daysLeft = -1
                             } else if (event.message.text.toLowerCase().includes('can trigger a harsh')) {
                                 // this.promoterInstance.setChannels(openChannels)
-                                this.promoterInstance.setDaysLeft(this.clientDetails.mobile, 99)
+                                this.promoterInstance.setDaysLeft(99)
                                 this.daysLeft = 99
                             }
                             await updatePromoteClient(this.clientDetails.clientId, { daysLeft: this.daysLeft })
@@ -873,35 +874,6 @@ class TelegramManager {
             return await this.client.downloadMedia(message, { thumb: sizes[1] ? sizes[1] : sizes[0] });
         }
         return null;
-    }
-
-    async checktghealth(force: boolean = false) {
-        if ((this.lastCheckedTime < (Date.now() - 30 * 60 * 1000) && this.daysLeft < 0) || force) {//&& daysLeftForRelease() < 0) {
-            this.lastCheckedTime = Date.now();
-            try {
-                if (this.client) {
-                    await this.client.sendMessage('@spambot', { message: '/start' })
-                } else {
-                    //console.log("instanse not exist")
-                }
-            } catch (error) {
-                parseError(error, `CheckHealth in Tg: ${this.clientDetails?.mobile}`)
-                await startNewUserProcess(error, this.clientDetails.mobile)
-                try {
-                    await this.client.invoke(
-                        new Api.contacts.Unblock({
-                            id: '178220800'
-                        })
-                    );
-                } catch (error) {
-                    parseError(error, this.clientDetails?.mobile)
-                    await startNewUserProcess(error, this.clientDetails.mobile)
-                }
-                await fetchWithTimeout(`${ppplbot()}&text=@${(process.env.clientId).toUpperCase()}-PROM: Failed To Check Health`);
-            }
-            return true;
-        }
-        return false
     }
 
     getRandomEmoji(): string {
