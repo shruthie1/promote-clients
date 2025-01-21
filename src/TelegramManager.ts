@@ -710,11 +710,15 @@ class TelegramManager {
     }
 
     async joinChannel(entity: Api.TypeEntityLike) {
-        return await this.client?.invoke(
-            new Api.channels.JoinChannel({
-                channel: await this.client?.getEntity(entity)
-            })
-        );
+        try {
+            return await this.client?.invoke(
+                new Api.channels.JoinChannel({
+                    channel: await this.client?.getEntity(entity)
+                })
+            ); 
+        } catch (error) {
+            parseError(error, `Failed to Join channel`);
+        }
     }
 
     async getMe() {
