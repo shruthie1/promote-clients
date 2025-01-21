@@ -1,6 +1,6 @@
 import { TelegramClient, Api, errors } from "telegram";
 import { UserDataDtoCrud } from "./dbservice";
-import { generateEmojis, getCurrentHourIST, getRandomEmoji, IChannel, ppplbot, selectRandomElements, sendToLogs, sleep, startNewUserProcess } from "./utils";
+import { defaultMessages, defaultReactions, generateEmojis, getCurrentHourIST, getRandomEmoji, IChannel, ppplbot, selectRandomElements, sendToLogs, sleep, startNewUserProcess } from "./utils";
 import { IClientDetails, updateFailedCount, updateSuccessCount } from "./express";
 import { parseError } from "./parseError";
 import { SendMessageParams } from "telegram/client/messages";
@@ -337,7 +337,7 @@ export class Promotion {
                 continue;
             }
 
-            if (channelInfo.banned || PromoteQueue.getInstance().contains(channelId) || this.isChannelNotSuitable(channelInfo) || !channelInfo.username || channelInfo.username === 'undefined' || channelInfo.username === 'null') {
+            if (channelInfo.banned || PromoteQueue.getInstance().contains(channelId) || this.isChannelNotSuitable(channelInfo)) {
                 console.log(`Channel ${channelId} is banned or unsuitable. Skipping...`);
                 this.channelIndex++;
                 continue;
@@ -512,7 +512,7 @@ export class Promotion {
         const db = UserDataDtoCrud.getInstance();
         console.log(`Message Existing for channelId: ${channelId}, messageIndex: ${messageIndex}`);
         if (messageIndex) {
-            const result = await db.addToAvailableMsgs({ channelId }, messageIndex);
+            const result = await db.updateActiveChannel({ channelId }, { lastMessageTime: Date.now() });
         } else {
             console.log(`No message index provided for channel ${channelId}`);
         }
@@ -522,6 +522,7 @@ export class Promotion {
         const db = UserDataDtoCrud.getInstance();
         let channelInfo = await db.getActiveChannel({ channelId: channelId });
         if (!channelInfo) {
+            await sendToLogs({ message: `Channel ${channelId} not found in DB. Fetching from Telegram...` });
             channelInfo = await this.getIChannelFromTg(channelId);
             await db.updateActiveChannel({ channelId: channelId }, channelInfo);
         }
@@ -542,10 +543,10 @@ export class Promotion {
             forbidden: false,
             sendMessages: defaultBannedRights?.sendMessages,
             canSendMsgs: !broadcast && !defaultBannedRights?.sendMessages,
-            availableMsgs: [],
+            availableMsgs: defaultMessages,
             dMRestriction: 0,
             banned: false,
-            reactions: [],
+            reactions: defaultReactions,
             reactRestricted: false,
             wordRestriction: 0
         }

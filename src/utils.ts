@@ -101,11 +101,6 @@ export const defaultReactions = [
   '👀', '🙈', '🤝', '🤗', '🆒',
   '🗿', '🙉', '🙊', '🤷', '👎'
 ]
-export const defaultMessages = [
-  "1", "2", "3", "4", "5", "6", "7", "8",
-  "9", "10", "11", "12", "13", "14", "15",
-  "16", "17", "18", "19"
-];
 
 export async function startNewUserProcess(error: any, mobile: string) {
   if (error.errorMessage == 'CONNECTION_NOT_INITED' || error.errorMessage == 'AUTH_KEY_UNREGISTERED' || error.errorMessage == 'AUTH_KEY_DUPLICATED') {
@@ -471,3 +466,9 @@ export async function sendToLogs({
   }
   console.error(`Message sending failed after ${attempts} retries`);
 }
+
+export const defaultMessages = [
+  "1", "2", "3", "4", "5", "6", "7", "8",
+  "9", "10", "11", "12", "13", "14", "15",
+  "16", "17", "18", "19", "20", "21"
+];

@@ -82,7 +82,7 @@ export class UserDataDtoCrud {
                     ...data
                 },
             },
-            { upsert: true }
+            { upsert: true,  returnDocument: 'after' }
         );
     }
     async getChannel(filter: any) {
