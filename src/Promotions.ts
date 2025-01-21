@@ -259,7 +259,7 @@ export class Promotion {
 
     private async sendPromotionalMessage(mobile: string, channelInfo: IChannel): Promise<Api.Message | undefined> {
         let sentMessage: Api.Message | undefined;
-        if (false && channelInfo.wordRestriction === 0) {
+        if (channelInfo.wordRestriction === 0) {
             const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
             const emojis = generateEmojis();
             const randomEmoji = getRandomEmoji();
@@ -268,9 +268,11 @@ export class Promotion {
             const offset = Math.floor(Math.random() * 3);
             const endMsg = pickOneMsg(['U bussy👀?', "I'm Aviilble!!😊💦", 'Trry Once!!😊💦', 'Trry Once!!😊💦', 'Waiiting fr ur mssg.....Dr!!💦', 'U Onliine?👀', "I'm Avilble!!😊", 'U Bussy??👀💦', 'U Intrstd??👀💦', 'U Awakke?👀💦', 'U therre???💦💦']);
             const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n.\n.\n**${endMsg}**`;
-            const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;
-
-            sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: `${msg}\n${addon}` });
+            // const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;
+            const randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
+            // console.log(`Selected Msg for ${channelInfo.channelId}, ${channelInfo.title} | ChannelIdex:${this.channelIndex} | MsgIndex: ${randomIndex}`);
+            const addon = this.promoteMsgs[randomIndex];
+            sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: `${msg}\n\n\n${generateEmojis()}${generateEmojis()}\n${addon}` });
         } else {
             // console.log(`Channel has word restriction. Selecting random available message.`);
             const randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
@@ -292,7 +294,7 @@ export class Promotion {
             channelId,
             messageId: sentMessage.id,
             timestamp: Date.now(),
-            messageIndex: 'id',
+            messageIndex: '0',
         });
         console.log(`Client ${mobile}: Message SENT to ${channelId} || channelIndex: ${this.channelIndex}`);
         // const randomBatchDelay = Math.floor(Math.random() * (this.maxDelay - this.minDelay + 1)) + this.minDelay;
@@ -494,9 +496,12 @@ export class Promotion {
     async handleDeletedMessage(channelId: string, messageIndex: string) {
         const db = UserDataDtoCrud.getInstance();
         if (messageIndex == '0') {
-            console.log(`Setting channel ${channelId} as banned because messageIndex is '0'`);
-            await db.updateActiveChannel({ channelId }, { banned: true });
-            console.log(`Channel ${channelId} is now banned.`);
+            const channelInfo = await db.getActiveChannel({ channelId });
+            if (channelInfo.availableMsgs.length < 1) {
+                console.log(`Setting channel ${channelId} as banned because messageIndex is '0'`);
+                await db.updateActiveChannel({ channelId }, { banned: true });
+                console.log(`Channel ${channelId} is now banned.`);
+            }
         } else {
             const result = await db.removeFromAvailableMsgs({ channelId }, messageIndex);
             console.log(`Removed message ${messageIndex} from channel ${channelId}`);
