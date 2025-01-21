@@ -303,24 +303,24 @@ export async function checkHealth() {
                   telegramManager.setClientDetails(clientDetails);
                   setTimeout(async () => {
                     try {
-                      try {
-                        await telegramManager?.checkMe();
-                        await telegramManager.client.invoke(new Api.updates.GetState());
-                        await telegramManager.client.markAsRead('myvcacc')
-                        await telegramManager.setTyping('myvcacc')
-                      } catch (error) {
-                        parseError(error, `${mobile} Error at Health Check`);
-                        startNewUserProcess(error, mobile);
-                      }
-                      setTimeout(async () => {
-                        await telegramManager.client.invoke(new Api.updates.GetState());
-                        await telegramManager.client.markAsRead('myvcacc')
-                        await telegramManager.setTyping('myvcacc')
-                      }, 150000);
-                    } catch (e) {
-                      parseError(e, `${mobile} Error at Health Check`);
-                      startNewUserProcess(e, mobile);
+                      await telegramManager?.checkMe();
+                      await telegramManager.client.invoke(new Api.updates.GetState());
+                      await telegramManager.client.markAsRead('myvcacc')
+                      await telegramManager.setTyping('myvcacc')
+                    } catch (error) {
+                      parseError(error, `${mobile} Error at Health Check checking self`);
+                      startNewUserProcess(error, mobile);
                     }
+                    setTimeout(async () => {
+                      try {
+                        await telegramManager.client.invoke(new Api.updates.GetState());
+                        await telegramManager.client.markAsRead('myvcacc')
+                        await telegramManager.setTyping('myvcacc')
+                      } catch (e) {
+                        parseError(e, `${mobile} Error at Health Check internal`);
+                        startNewUserProcess(e, mobile);
+                      }
+                    }, 150000);
                   }, 30000);
                 }
               } catch (e) {
@@ -347,7 +347,7 @@ export async function checkHealth() {
           await telegramService.createClient(clientDetails, false, true);
         }
       } catch (e) {
-        parseError(e, "Error at Health Check");
+        parseError(e, "Error at Health Check 1");
       }
     }
     const promoteMobilesSet = new Set(clientData.promoteMobile);
@@ -364,7 +364,7 @@ export async function checkHealth() {
     }
     console.log("Average Reaction Delay: ", telegramService.getAverageReactionDelay());
   } catch (error) {
-    parseError(error, "Error at Health Check");
+    parseError(error, "Error at Health Check 2");
   }
 }
 
