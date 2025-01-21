@@ -20,13 +20,12 @@ const CHANNEL_UPDATE_INTERVAL = 5 * 60 * 1000; // Update top channels every 5 mi
 const REACTION_INTERVAL = 3000; // Average time to wait between reactions (in ms)
 const MIN_REACTION_DELAY = 2000; // Minimum reaction delay (in ms)
 const MAX_REACTION_DELAY = 5000; // Maximum reaction delay (in ms)
-const CHANNELS_LIMIT = 20; // Number of top channels to monitor
+const CHANNELS_LIMIT = 40; // Number of top channels to monitor
 
 class TelegramManager {
     private phoneCall = undefined;
     private clientDetails: IClientDetails = undefined
     public client: TelegramClient | null;
-    private lastCheckedTime = 0;
     private checkingAuths = false;
     private lastResetTime = 0;
     private liveMap: Map<string, { time: number, value: boolean }> = new Map();
@@ -38,13 +37,12 @@ class TelegramManager {
     private updateChannelsInterval: NodeJS.Timeout;
     private isReacting: boolean = false;
 
-
     constructor(clientDetails: IClientDetails, reactorInstance: Reactions) {
         this.clientDetails = clientDetails;
         this.reactorInstance = reactorInstance;
         this.updateChannelsInterval = setInterval(this.updateChannels.bind(this), CHANNEL_UPDATE_INTERVAL);
     }
-    // Function to update the list of top channels (every 5 minutes)
+
     async updateChannels() {
         console.log(`${this.clientDetails.mobile}: Updating top channels...`);
         try {
@@ -56,7 +54,6 @@ class TelegramManager {
             this.randomChannelReaction()
         } catch (error) {
             console.error(`${this.clientDetails.mobile} Failed to update top channels: `, error);
-
         }
     }
 
