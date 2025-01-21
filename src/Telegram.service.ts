@@ -30,7 +30,7 @@ export class TelegramService {
 
     getDaysLeft(mobile: string) {
         const tgManager = this.getClient(mobile);
-        return tgManager?.promoterInstance.lastMessageTime;
+        return tgManager?.daysLeft;
     }
 
     startPromotion(mobile: string) {
