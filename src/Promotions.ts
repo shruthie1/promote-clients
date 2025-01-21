@@ -314,7 +314,7 @@ export class Promotion {
             //     return;
             // }
 
-            if (this.channelIndex >= 190) {
+            if (this.channelIndex >= 110) {
                 console.log("Refreshing channel list...");
                 this.channels = await this.fetchDialogs();
                 this.channelIndex = 0;
@@ -621,7 +621,7 @@ export class Promotion {
     }
 
     private getHealthyMobiles() {
-        if (this.daysLeft < 7 && this.lastMessageTime < Date.now() - 12 * 60 * 1000 && this.sleepTime < Date.now()) {
+        if (this.daysLeft < 7 && ((this.lastMessageTime < Date.now() - 12 * 60 * 1000 && this.daysLeft < 1) || (this.lastMessageTime < Date.now() - 3 * 60 * 1000 && this.daysLeft > 0)) && this.sleepTime < Date.now()) {
             return [this.clientDetails.mobile]
         }
         else {
