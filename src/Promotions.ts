@@ -42,7 +42,7 @@ export class Promotion {
     private lastCheckedTime: number = 0;
     private channels: string[] = [];
     private messageQueue: MessageQueueItem[] = [];
-    private messageCheckDelay: number = 5000;
+    private messageCheckDelay: number = 10000;
     private promoteMsgs: Record<string, any> = {};
     private channelIndex: any;
     private failureReason: any;
