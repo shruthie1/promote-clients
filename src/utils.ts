@@ -472,3 +472,7 @@ export const defaultMessages = [
   "9", "10", "11", "12", "13", "14", "15",
   "16", "17", "18", "19", "20", "21"
 ];
+
+export function getRandomBoolean(): boolean {
+  return Math.random() >= 0.5;
+}

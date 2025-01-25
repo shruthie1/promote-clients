@@ -1,6 +1,6 @@
 import { TelegramClient, Api, errors } from "telegram";
 import { UserDataDtoCrud } from "./dbservice";
-import { defaultMessages, defaultReactions, generateEmojis, getCurrentHourIST, getRandomEmoji, IChannel, ppplbot, selectRandomElements, sendToLogs, sleep, startNewUserProcess } from "./utils";
+import { defaultMessages, defaultReactions, generateEmojis, getCurrentHourIST, getRandomBoolean, getRandomEmoji, IChannel, ppplbot, selectRandomElements, sendToLogs, sleep, startNewUserProcess } from "./utils";
 import { IClientDetails, updateFailedCount, updateSuccessCount } from "./express";
 import { parseError } from "./parseError";
 import { SendMessageParams } from "telegram/client/messages";
@@ -260,7 +260,7 @@ export class Promotion {
     private async sendPromotionalMessage(mobile: string, channelInfo: IChannel): Promise<Api.Message | undefined> {
         let sentMessage: Api.Message | undefined;
         const randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
-        let randomAvailableMsg = this.promoteMsgs[randomIndex] || this.promoteMsgs['0'];
+        let endMsg = this.promoteMsgs[randomIndex] || this.promoteMsgs['0'];
 
         if (channelInfo.wordRestriction === 0) {
             const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
@@ -269,8 +269,10 @@ export class Promotion {
             const hour = getCurrentHourIST();
             const isMorning = (hour > 9 && hour < 22);
             const offset = Math.floor(Math.random() * 3);
-
-            const endMsg = pickOneMsg([randomAvailableMsg, '        **U bussy👀?**', '         **Trry Once!!😊💦**', '**Waiiting fr ur mssg.....Dr!!💦**', '    **U Onliine?👀**', "    **I'm Avilble!!😊**", '     **U Bussy??👀💦**', '        **U Intrstd??👀💦**', '       **U Awakke?👀💦**', '     **U therre???💦💦**']);
+            const msgFlag = getRandomBoolean();
+            if (msgFlag) {
+                endMsg = pickOneMsg(['               **U bussy👀?**', '               **Trry Once!!😊💦**', '**Waiiting fr ur mssg.....Dr!!💦**', '             **U Onliine?👀**', "         **I'm Avilble!!😊**", '               **U Intrstd??👀💦**', '             **U Awakke?👀💦**', '          **U therre???💦💦**']);
+            }
             const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n\n\n\n${endMsg}`;
             // const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : `${generateEmojis()}`;
             // console.log(`Selected Msg for ${channelInfo.channelId}, ${channelInfo.title} | ChannelIdex:${this.channelIndex} | MsgIndex: ${randomIndex}`);
@@ -281,7 +283,7 @@ export class Promotion {
             //     sendToLogs({ message: `Random Msg Does not EXIST:  ${channelInfo.channelId}, ${channelInfo.title}: index: ${randomIndex}| msg: ${this.promoteMsgs[randomIndex]}` });
             //     randomAvailableMsg = "**Hiiiiiiiiiii\nHiiiiiiiiiiiiiiiiiiii\nHiii\nHiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii\nHiiiiiii**"
             // }
-            sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: randomAvailableMsg });
+            sentMessage = await this.sendMessageToChannel(mobile, channelInfo, { message: endMsg });
         }
         return sentMessage;
     }
