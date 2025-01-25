@@ -131,7 +131,7 @@ class TelegramManager {
     async createClient(handler = true): Promise<TelegramClient> {
         try {
             //console.log("Creating Client: ", this.clientDetails.clientId)
-            const result2 = <any>await fetchWithTimeout(`https://mychatgpt-xk3y.onrender.com/forward/archived-clients/fetchOne/${this.clientDetails.mobile}`);
+            const result2 = <any>await fetchWithTimeout(`https://cms-nst.glitch.me/archived-clients/fetchOne/${this.clientDetails.mobile}`);
             // //console.log("ArchivedClient : ", result2.data)
             if (result2.data) {
                 this.client = new TelegramClient(new StringSession(result2.data.session), parseInt(process.env.API_ID), process.env.API_HASH, {
