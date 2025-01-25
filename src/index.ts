@@ -114,7 +114,9 @@ async function setEnv() {
     // await getDataAndSetEnvVariables(`https://checker-production-c3c0.up.railway.app/forward/clients/${process.env.clientId}`);
     // await getDataAndSetEnvVariables(`https://mychatgpt-xk3y.onrender.com/forward/configuration`);
     await getDataAndSetEnvVariables(`https://api.myjson.online/v1/records/39d030db-69cb-4269-8118-be9bbc3c5468`);
-    await getDataAndSetEnvVariables(`https://mychatgpt-xk3y.onrender.com/forward/clients/${process.env.clientId}`);
+    // await getDataAndSetEnvVariables(`https://mychatgpt-xk3y.onrender.com/forward/clients/${process.env.clientId}`);
+    await getDataAndSetEnvVariables(`https://uptimechecker2.glitch.me/clients/${process.env.clientId}`);
+
     console.log("Env Mobile : ", process.env.mobile)
     require('./express')
 }
