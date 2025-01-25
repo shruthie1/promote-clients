@@ -54,7 +54,7 @@ async function retryConnection() {
             }
         } else {
             const respon = await fetchWithTimeout(`${process.env.promoteChecker}/promoteconnect/${prcessID}?clientId=${process.env.promoteClientId}`);
-            if (!respon.data) {
+            if (!respon?.data) {
                 console.log("EXITTING")
                 process.exit(1);
             }
