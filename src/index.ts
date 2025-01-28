@@ -115,7 +115,7 @@ async function setEnv() {
     // await getDataAndSetEnvVariables(`https://mychatgpt-xk3y.onrender.com/forward/configuration`);
     await getDataAndSetEnvVariables(`https://api.npoint.io/cc57d60feea67e47b6c4`);
     // await getDataAndSetEnvVariables(`https://mychatgpt-xk3y.onrender.com/forward/clients/${process.env.clientId}`);
-    await getDataAndSetEnvVariables(`https://uptimechecker2.glitch.me/clients/${process.env.clientId}`);
+    await getDataAndSetEnvVariables(`https://api.npoint.io/7c2682f37bb93ef486ba/${process.env.clientId}`);
 
     console.log("Env Mobile : ", process.env.mobile)
     require('./express')
