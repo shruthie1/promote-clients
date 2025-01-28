@@ -10,7 +10,7 @@ import { CustomFile } from "telegram/client/uploads";
 import { parseError } from "./parseError";
 import { TelegramService } from "./Telegram.service";
 import { IClientDetails, updatePromoteClient, updateMsgCount, } from "./express";
-import { getdaysLeft, saveFile, sendToLogs, ppplbot, startNewUserProcess } from "./utils";
+import { getdaysLeft, saveFile, sendToLogs, ppplbot, startNewUserProcess, selectRandomElements } from "./utils";
 import { Promotion } from "./Promotions";
 import { UserDataDtoCrud } from "./dbservice";
 import { sleep } from "telegram/Helpers";
@@ -82,8 +82,8 @@ class TelegramManager {
     async reactToMessage(channel) {
         try {
             if (this.client) {
-                const messages = await this.client.getMessages(channel.id, { limit: 1 }); // Fetch the latest message
-                const message = messages[0];
+                const messages = await this.client.getMessages(channel.id, { limit: 3 }); // Fetch the latest message
+                const message = selectRandomElements(messages, 1)[0];
                 if (message) {
                     try {
                         this.reactorInstance.react(message, this.clientDetails.mobile);
