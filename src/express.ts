@@ -364,7 +364,7 @@ export async function checkHealth() {
     }
     console.log("Average Reaction Delay: ", telegramService.getAverageReactionDelay());
   } catch (error) {
-    parseError(error, "Error at Health Check 2");
+    parseError(error, `Error at Health Check 2 ${JSON.stringify(process.env)}`);
   }
 }
 

