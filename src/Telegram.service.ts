@@ -56,6 +56,24 @@ export class TelegramService {
         return result;
     }
 
+    resetPromotionResults() {
+        const result = {};
+        for (const mobile of this.getMobiles()) {
+            const tgManager = this.getClient(mobile);
+            result[mobile] = tgManager?.promoterInstance?.resetPromotionResults();
+        }
+        return result;
+    }
+
+    resetMobileStats() {
+        const result = {};
+        for (const mobile of this.getMobiles()) {
+            const tgManager = this.getClient(mobile);
+            result[mobile] = tgManager?.promoterInstance?.resetMobileStats();
+        }
+        return result;
+    }
+
     saveMobileStats() {
         const result = {};
         for (const mobile of this.getMobiles()) {

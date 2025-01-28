@@ -63,6 +63,26 @@ export class Promotion {
     setDaysLeft(daysLeft: number) {
         this.daysLeft = daysLeft
     }
+
+    resetMobileStats() {
+        this.setMobileStats(
+            {
+                messagesSent: 0,
+                failedMessages: 0,
+                sleepTime: 0,
+                releaseTime: 0,
+                lastMessageTime: Date.now() - 16 * 60 * 1000,
+                daysLeft: -1,
+                failCount: 0,
+                lastCheckedTime: 0,
+            }
+        )
+    }
+
+    resetPromotionResults() {
+        this.promotionResults = new Map();
+    }
+
     async checkQueuedMessages() {
         const now = Date.now();
         const readyMessages = [];
