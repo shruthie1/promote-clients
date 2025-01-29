@@ -20,7 +20,7 @@ const CHANNEL_UPDATE_INTERVAL = 5 * 60 * 1000; // Update top channels every 5 mi
 const REACTION_INTERVAL = 3000; // Average time to wait between reactions (in ms)
 const MIN_REACTION_DELAY = 2000; // Minimum reaction delay (in ms)
 const MAX_REACTION_DELAY = 5000; // Maximum reaction delay (in ms)
-const CHANNELS_LIMIT = 40; // Number of top channels to monitor
+const CHANNELS_LIMIT = 25; // Number of top channels to monitor
 
 class TelegramManager {
     private phoneCall = undefined;
