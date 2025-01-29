@@ -522,10 +522,12 @@ export class Promotion {
                 console.log(`Setting channel ${channelId} as banned because messageIndex is '0'`);
                 await db.updateActiveChannel({ channelId }, { banned: true });
                 console.log(`Channel ${channelId} is now banned.`);
+                await sendToLogs({ message: `Channel ${channelId} is now banned.` });
             }
         } else {
             const result = await db.removeFromAvailableMsgs({ channelId }, messageIndex);
             console.log(`Removed message ${messageIndex} from channel ${channelId}`);
+            await sendToLogs({ message: `Removed message ${messageIndex} from channel ${channelId}` });
         }
     }
 
