@@ -478,12 +478,12 @@ export class Promotion {
             const tenMins = 10 * 60 * 1000;
             const currentTime = Date.now();
             const recentMessages = messages.filter(
-                (msg: Api.Message) => msg.senderId && currentTime - msg.date * 1000 < tenMins
+                (msg: Api.Message) => msg.senderId && currentTime - msg?.date * 1000 < tenMins
             );
             const activeUsers = new Set(
                 recentMessages
                     .filter((msg) => {
-                        return (msg.senderId && !msg.viaBot && msg.senderId.toString() !== '609517172' && Date.now() - msg.date * 1000 < 3600000)
+                        return (msg.senderId && !msg.viaBot && msg.senderId.toString() !== '609517172' && Date.now() - msg?.date * 1000 < 3600000)
                     })
                     .map((msg: any) => msg.senderId),
             );

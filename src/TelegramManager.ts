@@ -845,7 +845,7 @@ class TelegramManager {
                 return {
                     id: message.id,
                     message: message.message,
-                    date: message.date,
+                    date: message?.date,
                     sender: {
                         id: message.senderId?.toString(),
                         is_self: message.out,
