@@ -291,7 +291,7 @@ export class Promotion {
             const offset = Math.floor(Math.random() * 3);
             const msgFlag = getRandomBoolean();
             if (msgFlag) {
-                endMsg = pickOneMsg(['               **U bussy👀?**', '               **Trry Once!!😊💦**', '**Waiiting fr ur mssg.....Dr!!💦**', '             **U Onliine?👀**', "         **I'm Avilble!!😊**", '               **U Intrstd??👀💦**', '             **U Awakke?👀💦**', '          **U therre???💦💦**']);
+                endMsg = pickOneMsg(['**U bussy👀?**', '**Trry Once!!😊💦**', '**Waiiting fr ur mssg.....Dr!!💦**', '**U Onliine?👀**', "**I'm Avilble!!😊**", '**U Intrstd??👀💦**', '**U Awakke?👀💦**', '**U therre???💦💦**']);
             }
             const addon = (offset !== 1) ? `${(offset === 2) ? `**\n\n\n             TODAAY's OFFFER:\n-------------------------------------------\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n𝗩𝗲𝗱𝗶𝗼 𝗖𝗮𝗹𝗹 𝗗𝗲𝗺𝗼 𝗔𝘃𝗶𝗹𝗯𝗹𝗲${randomEmoji}${randomEmoji}\n-------------------------------------------**` : `**\n\nJUST Trry Once!!😚😚\nI'm Freee Now!!${generateEmojis()}`}**` : endMsg;
             const msg = `**${pickOneMsg(greetings)}_._._._._._._!!**${emojis}\n\n\n\n${addon}`;
