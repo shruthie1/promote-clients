@@ -282,7 +282,7 @@ export class Promotion {
         const randomIndex = selectRandomElements(channelInfo.availableMsgs, 1)[0] || '0';
         let endMsg = this.promoteMsgs[randomIndex] || this.promoteMsgs['0'];
 
-        if (channelInfo.wordRestriction === 0) {
+        if (false && channelInfo.wordRestriction === 0) {
             const greetings = ['Hellloooo', 'Hiiiiii', 'Oyyyyyy', 'Oiiiii', 'Haaiiii', 'Hlloooo', 'Hiiii', 'Hyyyyy', 'Oyyyyye', 'Oyeeee', 'Heyyy'];
             const emojis = generateEmojis();
             const randomEmoji = getRandomEmoji();
