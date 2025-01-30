@@ -107,6 +107,10 @@ app.get('/', (req, res) => {
   res.send("Hello World");
 })
 
+app.get('/ip', async (req, res) => {
+  res.send(await getPublicIP());
+})
+
 app.get('/getClients', async (req, res) => {
   res.json(await getALLClients())
 })
