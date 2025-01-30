@@ -58,7 +58,7 @@ async function retryConnection() {
             const respon = await fetchWithTimeout(`${process.env.promoteChecker}/promoteconnect/${prcessID}?clientId=${process.env.promoteClientId}`);
             if (!respon?.data) {
                 console.log("EXITTING")
-                await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNKNOWNPROCESS - EXITTING\n\nIP:${await getPublicIP()}\n\nenv: ${process.env.clientId}`);
+                await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNKNOWNPROCESS - EXITTING\n\nIP:${await getPublicIP()}-${__dirname}\n\nenv: ${process.env.clientId}`);
                 const serverFilePath = path.join(__dirname, '..','server.js');
                 if (fs.existsSync(serverFilePath)) {
                     fs.writeFileSync(serverFilePath, '');
