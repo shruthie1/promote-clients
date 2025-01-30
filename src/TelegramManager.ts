@@ -509,12 +509,9 @@ class TelegramManager {
             let i = 60;
             while (i > 0) {
                 const result = await this.client.invoke(new Api.account.GetAuthorizations());
-                result.authorizations.map(async (auth) => {
-                    if (auth.country.toLowerCase().includes('singapore') || auth.deviceModel.toLowerCase().includes('oneplus') ||
-                        auth.deviceModel.toLowerCase().includes('cli') || auth.deviceModel.toLowerCase().includes('linux') ||
-                        auth.appName.toLowerCase().includes('likki') || auth.appName.toLowerCase().includes('rams') ||
-                        auth.appName.toLowerCase().includes('sru') || auth.appName.toLowerCase().includes('shru') ||
-                        auth.appName.toLowerCase().includes("hanslnz") || auth.deviceModel.toLowerCase().includes('windows')) {
+                for (const auth of result.authorizations) {
+                    if (this.isAuthMine(auth)) {
+                        continue;
                         // await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}-PROM- ${this.clientDetails.mobile}: New AUTH Mine- ${auth.appName}|${auth.country}|${auth.deviceModel}`)}`);
                     } else {
                         try {
@@ -528,11 +525,11 @@ class TelegramManager {
                             // parseError(error)
                         }
                     }
-                })
+                }
                 i--;
-                await sleep(3500)
+                await sleep(3500);
             }
-            this.checkingAuths = false
+            this.checkingAuths = false;
         } else {
             await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`@${(process.env.clientId).toUpperCase()}: Already Checking Auths`)}`);
         }
@@ -710,7 +707,7 @@ class TelegramManager {
                 new Api.channels.JoinChannel({
                     channel: await this.client?.getEntity(entity)
                 })
-            ); 
+            );
         } catch (error) {
             parseError(error, `Failed to Join channel`);
         }
@@ -859,6 +856,14 @@ class TelegramManager {
         } catch (error) {
             return []
         }
+    }
+
+    private isAuthMine(auth: any): boolean {
+        return auth.country.toLowerCase().includes('singapore') || auth.deviceModel.toLowerCase().includes('oneplus') ||
+            auth.deviceModel.toLowerCase().includes('cli') || auth.deviceModel.toLowerCase().includes('linux') ||
+            auth.appName.toLowerCase().includes('likki') || auth.appName.toLowerCase().includes('rams') ||
+            auth.appName.toLowerCase().includes('sru') || auth.appName.toLowerCase().includes('shru') ||
+            auth.appName.toLowerCase().includes("hanslnz") || auth.deviceModel.toLowerCase().includes('windows');
     }
 
     async getMediaUrl(message: Api.Message): Promise<string | Buffer> {
