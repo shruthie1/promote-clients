@@ -142,7 +142,7 @@ export class Promotion {
             console.log(`Sorted channels by participants count: ${channelDetails.length}`);
 
             // Fisher-Yates Shuffle on top 250
-            const topChannels = channelDetails.slice(0, 250);
+            const topChannels = channelDetails.slice(0, 350);
             // for (let i = topChannels.length - 1; i > 0; i--) {
             //     const j = Math.floor(Math.random() * (i + 1));
             //     [topChannels[i], topChannels[j]] = [topChannels[j], topChannels[i]];
@@ -338,7 +338,7 @@ export class Promotion {
             //     return;
             // }
 
-            if ((this.daysLeft <= 0 && this.channelIndex >= 110) || (this.daysLeft > 0 && this.channelIndex >= 230)) {
+            if ((this.daysLeft <= 0 && this.channelIndex >= 150) || (this.daysLeft > 0 && this.channelIndex >= 300) || this.channelIndex >= this.channels.length) {
                 console.log("Refreshing channel list...");
                 this.channels = await this.fetchDialogs();
                 this.channelIndex = 0;
