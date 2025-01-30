@@ -81,6 +81,18 @@ schedule.scheduleJob('test3', '25 0 * * *', 'Asia/Kolkata', async () => {
   TelegramService.getInstance().resetMobileStats()
 })
 
+let ip;
+const getPublicIP = async () => {
+    try {
+        const response = await fetchWithTimeout('https://api.ipify.org?format=json');
+        console.log(`Your public IP address is: ${response.data.ip}`);
+        ip = response.data.ip
+    } catch (error) {
+        console.error('Error fetching the public IP address:', error.message);
+    }
+};
+getPublicIP()
+
 const app = express();
 const port = process.env.PORT || 3000;
 app.use(cors());
