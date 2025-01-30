@@ -1,7 +1,7 @@
 import { fetchWithTimeout } from "./fetchWithTimeout";
 import { parseError } from "./parseError";
 import { ppplbot } from "./utils";
-import { prcessID } from "./express";
+import { getPublicIP, prcessID } from "./express";
 
 let retryTime = 0;
 export let sendPing = false;
@@ -30,7 +30,7 @@ async function retryConnection() {
         }
         if (retryTime > 5) {
             console.log("Exitiing");
-            await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNABLE TO START at RETRY - EXITTING\n\nENV:${JSON.stringify(process.env)}\n\nenv: ${process.env.clientId}`);
+            await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNABLE TO START at RETRY - EXITTING\n\nIP:${await getPublicIP()}\n\nenv: ${process.env.clientId}`);
             process.exit(1);
         }
         if (false &&!process.env.repl?.includes("glitch")) {

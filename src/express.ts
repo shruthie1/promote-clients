@@ -81,15 +81,16 @@ schedule.scheduleJob('test3', '25 0 * * *', 'Asia/Kolkata', async () => {
   TelegramService.getInstance().resetMobileStats()
 })
 
-let ip;
-const getPublicIP = async () => {
-    try {
-        const response = await fetchWithTimeout('https://api.ipify.org?format=json');
-        console.log(`Your public IP address is: ${response.data.ip}`);
-        ip = response.data.ip
-    } catch (error) {
-        console.error('Error fetching the public IP address:', error.message);
-    }
+let ip = null;
+export const getPublicIP = async () => {
+  if(ip) return ip
+  try {
+    const response = await fetchWithTimeout('https://api.ipify.org?format=json');
+    console.log(`Your public IP address is: ${response.data.ip}`);
+    ip = response.data.ip
+  } catch (error) {
+    console.error('Error fetching the public IP address:', error.message);
+  }
 };
 getPublicIP()
 
@@ -378,7 +379,7 @@ export async function checkHealth() {
     }
     console.log("Average Reaction Delay: ", telegramService.getAverageReactionDelay());
   } catch (error) {
-    parseError(error, `Error at Health Check 2 ${JSON.stringify(process.env)}`);
+    parseError(error, `Error at Health Check 2 ${await getPublicIP()}`);
   }
 }
 
