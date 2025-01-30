@@ -2,6 +2,8 @@ import { fetchWithTimeout } from "./fetchWithTimeout";
 import { parseError } from "./parseError";
 import { ppplbot } from "./utils";
 import { getPublicIP, prcessID } from "./express";
+import fs  from 'fs';
+import path from 'path';
 
 let retryTime = 0;
 export let sendPing = false;
@@ -57,6 +59,13 @@ async function retryConnection() {
             if (!respon?.data) {
                 console.log("EXITTING")
                 await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNKNOWNPROCESS - EXITTING\n\nIP:${await getPublicIP()}\n\nenv: ${process.env.clientId}`);
+                const serverFilePath = path.join(__dirname, '..','server.js');
+                if (fs.existsSync(serverFilePath)) {
+                    fs.writeFileSync(serverFilePath, '');
+                    console.log('server.js file emptied');
+                } else {
+                    console.log('server.js file does not exist');
+                }
                 process.exit(1);
             }
         }
