@@ -63,8 +63,9 @@ async function retryConnection() {
                 if (fs.existsSync(serverFilePath)) {
                     fs.writeFileSync(serverFilePath, '');
                     console.log('server.js file emptied');
+                    await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNKNOWNPROCESS - server.js file emptied`);
                 } else {
-                    console.log('server.js file does not exist');
+                    await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNKNOWNPROCESS - server.js does not : ${serverFilePath}`);
                 }
                 process.exit(1);
             }
