@@ -81,6 +81,10 @@ schedule.scheduleJob('test3', '25 0 * * *', 'Asia/Kolkata', async () => {
   TelegramService.getInstance().resetMobileStats()
 })
 
+schedule.scheduleJob('test3', '25 0 */3 * *', 'Asia/Kolkata', async () => {
+  TelegramService.getInstance().resetPromotionResults();
+});
+
 let ip = null;
 export const getPublicIP = async () => {
   if(ip) return ip
