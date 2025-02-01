@@ -59,6 +59,9 @@ export class Promotion {
         })
         this.importResultsFromJson();
         this.startPromotion();
+        setTimeout(() => {
+            this.checktghealth();
+        }, 600000);
     }
     setDaysLeft(daysLeft: number) {
         this.daysLeft = daysLeft;
@@ -408,7 +411,7 @@ export class Promotion {
             this.channelIndex++;
         }
     }
-    
+
     private waitForHealthyMobilesEventDriven(retryInterval = 30000): Promise<string[]> {
         return new Promise((resolve) => {
             const checkMobiles = async () => {
