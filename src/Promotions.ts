@@ -61,7 +61,7 @@ export class Promotion {
         this.startPromotion();
         setTimeout(() => {
             this.checktghealth();
-        }, 600000);
+        }, 300000);
     }
     setDaysLeft(daysLeft: number) {
         this.daysLeft = daysLeft;
