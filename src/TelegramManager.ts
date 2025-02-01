@@ -326,7 +326,8 @@ class TelegramManager {
                                             console.warn(`Client ${this.clientDetails.mobile}: Rate limited. Sleeping for ${error.seconds} seconds.`);
                                         }
                                     }
-                                    await updateMsgCount(this.clientDetails.clientId)
+                                    await updateMsgCount(this.clientDetails.clientId);
+                                    this.promoterInstance.incrementMsgCount();
                                 } else {
                                     try {
                                         await event.message.respond({ message: `Msg me here **Dear!! ${this.generateEmojis()}👇:**\n\nhttps://t.me/${this.clientDetails.username} ${this.getRandomEmoji()}`, linkPreview: true })

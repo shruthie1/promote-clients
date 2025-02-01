@@ -18,13 +18,13 @@ interface MessageQueueItem {
 }
 
 interface MobileStats {
-    messagesSent: number;
-    failedMessages: number;
+    successCount: number;
+    failedCount: number;
     sleepTime: number;
     releaseTime: number;
     lastMessageTime: number;
     daysLeft: number;
-    failCount: number;
+    messageCount: number;
     lastCheckedTime: number;
 }
 
@@ -34,10 +34,10 @@ export class Promotion {
     public client: TelegramClient | null;
     private daysLeft: number = -1;
     private sleepTime: number = 0;
-    public messagesSent: number = 0;
-    public failedMessages: number = 0;
+    public successCount: number = 0;
+    public failedCount: number = 0;
     public releaseTime: number = 0;
-    public failCount: number = 0;
+    public tempFailCount: number = 0;
     public lastMessageTime: number = Date.now() - 16 * 60 * 1000;
     private lastCheckedTime: number = 0;
     private channels: string[] = [];
@@ -47,6 +47,7 @@ export class Promotion {
     private channelIndex: any;
     private failureReason: any;
     private isPromoting: boolean = false;
+    private messageCount: number = 0;
 
     constructor(client: TelegramClient, clientDetails: IClientDetails) {
         this.clientDetails = clientDetails;
@@ -70,17 +71,21 @@ export class Promotion {
         }
     }
 
+    incrementMsgCount() {
+        this.messageCount++
+    }
+    
     resetMobileStats() {
         this.setMobileStats(
             {
-                messagesSent: 0,
-                failedMessages: 0,
+                successCount: 0,
+                failedCount: 0,
                 sleepTime: 0,
                 releaseTime: 0,
                 lastMessageTime: Date.now() - 16 * 60 * 1000,
                 daysLeft: -1,
-                failCount: 0,
                 lastCheckedTime: 0,
+                messageCount: 0,
             }
         )
     }
@@ -185,7 +190,7 @@ export class Promotion {
                 //console.log(`${mobile} Sending Message: to ${channelInfo.channelId} || @${channelInfo.username}`);
                 const result = await this.client.sendMessage(channelInfo.username ? `@${channelInfo.username}` : channelInfo.channelId, message);
                 if (result) {
-                    await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\nfailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - this.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${this.daysLeft}\nChannelIndex: ${this.channelIndex}` });
+                    await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ✅\ntempFailCount:  ${this.tempFailCount}\nLastMsg:  ${((Date.now() - this.lastMessageTime) / 60000).toFixed(2)}mins\nDaysLeft:  ${this.daysLeft}\nChannelIndex: ${this.channelIndex}` });
                     this.lastMessageTime = Date.now();
                     await updateSuccessCount(process.env.clientId)
                     PromoteQueue.getInstance().push(channelInfo.channelId)
@@ -197,7 +202,7 @@ export class Promotion {
                     return undefined;
                 }
             } else {
-                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - this.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(this.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${this.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
+                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\ntempFailCount:  ${this.tempFailCount}\nLastMsg:  ${((Date.now() - this.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(this.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${this.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
                 console.log(`Client ${mobile}: Sleeping for ${this.sleepTime / 1000} seconds due to rate limit.`);
                 return undefined;
             }
@@ -316,8 +321,8 @@ export class Promotion {
     }
 
     private async handleSuccessfulMessage(mobile: string, channelId: string, sentMessage: Api.Message) {
-        this.messagesSent += 1;
-        this.failCount = 0;
+        this.successCount += 1;
+        this.tempFailCount = 0;
         this.messageQueue.push({
             channelId,
             messageId: sentMessage.id,
@@ -395,10 +400,9 @@ export class Promotion {
                             messageSent = true;
                             break;
                         } else {
-                            this.failCount += 1;
-                            this.failedMessages += 1;
-                            if (this.failCount > 6 || (this.lastMessageTime < Date.now() - 15 * 60 * 1000 && this.failCount > 0)) {
-                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\nFailCount:  ${this.failCount}\nLastMsg:  ${((Date.now() - this.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(this.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${this.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
+                            this.failedCount += 1;
+                            if (this.tempFailCount > 6 || (this.lastMessageTime < Date.now() - 15 * 60 * 1000 && this.tempFailCount > 0)) {
+                                await sendToLogs({ message: `${mobile}:\n@${channelInfo.username} ❌\ntempFailCount:  ${this.tempFailCount}\nLastMsg:  ${((Date.now() - this.lastMessageTime) / 60000).toFixed(2)}mins\nSleeping:  ${(this.sleepTime - Date.now()) / 60000}mins\nDaysLeft:  ${this.daysLeft}\nReason: ${this.failureReason}\nchannelIndex: ${this.channelIndex}` });
                             }
                         }
                     }
@@ -430,17 +434,17 @@ export class Promotion {
     }
 
     // private updateMobileStats(mobile: string, channelId: string) {
-    //     const stats = this.mobileStats.get(mobile) || { messagesSent: 0, failedMessages: 0, sleepTime: 0, releaseTime: 0, lastMessageTime: Date.now(), daysLeft: 0, failCount: 0 };
+    //     const stats = this.mobileStats.get(mobile) || { messagesSent: 0, failedMessages: 0, sleepTime: 0, releaseTime: 0, lastMessageTime: Date.now(), daysLeft: 0, tempFailCount: 0 };
 
     //     this.failedMessages += 1;
-    //     this.failCount += 1;
+    //     this.tempFailCount += 1;
     //     this.mobileStats.set(mobile, stats);
 
-    //     if (this.failCount > 6) {
+    //     if (this.tempFailCount > 6) {
     //         sendToLogs({
     //             message: `${mobile}:
     // @${channelId} ❌
-    // FailCount: ${this.failCount}
+    // tempFailCount: ${this.tempFailCount}
     // LastMsg: ${(Date.now() - this.lastMessageTime) / 60000} mins
     // Sleeping: ${(this.sleepTime - Date.now()) / 60000} mins
     // DaysLeft: ${this.daysLeft}
@@ -593,26 +597,26 @@ export class Promotion {
 
     public getMobileStats(): MobileStats {
         return {
-            messagesSent: this.messagesSent,
-            failedMessages: this.failedMessages,
+            successCount: this.successCount,
+            failedCount: this.failedCount,
             sleepTime: this.sleepTime,
             releaseTime: this.releaseTime,
             lastMessageTime: this.lastMessageTime,
             daysLeft: this.daysLeft,
-            failCount: this.failCount,
-            lastCheckedTime: this.lastCheckedTime
+            lastCheckedTime: this.lastCheckedTime,
+            messageCount: this.messageCount
         };
     }
 
     //logic to set the mobileStats
     public setMobileStats(mobileStats: MobileStats) {
-        this.messagesSent = mobileStats.messagesSent;
-        this.failedMessages = mobileStats.failedMessages;
+        this.messageCount = mobileStats.messageCount;
+        this.successCount = mobileStats.successCount;
+        this.failedCount = mobileStats.failedCount;
         this.sleepTime = mobileStats.sleepTime;
         this.releaseTime = mobileStats.releaseTime;
         this.lastMessageTime = mobileStats.lastMessageTime;
         this.daysLeft = mobileStats.daysLeft;
-        this.failCount = mobileStats.failCount;
         this.lastCheckedTime = mobileStats.lastCheckedTime;
     }
 
