@@ -1,6 +1,6 @@
 import { MongoClient, ServerApiVersion, ConnectOptions, ObjectId } from 'mongodb';
 import { parseError } from './parseError';
-import { IChannel } from './utils';
+import { formatDateTime, IChannel } from './utils';
 
 
 export class UserDataDtoCrud {
@@ -259,7 +259,7 @@ export class UserDataDtoCrud {
                     "failedCount": 0,
                     "messageCount": 0,
                     "daysLeft": 0,
-                    "lastStarted": new Date(),
+                    "lastStarted": formatDateTime(new Date()),
                     "reactCount": 0
                 }
             })

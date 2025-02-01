@@ -3,7 +3,7 @@ import cors from 'cors';
 import { fetchWithTimeout } from './fetchWithTimeout';
 import { parseError } from './parseError';
 import { sendPing } from './connection';
-import { ppplbot, sendToLogs, setupNewMobile, sleep, startNewUserProcess } from './utils';
+import { formatDateTime, ppplbot, sendToLogs, setupNewMobile, sleep, startNewUserProcess } from './utils';
 import * as schedule from 'node-schedule-tz';
 import { execSync } from 'child_process';
 import { TelegramService } from './Telegram.service';
@@ -217,7 +217,7 @@ app.get('/tryToConnect/:num', async (req, res, next) => {
           canTry2 = false;
           const db = UserDataDtoCrud.getInstance()
           await db.connect()
-          await db.updatePromoteClientStat({ clientId: process.env.clientId }, { lastStarted: new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }) });
+          await db.updatePromoteClientStat({ clientId: process.env.clientId }, { lastStarted: formatDateTime(new Date()) });
           setTimeout(() => {
             canTry2 = true;
           }, 70000);

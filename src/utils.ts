@@ -476,3 +476,14 @@ export const defaultMessages = [
 export function getRandomBoolean(): boolean {
   return Math.random() >= 0.5;
 }
+
+export function formatDateTime(date) {
+  return date.toLocaleString("en-US", {
+    day: "numeric",    // e.g., 1
+    month: "numeric",  // e.g., 2
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata" // Set to IST
+  }).replace(/^(\d+)\/(\d+)/, "$2/$1"); // Swap month and day
+}
