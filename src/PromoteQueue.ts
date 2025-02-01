@@ -1,10 +1,11 @@
 export class PromoteQueue {
     private static instance: PromoteQueue;
     public items: string[] = [];
-    private maxSize = 7;
+    private maxSize = 10;
     private timer: NodeJS.Timeout;
+    private pushCount: Map<string, number> = new Map();
 
-    private constructor() { }
+    private constructor() {}
 
     public static getInstance(): PromoteQueue {
         if (!PromoteQueue.instance) {
@@ -26,7 +27,13 @@ export class PromoteQueue {
         }
         this.timer = setTimeout(() => {
             this.pop();
-        }, 100000); // 1 minute
+        }, 100000);
+        // Update push count
+        if (this.pushCount.has(item)) {
+            this.pushCount.set(item, this.pushCount.get(item)! + 1);
+        } else {
+            this.pushCount.set(item, 1);
+        }
     }
 
     public clear() {
@@ -51,5 +58,9 @@ export class PromoteQueue {
 
     public isFull() {
         return this.items.length === this.maxSize;
+    }
+
+    public getSentCount(item: string): number {
+        return this.pushCount.get(item) || 0;
     }
 }

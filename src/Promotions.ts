@@ -61,7 +61,10 @@ export class Promotion {
         this.startPromotion();
     }
     setDaysLeft(daysLeft: number) {
-        this.daysLeft = daysLeft
+        this.daysLeft = daysLeft;
+        if (daysLeft < 0) {
+            this.resetPromotionResults();
+        }
     }
 
     resetMobileStats() {
@@ -81,6 +84,7 @@ export class Promotion {
 
     resetPromotionResults() {
         this.promotionResults = new Map();
+        PromoteQueue.getInstance().clear();
     }
 
     async checkQueuedMessages() {
@@ -357,8 +361,16 @@ export class Promotion {
                 this.channelIndex++;
                 continue;
             }
+            if (this.daysLeft < 0 || PromoteQueue.getInstance().contains(channelId)) {
+                const count = PromoteQueue.getInstance().getSentCount(channelId);
+                if (count > 0) {
+                    console.log(`Channel ${channelId} has already been promoted. Skipping...`);
+                    this.channelIndex++;
+                    continue;
+                }
+            }
 
-            if (channelInfo.banned || PromoteQueue.getInstance().contains(channelId) || this.isChannelNotSuitable(channelInfo)) {
+            if (channelInfo.banned || this.isChannelNotSuitable(channelInfo)) {
                 console.log(`Channel ${channelId} is banned or unsuitable. Skipping...`);
                 this.channelIndex++;
                 continue;
@@ -373,7 +385,6 @@ export class Promotion {
                         console.log(`Skipping promotion for mobile ${mobile} and channel ${channelId} based on previous result.`);
                         continue;
                     }
-
                     if (!messageSent) {
                         const sentMessage = await this.sendPromotionalMessage(mobile, channelInfo);
                         if (sentMessage) {
@@ -397,6 +408,7 @@ export class Promotion {
             this.channelIndex++;
         }
     }
+    
     private waitForHealthyMobilesEventDriven(retryInterval = 30000): Promise<string[]> {
         return new Promise((resolve) => {
             const checkMobiles = async () => {
