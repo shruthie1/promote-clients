@@ -3,7 +3,7 @@ export class PromoteQueue {
     public items: string[] = [];
     private maxSize = 10;
     private timer: NodeJS.Timeout;
-    private pushCount: Map<string, number> = new Map();
+    private pushCount: Map<string, { count: number, timestamp: number }> = new Map();
 
     private constructor() {}
 
@@ -18,27 +18,42 @@ export class PromoteQueue {
     }
 
     public push(item: string) {
+        // Remove items older than 1 hour from the pushCount map
+        const now = Date.now();
+        this.pushCount.forEach((data, key) => {
+            if (now - data.timestamp > 60 * 60 * 1000) {  // 1 hour = 60 minutes * 60 seconds * 1000 ms
+                this.pushCount.delete(key);
+            }
+        });
+
+        // Proceed with the normal push operation
         while (this.items.length >= this.maxSize) {
             this.items.shift();
         }
         this.items.push(item);
+
         if (this.timer) {
             clearTimeout(this.timer);
         }
         this.timer = setTimeout(() => {
             this.pop();
         }, 100000);
-        // Update push count
+
+        // Update push count with timestamp
         if (this.pushCount.has(item)) {
-            this.pushCount.set(item, this.pushCount.get(item)! + 1);
+            const existingData = this.pushCount.get(item)!;
+            existingData.count += 1;
+            existingData.timestamp = now;  // Update timestamp to current time
         } else {
-            this.pushCount.set(item, 1);
+            this.pushCount.set(item, { count: 1, timestamp: now });
         }
     }
 
     public clear() {
-        this.items = []
+        this.items = [];
+        this.pushCount.clear();
     }
+
     public pop() {
         if (this.items.length === 0) {
             return undefined;
@@ -61,6 +76,12 @@ export class PromoteQueue {
     }
 
     public getSentCount(item: string): number {
-        return this.pushCount.get(item) || 0;
+        // Retrieve the count for the item within the last hour
+        const data = this.pushCount.get(item);
+        if (data && Date.now() - data.timestamp <= 60 * 60 * 1000) {
+            return data.count;
+        } else {
+            return 0;
+        }
     }
 }
