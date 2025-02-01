@@ -82,7 +82,7 @@ export class UserDataDtoCrud {
                     ...data
                 },
             },
-            { upsert: true,  returnDocument: 'after' }
+            { upsert: true, returnDocument: 'after' }
         );
     }
     async getChannel(filter: any) {
@@ -193,6 +193,15 @@ export class UserDataDtoCrud {
             return await promoteClientStatDb.updateOne(filter, { $set: data })
         } catch (error) {
             parseError(error, "Error updating Client stat")
+        }
+    }
+
+    async getPromoteClientStat() {
+        try {
+            const promoteClientStatDb = this.client.db("tgclients").collection('promoteClientStats')
+            return (await promoteClientStatDb.findOne({ clientId: process.env.clientId }))
+        } catch (error) {
+            parseError(error, "Error getting Client stats")
         }
     }
 

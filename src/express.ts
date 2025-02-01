@@ -35,7 +35,6 @@ export interface IClientDetails {
   daysLeft: number
 }
 
-
 // do something when app is closing
 process.on('exit', exitHandler.bind(null, { cleanup: true }));
 process.on('SIGINT', exitHandler.bind(null, {}));
@@ -76,8 +75,13 @@ setInterval(() => {
 
 schedule.scheduleJob('test3', '25 0 * * *', 'Asia/Kolkata', async () => {
   const db = UserDataDtoCrud.getInstance();
-  await db.resetPromoteClientStats()
-  TelegramService.getInstance().resetMobileStats()
+  const totalStat = await db.getPromoteClientStat();
+  const mobileStats = TelegramService.getInstance().getMobileStats();
+  await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`${process.env.clientId}-Prom\n${JSON.stringify(totalStat, null, 2)}\n${JSON.stringify(mobileStats, null, 2)}`)}`);
+  setTimeout(async () => {
+    await db.resetPromoteClientStats()
+    TelegramService.getInstance().resetMobileStats()
+  }, 30000);
 })
 
 schedule.scheduleJob('test3', '25 0 */3 * *', 'Asia/Kolkata', async () => {
@@ -86,7 +90,7 @@ schedule.scheduleJob('test3', '25 0 */3 * *', 'Asia/Kolkata', async () => {
 
 let ip = null;
 export const getPublicIP = async () => {
-  if(ip) return ip
+  if (ip) return ip
   try {
     const response = await fetchWithTimeout('https://api.ipify.org?format=json');
     console.log(`Your public IP address is: ${response.data.ip}`);
@@ -116,6 +120,14 @@ app.get('/ip', async (req, res) => {
 
 app.get('/getClients', async (req, res) => {
   res.json(await getALLClients())
+})
+
+app.get('/getstats', async (req, res) => {
+  const db = UserDataDtoCrud.getInstance();
+  const totalStat = await db.getPromoteClientStat();
+  const mobileStats = TelegramService.getInstance().getMobileStats();
+  await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`${process.env.clientId}-Prom\n${JSON.stringify(totalStat, null, 2)}\n${JSON.stringify(mobileStats, null, 2)}`)}`);
+  res.json({ totalStat, mobileStats });
 })
 
 app.get('/exit', (req, res, next) => {
@@ -262,7 +274,6 @@ async function startConn() {
 async function getALLClients() {
   const db = UserDataDtoCrud.getInstance();
   const result = await db.getPromoteClientStats()
-
   return result
 }
 export async function checkHealth() {
