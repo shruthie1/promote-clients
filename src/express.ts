@@ -77,7 +77,6 @@ setInterval(() => {
 schedule.scheduleJob('test3', '25 0 * * *', 'Asia/Kolkata', async () => {
   const db = UserDataDtoCrud.getInstance();
   await db.resetPromoteClientStats()
-  TelegramService.getInstance().resetPromotionResults();
   TelegramService.getInstance().resetMobileStats()
 })
 
