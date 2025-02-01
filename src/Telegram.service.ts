@@ -52,6 +52,10 @@ export class TelegramService {
         for (const mobile of this.getMobiles()) {
             const tgManager = this.getClient(mobile);
             result[mobile] = tgManager?.promoterInstance?.getMobileStats();
+            delete result[mobile]["lastCheckedTime"];
+            delete result[mobile]["sleepTime"];
+            delete result[mobile]["releaseTime"];
+            delete result[mobile]["lastMessageTime"];
         }
         return result;
     }

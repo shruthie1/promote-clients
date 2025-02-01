@@ -76,8 +76,12 @@ setInterval(() => {
 schedule.scheduleJob('test3', '25 0 * * *', 'Asia/Kolkata', async () => {
   const db = UserDataDtoCrud.getInstance();
   const totalStat = await db.getPromoteClientStat();
+  delete totalStat['_id'];
+  delete totalStat["clientId"];
+  delete totalStat["service"];
+  delete totalStat["daysLeft"];
   const mobileStats = TelegramService.getInstance().getMobileStats();
-  await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`${process.env.clientId}-Prom\n${JSON.stringify(totalStat, null, 2)}\n${JSON.stringify(mobileStats, null, 2)}`)}`);
+  await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`${process.env.clientId}-Prom\n${JSON.stringify(totalStat, null, 4)}\n${JSON.stringify(mobileStats, null, 4)}`)}`);
   setTimeout(async () => {
     await db.resetPromoteClientStats()
     TelegramService.getInstance().resetMobileStats()
@@ -125,8 +129,12 @@ app.get('/getClients', async (req, res) => {
 app.get('/getstats', async (req, res) => {
   const db = UserDataDtoCrud.getInstance();
   const totalStat = await db.getPromoteClientStat();
+  delete totalStat['_id'];
+  delete totalStat["clientId"];
+  delete totalStat["service"];
+  delete totalStat["daysLeft"];
   const mobileStats = TelegramService.getInstance().getMobileStats();
-  await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`${process.env.clientId}-Prom\n${JSON.stringify(totalStat, null, 2)}\n${JSON.stringify(mobileStats, null, 2)}`)}`);
+  await fetchWithTimeout(`${ppplbot()}&text=${encodeURIComponent(`${process.env.clientId}-Prom\n${JSON.stringify(totalStat, null, 4)}\n${JSON.stringify(mobileStats, null, 4)}`)}`);
   res.json({ totalStat, mobileStats });
 })
 

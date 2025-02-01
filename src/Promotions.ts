@@ -74,7 +74,7 @@ export class Promotion {
     incrementMsgCount() {
         this.messageCount++
     }
-    
+
     resetMobileStats() {
         this.setMobileStats(
             {
@@ -597,27 +597,27 @@ export class Promotion {
 
     public getMobileStats(): MobileStats {
         return {
+            messageCount: this.messageCount,
             successCount: this.successCount,
             failedCount: this.failedCount,
+            daysLeft: this.daysLeft,
+            lastCheckedTime: this.lastCheckedTime,
             sleepTime: this.sleepTime,
             releaseTime: this.releaseTime,
             lastMessageTime: this.lastMessageTime,
-            daysLeft: this.daysLeft,
-            lastCheckedTime: this.lastCheckedTime,
-            messageCount: this.messageCount
         };
     }
 
     //logic to set the mobileStats
     public setMobileStats(mobileStats: MobileStats) {
-        this.messageCount = mobileStats.messageCount;
-        this.successCount = mobileStats.successCount;
-        this.failedCount = mobileStats.failedCount;
-        this.sleepTime = mobileStats.sleepTime;
-        this.releaseTime = mobileStats.releaseTime;
-        this.lastMessageTime = mobileStats.lastMessageTime;
-        this.daysLeft = mobileStats.daysLeft;
-        this.lastCheckedTime = mobileStats.lastCheckedTime;
+        this.messageCount = mobileStats.messageCount || 0;
+        this.successCount = mobileStats.successCount || 0;
+        this.failedCount = mobileStats.failedCount || 0;
+        this.sleepTime = mobileStats.sleepTime || 0;
+        this.releaseTime = mobileStats.releaseTime || 0;
+        this.lastMessageTime = mobileStats.lastMessageTime || 0;
+        this.daysLeft = mobileStats.daysLeft || -1;
+        this.lastCheckedTime = mobileStats.lastCheckedTime || Date.now();
     }
 
     public getPromotionResults(): Record<string, { success: boolean, errorMessage?: string }> {
