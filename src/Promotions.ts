@@ -82,9 +82,9 @@ export class Promotion {
                 failedCount: 0,
                 sleepTime: 0,
                 releaseTime: 0,
-                lastMessageTime: Date.now() - 16 * 60 * 1000,
-                daysLeft: -1,
-                lastCheckedTime: 0,
+                lastMessageTime: this.lastMessageTime || Date.now() - 16 * 60 * 1000,
+                daysLeft: this.daysLeft || -1,
+                lastCheckedTime: this.lastCheckedTime || Date.now() - 16 * 60 * 1000,
                 messageCount: 0,
             }
         )
