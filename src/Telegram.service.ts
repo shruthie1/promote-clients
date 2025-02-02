@@ -51,7 +51,7 @@ export class TelegramService {
         const result = [];
         for (const mobile of this.getMobiles()) {
             const tgManager = this.getClient(mobile);
-            result.push(tgManager?.promoterInstance.getBannedChannels());
+            result.push(...tgManager?.promoterInstance?.getBannedChannels());
         }
         return result;
     }
