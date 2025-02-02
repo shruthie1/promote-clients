@@ -166,6 +166,15 @@ app.get('/getPromotionStats', async (req, res) => {
   }
 });
 
+app.get('/getBannedChannels', async (req, res) => {
+  try {
+    const telegramService = TelegramService.getInstance();
+    res.send(telegramService.getBannedChannels());
+  } catch (error) {
+    parseError(error, "Error Executing ");
+  }
+});
+
 app.get('/updateProfilePics', async (req, res, next) => {
   try {
     res.json({ message: "Updating Profile Pics" });

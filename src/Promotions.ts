@@ -90,6 +90,16 @@ export class Promotion {
         )
     }
 
+    public getBannedChannels(): string[] {
+        const bannedUserKeys: string[] = [];
+        this.promotionResults.forEach((value, key) => {
+            if (!value.success && value.errorMessage === "USER_BANNED_IN_CHANNEL") {
+                bannedUserKeys.push(key);
+            }
+        });
+        return bannedUserKeys;
+    }
+
     resetPromotionResults() {
         this.promotionResults = new Map();
         PromoteQueue.getInstance().clear();
