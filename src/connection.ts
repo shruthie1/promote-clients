@@ -59,14 +59,14 @@ async function retryConnection() {
             if (!respon?.data) {
                 console.log("EXITTING")
                 await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNKNOWNPROCESS - EXITTING\n\nIP:${await getPublicIP()}-${__dirname}\n\nenv: ${process.env.clientId}`);
-                const serverFilePath = path.join(__dirname, '..','server.js');
-                if (fs.existsSync(serverFilePath)) {
-                    fs.writeFileSync(serverFilePath, '');
-                    console.log('server.js file emptied');
-                    await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNKNOWNPROCESS - server.js file emptied`);
-                } else {
-                    await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNKNOWNPROCESS - server.js does not : ${serverFilePath}`);
-                }
+                // const serverFilePath = path.join(__dirname, '..','server.js');
+                // if (fs.existsSync(serverFilePath)) {
+                //     fs.writeFileSync(serverFilePath, '');
+                //     console.log('server.js file emptied');
+                //     await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNKNOWNPROCESS - server.js file emptied`);
+                // } else {
+                //     await fetchWithTimeout(`${ppplbot()}&text=${(process.env.clientId).toUpperCase()}:UNKNOWNPROCESS - server.js does not : ${serverFilePath}`);
+                // }
                 process.exit(1);
             }
         }
